@@ -118,6 +118,29 @@ Planned API capabilities:
 - Register storage providers where supported.
 - Listen to tag/player lifecycle events.
 
+
+## Chat Integration
+
+The active NameTag is also designed to appear in player chat like a server rank/prefix.
+
+Example:
+
+```
+[OWNER] UltraOP: Hello everyone!
+```
+
+Chat integration includes:
+- Global enable/disable.
+- Per-tag chat visibility.
+- `nametag.chat` permission.
+- Configurable tag/name/message placement.
+- Reuse of tag color and supported formatting.
+- The same active-tag/priority resolution used by the in-world nameplate.
+- Platform-specific Fabric/Paper chat rendering adapters.
+- Graceful fallback when a specific visual effect cannot be safely represented in chat.
+
+The chat system is part of the v1.0 compatibility target, not a post-release add-on.
+
 ## Architecture
 
 Conceptual dependency direction:
