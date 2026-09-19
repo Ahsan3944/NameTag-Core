@@ -1,6 +1,7 @@
 plugins {
-    id 'net.fabricmc.fabric-loom-remap' version '1.14-SNAPSHOT'
+    id 'net.fabricmc.fabric-loom-remap' version '1.14.10'
 }
+
 dependencies {
     minecraft "com.mojang:minecraft:" + minecraft_version
     mappings loom.officialMojangMappings()
@@ -10,5 +11,5 @@ dependencies {
     implementation project(':common')
     implementation project(':versions:fabric-1.21.11')
 }
-loom { splitEnvironmentSourceSets() }
+
 tasks.withType(JavaCompile).configureEach { options.release = 21 }
