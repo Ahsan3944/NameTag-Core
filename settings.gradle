@@ -1,7 +1,9 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven { url = 'https://maven.fabricmc.net/' }
+        maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+    }
+}
 rootProject.name = 'NameTag-Core'
-
-include(
-    ':core',
-    ':api',
-    ':common'
-)
+include(':core', ':api', ':common', ':platform:fabric', ':platform:paper', ':versions:fabric-1.21.11', ':versions:paper-1.21.11')
