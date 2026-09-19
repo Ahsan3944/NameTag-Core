@@ -1,0 +1,6 @@
+name: NameTag-Core
+version: "${project.version}"
+main: com.ultraop.nametag.paper.NameTagPaperPlugin
+api-version: '1.21'
+author: UltraOP
+description: Cross-platform NameTag system for Paper servers.
