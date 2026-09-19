@@ -1,0 +1,7 @@
+repositories { maven { url = 'https://repo.papermc.io/repository/maven-public/' } }
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT"
+    implementation project(':api')
+    implementation project(':common')
+    implementation project(':versions:paper-1.21.11')
+}
