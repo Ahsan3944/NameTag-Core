@@ -1,0 +1,2 @@
+dependencies { implementation project(':api') }
+tasks.withType(JavaCompile).configureEach { options.release = 21 }
