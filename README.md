@@ -1,0 +1,286 @@
+# NameTag-Core
+
+A cross-platform, version-aware Minecraft NameTag framework designed to provide one stable core for both **Fabric Server Mods** and **Paper Server Plugins**.
+
+## Project Status
+
+**Phase:** Architecture / Blueprint  
+**Target baseline:** Minecraft Java Edition **1.21.11**  
+**Platforms:** Fabric Server + Paper Server  
+**Primary goal:** Build the core once, isolate platform/version-specific code, and make future Minecraft version upgrades predictable and maintainable.
+
+## Vision
+
+NameTag-Core is not intended to be a single-version, single-platform plugin. The project is designed as a layered system:
+
+- **Core:** platform-independent NameTag domain logic.
+- **API:** stable public interfaces for tags, players, effects, storage, permissions and integrations.
+- **Platform adapters:** Fabric and Paper implementations.
+- **Version adapters:** Minecraft-version-specific code isolated behind platform contracts.
+- **Effect engine:** extensible visual/text effects, beginning with Glitch.
+- **Storage abstraction:** configurable persistence without coupling the core to one database format.
+
+This separation prevents Minecraft API changes from spreading through the entire project.
+
+## Planned Features
+
+### NameTag management
+- Create, edit, delete and list tags.
+- Assign and remove tags from players.
+- One primary active tag in the first release, with the core designed to support multiple/layered tags later.
+- UUID-based player identity.
+- Tag priority support.
+- Optional temporary/expiring tags in a later release.
+
+### Colors
+- Minecraft named/preset colors supported by the target text API.
+- Custom RGB/hex colors.
+- Random color.
+- Animated/randomized color mode as an optional future effect.
+- Gradient colors.
+
+### Text formatting
+- Bold.
+- Italic.
+- Underline.
+- Strikethrough.
+- Obfuscated.
+- Reset/clean formatting behavior.
+
+### Effects
+- Effect API from the beginning.
+- Glitch effect in the initial feature design.
+- Future effects can be added without changing the tag model.
+- Configurable effect speed/intensity where supported.
+
+### Permissions
+Permission nodes will be platform-neutral in the core and mapped to the native permission system by each adapter.
+
+Planned nodes include:
+- `nametag.use`
+- `nametag.create`
+- `nametag.edit`
+- `nametag.delete`
+- `nametag.give`
+- `nametag.remove`
+- `nametag.reload`
+- `nametag.admin`
+
+OP access will be the default administrative fallback where the platform supports it.
+
+### Commands
+
+The initial command namespace is:
+
+`/nametag`
+
+Planned commands:
+- `/nametag create`
+- `/nametag list`
+- `/nametag give <player> <tag>`
+- `/nametag remove <player>`
+- `/nametag set <player> <tag>`
+- `/nametag clear <player>`
+- `/nametag delete <tag>`
+- `/nametag reload`
+
+Exact syntax may be finalized during implementation, but command behavior must remain consistent between Fabric and Paper.
+
+### GUI
+
+A GUI/editor is planned, but it will not be allowed to contaminate the core domain layer.
+
+The editor will eventually expose:
+- Tag name.
+- Preset color.
+- RGB/hex color.
+- Gradient.
+- Random color.
+- Bold/italic/underline/strikethrough/obfuscated.
+- Effect selection.
+- Effect configuration.
+- Preview.
+- Save/cancel.
+
+The first stable milestone prioritizes the API and command path before the GUI.
+
+### API
+
+External mods/plugins should be able to interact with NameTag-Core through a stable API.
+
+Planned API capabilities:
+- Create/read/update/delete tags.
+- Assign/remove tags.
+- Read active tag.
+- Query tag existence.
+- Access color/style/effect definitions.
+- Register custom effects.
+- Register storage providers where supported.
+- Listen to tag/player lifecycle events.
+
+## Architecture
+
+Conceptual dependency direction:
+
+```
+                    NameTag API
+                         |
+                    NameTag Core
+             /-----------+-----------\\
+            /            |            \\
+      Effects        Storage       Permissions
+            \\            |            /
+             \\-----------+-----------/
+                         |
+                Platform Contracts
+                  /             \\
+                 /               \\
+             Fabric             Paper
+                |                 |
+        Version Adapter    Version Adapter
+                |                 |
+          Minecraft API       Minecraft API
+```
+
+The core must never directly depend on Fabric-only or Paper-only classes.
+
+## Repository Structure
+
+The planned repository layout is:
+
+```
+NameTag-Core/
+├── README.md
+├── LICENSE
+├── .gitignore
+├── docs/
+│   ├── BLUEPRINT.md
+│   └── ROADMAP.md
+├── gradle/
+├── settings.gradle
+├── build.gradle
+├── gradle.properties
+├── core/
+├── api/
+├── common/
+├── platform/
+│   ├── fabric/
+│   └── paper/
+└── versions/
+    ├── fabric-1.21.11/
+    └── paper-1.21.11/
+```
+
+The exact Gradle module names may be refined during implementation, but the architectural boundary is fixed: **core/API code must not be mixed with platform/version code**.
+
+## Versioning Strategy
+
+The project uses semantic project versioning independently from Minecraft versions.
+
+Example:
+
+- NameTag-Core `0.1.0` = architecture/development milestone.
+- NameTag-Core `1.0.0` = first stable release.
+- Minecraft target remains a separate compatibility dimension.
+
+A future Minecraft upgrade should normally add/update an adapter module rather than fork the entire codebase.
+
+## Data Model
+
+A tag should conceptually contain:
+
+- Unique ID.
+- Display name.
+- Color definition.
+- Optional gradient definition.
+- Text style.
+- Effect definition.
+- Priority.
+- Enabled state.
+- Optional metadata.
+
+Player data should use UUID as the stable identifier and store:
+- Assigned tag(s).
+- Active tag.
+- Optional expiration metadata.
+
+Player names must not be the primary identity key.
+
+## Storage
+
+The first implementation will use a simple local, human-readable storage provider so the system can work without an external database.
+
+Storage must be abstracted behind an interface so future providers can include:
+- YAML/JSON file storage.
+- SQLite.
+- MySQL/MariaDB.
+- PostgreSQL.
+
+The core must not assume one storage implementation.
+
+## Rendering
+
+The core describes **what** a tag is. Platform/version adapters decide **how** Minecraft renders it.
+
+This is important because text APIs and player-name rendering mechanisms can change between Minecraft versions.
+
+The rendering layer must therefore be replaceable without changing tag management logic.
+
+## Compatibility Policy
+
+Initial target:
+
+| Component | Baseline |
+|---|---|
+| Minecraft | 1.21.11 |
+| Fabric | Server |
+| Paper | Server |
+| Java | Version required by the selected Minecraft/platform toolchain |
+
+Future versions are added only after the baseline passes build, startup, command, persistence, assignment, rendering and regression tests.
+
+## Development Rules
+
+1. Do not duplicate core business logic between Fabric and Paper.
+2. Do not place Minecraft-version-specific classes inside the core.
+3. Do not use player names as persistent primary identifiers.
+4. Do not add a feature directly to one platform without defining its core contract first, unless the feature is inherently platform-specific.
+5. Every public API change must be documented.
+6. Every Minecraft version adapter must be tested independently.
+7. Existing stable behavior must not be silently changed during a version upgrade.
+8. New effects must use the effect abstraction.
+9. Storage must remain replaceable.
+10. Documentation and implementation must stay synchronized.
+
+## Build Philosophy
+
+The project will be built in controlled milestones:
+
+1. Blueprint and architecture.
+2. Gradle multi-module foundation.
+3. Core domain model.
+4. API contracts.
+5. Storage and player assignment.
+6. Command abstraction.
+7. Paper 1.21.11 adapter.
+8. Fabric 1.21.11 adapter.
+9. Rendering/nameplate integration.
+10. Glitch effect.
+11. Tests and regression checks.
+12. GUI/editor.
+13. Release packaging.
+14. Future version adapters.
+
+No platform implementation should begin before the corresponding core contract is stable.
+
+## Roadmap
+
+See [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## Full Technical Blueprint
+
+See [docs/BLUEPRINT.md](docs/BLUEPRINT.md).
+
+## License
+
+License will be finalized before the first public stable release.
