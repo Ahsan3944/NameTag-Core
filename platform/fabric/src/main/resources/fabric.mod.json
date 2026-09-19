@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "nametag-core",
+  "version": "${version}",
+  "name": "NameTag-Core",
+  "description": "Cross-platform NameTag system for Fabric servers.",
+  "authors": ["UltraOP"],
+  "environment": "server",
+  "entrypoints": {"server": ["com.ultraop.nametag.fabric.NameTagFabricEntrypoint"]},
+  "depends": {"fabricloader": ">=0.18.1", "minecraft": "~1.21.11", "fabric-api": "*"}
+}
