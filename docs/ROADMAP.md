@@ -13,32 +13,32 @@
 
 ## Phase 1 — Build Foundation
 - [ ] Gradle wrapper and root build.
-- [ ] Multi-module configuration.
-- [ ] Java/toolchain configuration.
+- [x] Multi-module configuration.
+- [x] Java/toolchain configuration.
 - [ ] Checkstyle/formatting policy if required.
 - [ ] Test framework.
-- [ ] Base package structure.
+- [x] Base package structure.
 
 ## Phase 2 — Core Domain
-- [ ] Tag model.
-- [ ] Tag ID/display name.
-- [ ] Color model.
+- [x] Tag model.
+- [x] Tag ID/display name.
+- [x] Color model.
 - [ ] RGB parser.
 - [ ] Random color strategy.
 - [ ] Gradient model.
-- [ ] Text style model.
-- [ ] Effect model.
+- [x] Text style model.
+- [x] Effect model.
 - [ ] Priority.
 - [ ] Validation.
 
 ## Phase 3 — API
-- [ ] Tag service.
-- [ ] Assignment service.
-- [ ] Query interfaces.
+- [x] Tag service.
+- [x] Assignment service.
+- [x] Query interfaces.
 - [ ] Events.
 - [ ] Effect registration.
-- [ ] Storage contracts.
-- [ ] Permission contracts.
+- [x] Storage contracts.
+- [x] Permission contracts.
 
 ## Phase 4 — Persistence
 - [ ] Tag repository.
@@ -56,6 +56,7 @@
 - [ ] Caching.
 
 ## Phase 6 — Paper 1.21.11
+- [ ] Chat integration.
 - [ ] Paper bootstrap.
 - [ ] Commands.
 - [ ] Permissions.
@@ -67,6 +68,7 @@
 - [ ] Integration tests.
 
 ## Phase 7 — Fabric 1.21.11
+- [ ] Chat integration.
 - [ ] Fabric bootstrap.
 - [ ] Commands.
 - [ ] Permissions.
