@@ -27,7 +27,8 @@ public final class FabricCommandSource implements CommandSource {
 
     @Override
     public boolean hasPermission(String permission) {
-        // The native /nametag root command already enforces the gamemaster permission level.\n        return true;
+        // The native /nametag root command already enforces the gamemaster permission level.
+        return true;
     }
 
     @Override
