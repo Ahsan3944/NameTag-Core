@@ -47,6 +47,7 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("message.created", "Created NameTag: {tag}");
         defaults.put("message.deleted", "Deleted NameTag: {tag}");
         defaults.put("message.assigned", "Assigned {tag} to {player}");
+        defaults.put("message.set_active", "Set {tag} as active for {player}");
         defaults.put("message.cleared", "Cleared NameTags from {player}");
         defaults.put("message.glitch_set", "Glitch effect set to {mode} for tag {tag}");
         defaults.put("message.list_entry", "{tag} -> {displayName}{glitch}");
