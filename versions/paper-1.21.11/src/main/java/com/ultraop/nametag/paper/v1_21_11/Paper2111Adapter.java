@@ -13,6 +13,7 @@ public final class Paper2111Adapter {
     private final ConfigurationService configuration;
     private final Paper2111NameplateRenderer renderer;
     private final Paper2111ChatListener chatListener;
+    private final Paper2111PlayerLifecycleListener lifecycleListener;
 
     public Paper2111Adapter(
             Plugin plugin,
@@ -24,6 +25,7 @@ public final class Paper2111Adapter {
         this.configuration = Objects.requireNonNull(configuration, "configuration");
         this.renderer = new Paper2111NameplateRenderer(plugin, tagService);
         this.chatListener = new Paper2111ChatListener(tagService, configuration);
+        this.lifecycleListener = new Paper2111PlayerLifecycleListener(renderer);
     }
 
     public TagService tagService() {
@@ -33,10 +35,12 @@ public final class Paper2111Adapter {
     public void start() {
         renderer.start();
         plugin.getServer().getPluginManager().registerEvents(chatListener, plugin);
+        plugin.getServer().getPluginManager().registerEvents(lifecycleListener, plugin);
     }
 
     public void stop() {
         HandlerList.unregisterAll(chatListener);
+        HandlerList.unregisterAll(lifecycleListener);
         renderer.stop();
     }
 }
