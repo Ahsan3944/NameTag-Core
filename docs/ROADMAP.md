@@ -50,8 +50,8 @@
 - [x] Atomic save/recovery strategy.
 
 ## Phase 5 — Common Services
-- [ ] Command contracts.
-- [ ] Message/localization service.
+- [x] Command contracts.
+- [x] Message/localization service.
 - [ ] Configuration service.
 - [ ] Reload service.
 - [ ] Caching.
@@ -62,7 +62,7 @@
 - [x] Commands.
 - [x] Permissions.
 - [ ] Player lifecycle.
-- [ ] Storage integration.
+- [x] Storage integration.
 - [x] Nameplate rendering.
 - [x] Text styles.
 - [x] Effects.
@@ -74,7 +74,7 @@
 - [x] Commands.
 - [x] Permissions.
 - [ ] Player lifecycle.
-- [ ] Storage integration.
+- [x] Storage integration.
 - [x] Nameplate rendering.
 - [x] Text styles.
 - [x] Effects.
@@ -109,7 +109,7 @@
 ## Phase 10 — Stability
 - [ ] Full unit test suite.
 - [ ] Full integration suite.
-- [ ] Restart persistence test.
+- [x] Restart persistence test.
 - [ ] Reload test.
 - [ ] Permission regression test.
 - [ ] Cross-platform behavior comparison.
