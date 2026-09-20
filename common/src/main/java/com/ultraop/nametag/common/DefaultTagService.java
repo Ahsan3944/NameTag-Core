@@ -18,11 +18,23 @@ import java.util.UUID;
 
 public final class DefaultTagService implements TagService {
     private final TagRepository tags;
+    private static final int DEFAULT_CACHE_CAPACITY = ActiveTagCache.DEFAULT_CAPACITY;
+
     private final PlayerAssignmentRepository assignments;
+    private final ActiveTagCache activeTagCache;
 
     public DefaultTagService(TagRepository tags, PlayerAssignmentRepository assignments) {
+        this(tags, assignments, DEFAULT_CACHE_CAPACITY);
+    }
+
+    DefaultTagService(
+            TagRepository tags,
+            PlayerAssignmentRepository assignments,
+            int cacheCapacity
+    ) {
         this.tags = Objects.requireNonNull(tags);
         this.assignments = Objects.requireNonNull(assignments);
+        this.activeTagCache = new ActiveTagCache(cacheCapacity);
     }
 
     @Override
@@ -42,6 +54,7 @@ public final class DefaultTagService implements TagService {
             throw new IllegalArgumentException("Tag does not exist: " + tag.id().value());
         }
         tags.save(tag);
+        activeTagCache.invalidateTag(tag.id());
         return tag;
     }
 
@@ -50,6 +63,7 @@ public final class DefaultTagService implements TagService {
         if (tags.find(id).isEmpty()) return false;
 
         tags.delete(id);
+        activeTagCache.invalidateTag(id);
 
         for (PlayerAssignment current : assignments.findAll()) {
             if (!current.assignedTagIds().contains(id)) {
@@ -68,6 +82,7 @@ public final class DefaultTagService implements TagService {
             } else {
                 assignments.save(updated);
             }
+            activeTagCache.invalidatePlayer(current.playerUuid());
         }
 
         return true;
@@ -98,6 +113,7 @@ public final class DefaultTagService implements TagService {
         PlayerAssignment updated = new PlayerAssignment(playerUuid, ids, active);
         TagValidator.validate(updated);
         assignments.save(updated);
+        activeTagCache.invalidatePlayer(playerUuid);
         return updated;
     }
 
@@ -122,6 +138,7 @@ public final class DefaultTagService implements TagService {
         );
         TagValidator.validate(updated);
         assignments.save(updated);
+        activeTagCache.invalidatePlayer(playerUuid);
         return updated;
     }
 
@@ -143,17 +160,26 @@ public final class DefaultTagService implements TagService {
             assignments.save(updated);
         }
 
+        activeTagCache.invalidatePlayer(playerUuid);
         return updated;
     }
 
     @Override
     public void clear(UUID playerUuid) {
         assignments.delete(playerUuid);
+        activeTagCache.invalidatePlayer(playerUuid);
     }
 
     @Override
     public Optional<Tag> activeTag(UUID playerUuid) {
-        return assignments.find(playerUuid).flatMap(this::resolveActiveTag);
+        Optional<Tag> cached = activeTagCache.get(playerUuid);
+        if (cached != null) {
+            return cached;
+        }
+
+        Optional<Tag> resolved = assignments.find(playerUuid).flatMap(this::resolveActiveTag);
+        activeTagCache.put(playerUuid, resolved);
+        return resolved;
     }
 
     private Optional<Tag> resolveActiveTag(PlayerAssignment assignment) {
