@@ -4,6 +4,7 @@ import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
+import org.yaml.snakeyaml.representer.Representer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,7 +30,13 @@ final class YamlFileStore {
         options.setPrettyFlow(true);
         options.setIndent(2);
         options.setWidth(120);
-        this.yaml = new Yaml(new SafeConstructor(new LoaderOptions()), options);
+        LoaderOptions loaderOptions = new LoaderOptions();
+        this.yaml = new Yaml(
+                new SafeConstructor(loaderOptions),
+                new Representer(options),
+                options,
+                loaderOptions
+        );
     }
 
     Map<String, Object> load() {
