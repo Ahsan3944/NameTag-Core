@@ -51,12 +51,12 @@ public final class NameTagFabric {
                     .requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK));
 
             root.then(CommandManager.literal("list")
-                    .executes(context -> execute(context, service, messages, new String[]{"list"})));
+                    .executes(context -> execute(context, service, messages, configuration, new String[]{"list"})));
 
             root.then(CommandManager.literal("create")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
                             .then(CommandManager.argument("displayName", StringArgumentType.greedyString())
-                                    .executes(context -> execute(context, service, messages, new String[]{
+                                    .executes(context -> execute(context, service, messages, configuration, new String[]{
                                             "create",
                                             StringArgumentType.getString(context, "tag"),
                                             StringArgumentType.getString(context, "displayName")
@@ -77,7 +77,7 @@ public final class NameTagFabric {
                                     .suggests((context, builder) ->
                                             suggestTags(context, builder, service, "give"))
                                     .executes(context -> executeTarget(
-                                            context, service, messages, false
+                                            context, service, messages, configuration, false
                                     )))));
 
             root.then(CommandManager.literal("set")
@@ -86,19 +86,19 @@ public final class NameTagFabric {
                                     .suggests((context, builder) ->
                                             suggestTags(context, builder, service, "set"))
                                     .executes(context -> executeTarget(
-                                            context, service, messages, true
+                                            context, service, messages, configuration, true
                                     )))));
 
             root.then(CommandManager.literal("remove")
                     .then(CommandManager.argument("player", EntityArgumentType.player())
                             .executes(context -> executeTargetClear(
-                                    context, service, messages, "remove"
+                                    context, service, messages, configuration, "remove"
                             ))));
 
             root.then(CommandManager.literal("clear")
                     .then(CommandManager.argument("player", EntityArgumentType.player())
                             .executes(context -> executeTargetClear(
-                                    context, service, messages, "clear"
+                                    context, service, messages, configuration, "clear"
                             ))));
 
             root.then(CommandManager.literal("glitch")
@@ -111,7 +111,7 @@ public final class NameTagFabric {
                                                     List.of("white", "colorful"),
                                                     builder
                                             ))
-                                    .executes(context -> execute(context, service, messages, new String[]{
+                                    .executes(context -> execute(context, service, messages, configuration, new String[]{
                                             "glitch",
                                             StringArgumentType.getString(context, "tag"),
                                             StringArgumentType.getString(context, "mode")
@@ -125,6 +125,7 @@ public final class NameTagFabric {
             CommandContext<ServerCommandSource> context,
             TagService service,
             DefaultMessageService messages,
+            ConfigurationService configuration,
             String[] args
     ) {
         handler(context.getSource(), service, messages, configuration)
@@ -139,6 +140,7 @@ public final class NameTagFabric {
             CommandContext<ServerCommandSource> context,
             TagService service,
             DefaultMessageService messages,
+            ConfigurationService configuration,
             boolean setActive
     ) {
         try {
@@ -149,6 +151,7 @@ public final class NameTagFabric {
                     context,
                     service,
                     messages,
+                    configuration,
                     new String[]{subcommand, player.getName().getString(), tag}
             );
         } catch (CommandSyntaxException exception) {
@@ -161,6 +164,7 @@ public final class NameTagFabric {
             CommandContext<ServerCommandSource> context,
             TagService service,
             DefaultMessageService messages,
+            ConfigurationService configuration,
             String subcommand
     ) {
         try {
@@ -169,6 +173,7 @@ public final class NameTagFabric {
                     context,
                     service,
                     messages,
+                    configuration,
                     new String[]{subcommand, player.getName().getString()}
             );
         } catch (CommandSyntaxException exception) {
