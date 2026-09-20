@@ -14,9 +14,6 @@ public final class TagValidator {
         if (tag.priority() < 0) {
             throw new IllegalArgumentException("Tag priority cannot be negative");
         }
-        if (tag.displayName().length() > 128) {
-            throw new IllegalArgumentException("Tag display name cannot exceed 128 characters");
-        }
     }
 
     public static void validate(PlayerAssignment assignment) {
