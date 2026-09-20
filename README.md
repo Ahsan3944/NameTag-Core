@@ -4,7 +4,7 @@ A cross-platform, version-aware Minecraft NameTag framework designed to provide 
 
 ## Project Status
 
-**Phase:** Common Services — command and message contracts implemented; configuration/reload/caching remain in progress  
+**Phase:** Common Services — command/message/configuration foundations implemented; reload and caching remain in progress  
 **Target baseline:** Minecraft Java Edition **1.21.11**  
 **Platforms:** Fabric Server + Paper Server  
 **Primary goal:** Build the core once, isolate platform/version-specific code, and make future Minecraft version upgrades predictable and maintainable.
@@ -112,7 +112,11 @@ The first stable milestone prioritizes the API and command path before the GUI.
 
 Command business rules are implemented once in the platform-neutral common module through a stable command contract. Fabric and Paper provide sender/player-resolution adapters rather than maintaining separate command logic.
 
-The message layer is also platform-neutral and currently provides default English messages with placeholder formatting. File-backed localization will be added as part of the configuration/reload milestone.
+The message layer is also platform-neutral and currently provides default English messages with placeholder formatting. Typed YAML configuration is now loaded during platform bootstrap; reload and file-backed localization remain separate milestones.
+
+## Configuration
+
+The common configuration service provides an immutable typed runtime snapshot backed by `configuration.yml`. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the schema, defaults, validation rules and platform file locations.
 
 ## API
 
