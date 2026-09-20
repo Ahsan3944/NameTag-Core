@@ -20,6 +20,7 @@ public interface TagService {
 
     PlayerAssignment assign(UUID playerUuid, TagId tagId);
     PlayerAssignment remove(UUID playerUuid, TagId tagId);
+    void clear(UUID playerUuid);
     Optional<Tag> activeTag(UUID playerUuid);
 
     /**
