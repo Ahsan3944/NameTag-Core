@@ -32,7 +32,7 @@ public final class NameTagFabric {
         java.nio.file.Path dataDirectory = FabricLoader.getInstance()
                 .getConfigDir()
                 .resolve("nametag-core");
-        DefaultConfigurationService configuration = new DefaultConfigurationService(
+        DefaultDefaultConfigurationService configuration = new DefaultConfigurationService(
                 dataDirectory.resolve("configuration.yml")
         );
         TagService service = new DefaultTagService(
@@ -214,13 +214,12 @@ public final class NameTagFabric {
             DefaultMessageService messages,
             ConfigurationService configuration
     ) {
-        DefaultConfigurationService reloadService = (DefaultConfigurationService) configuration;
         return new DefaultNameTagCommandHandler(
                 service,
                 new FabricPlayerResolver(source.getServer()),
                 messages,
                 configuration,
-                reloadService
+                configuration
         );
     }
 }
