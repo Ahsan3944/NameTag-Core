@@ -76,7 +76,7 @@ class DefaultConfigurationServiceTest {
                 IllegalStateException.class,
                 () -> new DefaultConfigurationService(file)
         );
-        assertTrue(Files.readString(file).contains("chatEnabled: "yes""));
+        assertTrue(Files.readString(file).contains("chatEnabled: \"yes\""));
     }
 
     @Test
