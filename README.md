@@ -4,7 +4,7 @@ A cross-platform, version-aware Minecraft NameTag framework designed to provide 
 
 ## Project Status
 
-**Phase:** Architecture / Blueprint  
+**Phase:** Common Services — command and message contracts implemented; configuration/reload/caching remain in progress  
 **Target baseline:** Minecraft Java Edition **1.21.11**  
 **Platforms:** Fabric Server + Paper Server  
 **Primary goal:** Build the core once, isolate platform/version-specific code, and make future Minecraft version upgrades predictable and maintainable.
@@ -108,7 +108,13 @@ The editor will eventually expose:
 
 The first stable milestone prioritizes the API and command path before the GUI.
 
-### API
+### Common Command Layer
+
+Command business rules are implemented once in the platform-neutral common module through a stable command contract. Fabric and Paper provide sender/player-resolution adapters rather than maintaining separate command logic.
+
+The message layer is also platform-neutral and currently provides default English messages with placeholder formatting. File-backed localization will be added as part of the configuration/reload milestone.
+
+## API
 
 External mods/plugins should be able to interact with NameTag-Core through a stable API.
 
