@@ -54,7 +54,8 @@ public final class DefaultTagService implements TagService {
             throw new IllegalArgumentException("Tag does not exist: " + tag.id().value());
         }
         tags.save(tag);
-        activeTagCache.invalidateTag(tag.id());
+        // Any tag update can change priority/enabled resolution for players using other tags.
+        activeTagCache.clear();
         return tag;
     }
 
