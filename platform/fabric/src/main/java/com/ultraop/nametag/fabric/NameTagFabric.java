@@ -44,7 +44,7 @@ public final class NameTagFabric {
         registerCommands(service, configuration);
     }
 
-    private static void registerCommands(TagService service, ConfigurationService configuration) {
+    private static void registerCommands(TagService service, DefaultConfigurationService configuration) {
         DefaultMessageService messages = new DefaultMessageService();
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
@@ -53,6 +53,10 @@ public final class NameTagFabric {
 
             root.then(CommandManager.literal("list")
                     .executes(context -> execute(context, service, messages, configuration, new String[]{"list"})));
+
+            root.then(CommandManager.literal("reload")
+                    .executes(context -> execute(context, service, messages, configuration, new String[]{"reload"})));
+
 
             root.then(CommandManager.literal("create")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
@@ -126,7 +130,7 @@ public final class NameTagFabric {
             CommandContext<ServerCommandSource> context,
             TagService service,
             DefaultMessageService messages,
-            ConfigurationService configuration,
+            DefaultConfigurationService configuration,
             String[] args
     ) {
         handler(context.getSource(), service, messages, configuration)
@@ -141,7 +145,7 @@ public final class NameTagFabric {
             CommandContext<ServerCommandSource> context,
             TagService service,
             DefaultMessageService messages,
-            ConfigurationService configuration,
+            DefaultConfigurationService configuration,
             boolean setActive
     ) {
         try {
@@ -165,7 +169,7 @@ public final class NameTagFabric {
             CommandContext<ServerCommandSource> context,
             TagService service,
             DefaultMessageService messages,
-            ConfigurationService configuration,
+            DefaultConfigurationService configuration,
             String subcommand
     ) {
         try {
@@ -187,7 +191,7 @@ public final class NameTagFabric {
             CommandContext<ServerCommandSource> context,
             com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
             TagService service,
-            ConfigurationService configuration,
+            DefaultConfigurationService configuration,
             String subcommand
     ) {
         String prefix = builder.getRemaining();
@@ -212,7 +216,7 @@ public final class NameTagFabric {
             ServerCommandSource source,
             TagService service,
             DefaultMessageService messages,
-            ConfigurationService configuration
+            DefaultConfigurationService configuration
     ) {
         return new DefaultNameTagCommandHandler(
                 service,
