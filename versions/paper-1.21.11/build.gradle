@@ -1,2 +1,7 @@
-dependencies { implementation project(':api') }
+dependencies {
+    implementation project(':api')
+    implementation project(':core')
+    compileOnly "io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT"
+}
+
 tasks.withType(JavaCompile).configureEach { options.release = 21 }
