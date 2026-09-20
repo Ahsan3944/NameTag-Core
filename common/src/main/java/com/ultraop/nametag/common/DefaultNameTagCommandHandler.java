@@ -2,12 +2,15 @@ package com.ultraop.nametag.common;
 
 import com.ultraop.nametag.api.CommandContext;
 import com.ultraop.nametag.api.CommandSource;
+import com.ultraop.nametag.api.ConfigurationService;
 import com.ultraop.nametag.api.MessageService;
 import com.ultraop.nametag.api.NameTagCommandHandler;
 import com.ultraop.nametag.api.OnlinePlayer;
 import com.ultraop.nametag.api.PlayerResolver;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.core.model.GlitchMode;
+import com.ultraop.nametag.core.model.GlitchSettings;
+import com.ultraop.nametag.core.model.NameTagConfiguration;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagEffect;
@@ -29,15 +32,26 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     private final TagService tagService;
     private final PlayerResolver playerResolver;
     private final MessageService messages;
+    private final ConfigurationService configuration;
 
     public DefaultNameTagCommandHandler(
             TagService tagService,
             PlayerResolver playerResolver,
             MessageService messages
     ) {
+        this(tagService, playerResolver, messages, () -> NameTagConfiguration.defaults());
+    }
+
+    public DefaultNameTagCommandHandler(
+            TagService tagService,
+            PlayerResolver playerResolver,
+            MessageService messages,
+            ConfigurationService configuration
+    ) {
         this.tagService = Objects.requireNonNull(tagService, "tagService");
         this.playerResolver = Objects.requireNonNull(playerResolver, "playerResolver");
         this.messages = Objects.requireNonNull(messages, "messages");
+        this.configuration = Objects.requireNonNull(configuration, "configuration");
     }
 
     @Override
@@ -129,9 +143,9 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 new TagColor.Preset("white"),
                 TagStyle.plain(),
                 TagEffect.none(),
-                0,
-                true,
-                true,
+                configuration.current().defaultTagPriority(),
+                configuration.current().defaultTagEnabled(),
+                configuration.current().defaultTagChatEnabled(),
                 Map.of()
         );
         tagService.create(tag);
