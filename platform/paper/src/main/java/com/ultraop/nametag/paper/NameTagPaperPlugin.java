@@ -66,8 +66,8 @@ public final class NameTagPaperPlugin extends JavaPlugin implements CommandExecu
             String alias,
             String[] args
     ) {
-        return commandHandler.suggest(
+        return List.copyOf(commandHandler.suggest(
                 new CommandContext(new PaperCommandSource(sender), args)
-        );
+        ));
     }
 }
