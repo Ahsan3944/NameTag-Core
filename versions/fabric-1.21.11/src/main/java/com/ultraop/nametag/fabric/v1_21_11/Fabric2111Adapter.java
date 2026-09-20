@@ -31,7 +31,7 @@ public final class Fabric2111Adapter {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
                 dispatcher.register(
                         CommandManager.literal("nametag")
-                                .requires(source -> source.hasPermissionLevel(2))
+                                .requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
                                 .then(CommandManager.literal("glitch")
                                         .then(CommandManager.argument("tag", StringArgumentType.word())
                                                 .suggests((context, builder) ->
