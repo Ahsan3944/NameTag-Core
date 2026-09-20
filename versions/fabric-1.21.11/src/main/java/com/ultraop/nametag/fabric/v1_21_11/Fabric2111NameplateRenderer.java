@@ -154,7 +154,7 @@ public final class Fabric2111NameplateRenderer {
             return style.withColor(rgb.red() << 16 | rgb.green() << 8 | rgb.blue());
         }
         if (color instanceof TagColor.Preset preset) {
-            TextColor parsed = TextColor.parse(preset.name());
+            TextColor parsed = TextColor.parse(preset.name()).result().orElse(null);
             if (parsed != null) {
                 return style.withColor(parsed);
             }
