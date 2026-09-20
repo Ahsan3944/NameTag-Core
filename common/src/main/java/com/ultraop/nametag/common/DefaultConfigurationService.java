@@ -2,9 +2,6 @@ package com.ultraop.nametag.common;
 
 import com.ultraop.nametag.api.ConfigurationService;
 import com.ultraop.nametag.core.model.NameTagConfiguration;
-import org.yaml.snakeyaml.error.YAMLException;
-
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -24,12 +21,7 @@ public final class DefaultConfigurationService implements ConfigurationService {
     }
 
     private NameTagConfiguration loadOrCreate() {
-        Map<String, Object> document;
-        try {
-            document = store.load();
-        } catch (YAMLException exception) {
-            throw new IllegalStateException("Unable to parse NameTag-Core configuration", exception);
-        }
+        Map<String, Object> document = store.load();
 
         if (document.size() == 1 && document.containsKey("schemaVersion")) {
             NameTagConfiguration defaults = NameTagConfiguration.defaults();
@@ -84,7 +76,10 @@ public final class DefaultConfigurationService implements ConfigurationService {
     private static int intValue(Map<String, Object> document, String key, int fallback) {
         Object value = document.get(key);
         if (value == null) return fallback;
-        if (value instanceof Number number) return number.intValue();
+        if (value instanceof Byte || value instanceof Short
+                || value instanceof Integer || value instanceof Long) {
+            return ((Number) value).intValue();
+        }
         throw new IllegalStateException("Configuration value '" + key + "' must be an integer");
     }
 }
