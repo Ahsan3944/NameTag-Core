@@ -8,10 +8,10 @@ description: Cross-platform NameTag system for Paper servers.
 commands:
   nametag:
     description: NameTag-Core administration commands
-    usage: /nametag glitch <tag> <white|colorful>
+    usage: /nametag create <tag> <displayName>
     permission: nametag.edit
 
 permissions:
   nametag.edit:
-    description: Allows editing NameTag effects
+    description: Allows editing NameTag settings
     default: op
