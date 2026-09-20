@@ -48,6 +48,10 @@ final class YamlFileStore {
         );
     }
 
+    boolean hasAnyFile() {
+        return Files.exists(file) || Files.exists(backup);
+    }
+
     Map<String, Object> load() {
         if (!Files.exists(file) && !Files.exists(backup)) return emptyDocument();
 
