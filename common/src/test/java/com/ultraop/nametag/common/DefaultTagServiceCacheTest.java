@@ -56,15 +56,15 @@ class DefaultTagServiceCacheTest {
 
         service.create(tag("member", "MEMBER", 10, true));
         service.create(tag("vip", "VIP", 20, true));
-        service.assign(player, new TagId("member"));
-        service.assign(player, new TagId("vip"));
-        service.remove(player, new TagId("vip"));
-        service.assign(player, new TagId("vip"));
-        service.setActive(player, new TagId("member"));
+        assignments.save(new PlayerAssignment(
+                player,
+                List.of(new TagId("member"), new TagId("vip")),
+                null
+        ));
         assignments.findCalls = 0;
 
-        assertEquals("MEMBER", service.activeTag(player).orElseThrow().displayName());
-        service.update(tag("vip", "VIP", 50, true));
+        assertEquals("VIP", service.activeTag(player).orElseThrow().displayName());
+        service.update(tag("member", "MEMBER", 50, true));
 
         assertEquals("MEMBER", service.activeTag(player).orElseThrow().displayName());
         assertEquals(2, assignments.findCalls);
