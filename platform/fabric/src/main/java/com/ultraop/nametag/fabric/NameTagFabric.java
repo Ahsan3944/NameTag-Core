@@ -4,7 +4,6 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
-import com.ultraop.nametag.api.ConfigurationService;
 import com.ultraop.nametag.api.NameTagCommandHandler;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.common.DefaultConfigurationService;
@@ -32,7 +31,7 @@ public final class NameTagFabric {
         java.nio.file.Path dataDirectory = FabricLoader.getInstance()
                 .getConfigDir()
                 .resolve("nametag-core");
-        DefaultDefaultConfigurationService configuration = new DefaultConfigurationService(
+        DefaultConfigurationService configuration = new DefaultConfigurationService(
                 dataDirectory.resolve("configuration.yml")
         );
         TagService service = new DefaultTagService(
