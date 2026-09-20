@@ -71,6 +71,24 @@ final class DefaultNameTagCommandHandlerTest {
 
         assertEquals("owner", service.activeTag(playerUuid).orElseThrow().id().value());
         assertEquals("Assigned owner to UltraOP", source.lastMessage);
+
+        Tag secondTag = new Tag(
+                new TagId("vip"),
+                "VIP",
+                new TagColor.Preset("white"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of()
+        );
+        service.create(secondTag);
+
+        handler.execute(new CommandContext(source, new String[]{"set", "UltraOP", "vip"}));
+
+        assertEquals("vip", service.activeTag(playerUuid).orElseThrow().id().value());
+        assertEquals("Set vip as active for UltraOP", source.lastMessage);
     }
 
     @Test
