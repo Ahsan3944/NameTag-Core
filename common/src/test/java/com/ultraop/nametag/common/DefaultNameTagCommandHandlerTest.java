@@ -85,6 +85,8 @@ final class DefaultNameTagCommandHandlerTest {
         );
         service.create(secondTag);
 
+        handler.execute(new CommandContext(source, new String[]{"give", "UltraOP", "vip"}));
+
         handler.execute(new CommandContext(source, new String[]{"set", "UltraOP", "vip"}));
 
         assertEquals("vip", service.activeTag(playerUuid).orElseThrow().id().value());
