@@ -262,7 +262,7 @@ final class DefaultNameTagCommandHandlerTest {
                 new EmptyPlayerResolver(),
                 new DefaultMessageService(),
                 NameTagConfiguration::defaults,
-                () -> ConfigurationReloadResult.success()
+                () -> ConfigurationReloadResult.successResult()
         );
 
         handler.execute(new CommandContext(source, new String[]{"reload"}));
