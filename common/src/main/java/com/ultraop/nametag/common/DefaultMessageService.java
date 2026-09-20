@@ -54,7 +54,7 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("message.cleared", "Cleared NameTags from {player}");
         defaults.put("message.glitch_set", "Glitch effect set to {mode} for tag {tag}");
         defaults.put("message.list_entry", "{tag} -> {displayName}{glitch}");
-        defaults.put("message.usage", "/nametag create <tag> <displayName> | list | give <player> <tag> | set <player> <tag> | remove <player> | clear <player> | delete <tag> | glitch <tag> <white|colorful>");
+        defaults.put("message.usage", "/nametag create <tag> <displayName> | list | give <player> <tag> | set <player> <tag> | remove <player> | clear <player> | delete <tag> | reload | glitch <tag> <white|colorful>");
         return defaults;
     }
 }
