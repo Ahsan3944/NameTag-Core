@@ -65,8 +65,8 @@ public final class NameTagFabric {
             root.then(CommandManager.literal("delete")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
                             .suggests((context, builder) ->
-                                    suggestTags(context, builder, service, "delete"))
-                            .executes(context -> execute(context, service, messages, new String[]{
+                                    suggestTags(context, builder, service, configuration, "delete"))
+                            .executes(context -> execute(context, service, messages, configuration, new String[]{
                                     "delete",
                                     StringArgumentType.getString(context, "tag")
                             }))));
@@ -75,7 +75,7 @@ public final class NameTagFabric {
                     .then(CommandManager.argument("player", EntityArgumentType.player())
                             .then(CommandManager.argument("tag", StringArgumentType.word())
                                     .suggests((context, builder) ->
-                                            suggestTags(context, builder, service, "give"))
+                                            suggestTags(context, builder, service, configuration, "give"))
                                     .executes(context -> executeTarget(
                                             context, service, messages, configuration, false
                                     )))));
@@ -84,7 +84,7 @@ public final class NameTagFabric {
                     .then(CommandManager.argument("player", EntityArgumentType.player())
                             .then(CommandManager.argument("tag", StringArgumentType.word())
                                     .suggests((context, builder) ->
-                                            suggestTags(context, builder, service, "set"))
+                                            suggestTags(context, builder, service, configuration, "set"))
                                     .executes(context -> executeTarget(
                                             context, service, messages, configuration, true
                                     )))));
@@ -104,7 +104,7 @@ public final class NameTagFabric {
             root.then(CommandManager.literal("glitch")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
                             .suggests((context, builder) ->
-                                    suggestTags(context, builder, service, "glitch"))
+                                    suggestTags(context, builder, service, configuration, "glitch"))
                             .then(CommandManager.argument("mode", StringArgumentType.word())
                                     .suggests((context, builder) ->
                                             CommandSource.suggestMatching(
@@ -186,6 +186,7 @@ public final class NameTagFabric {
             CommandContext<ServerCommandSource> context,
             com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
             TagService service,
+            ConfigurationService configuration,
             String subcommand
     ) {
         String prefix = builder.getRemaining();
@@ -215,7 +216,8 @@ public final class NameTagFabric {
         return new DefaultNameTagCommandHandler(
                 service,
                 new FabricPlayerResolver(source.getServer()),
-                messages
+                messages,
+                configuration
         );
     }
 }
