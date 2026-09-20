@@ -6,13 +6,14 @@ import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.core.model.PlayerAssignment;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagId;
+import com.ultraop.nametag.core.validation.TagValidator;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 public final class DefaultTagService implements TagService {
     private final TagRepository tags;
@@ -25,6 +26,7 @@ public final class DefaultTagService implements TagService {
 
     @Override
     public Tag create(Tag tag) {
+        TagValidator.validate(tag);
         if (tags.find(tag.id()).isPresent()) {
             throw new IllegalArgumentException("Tag already exists: " + tag.id().value());
         }
@@ -34,6 +36,7 @@ public final class DefaultTagService implements TagService {
 
     @Override
     public Tag update(Tag tag) {
+        TagValidator.validate(tag);
         if (tags.find(tag.id()).isEmpty()) {
             throw new IllegalArgumentException("Tag does not exist: " + tag.id().value());
         }
@@ -60,7 +63,8 @@ public final class DefaultTagService implements TagService {
 
     @Override
     public PlayerAssignment assign(UUID playerUuid, TagId tagId) {
-        Tag tag = tags.find(tagId).orElseThrow(() -> new IllegalArgumentException("Tag not found: " + tagId.value()));
+        Tag tag = tags.find(tagId).orElseThrow(() ->
+                new IllegalArgumentException("Tag not found: " + tagId.value()));
         PlayerAssignment current = assignments.find(playerUuid)
                 .orElse(new PlayerAssignment(playerUuid, List.of(), null));
 
@@ -68,6 +72,7 @@ public final class DefaultTagService implements TagService {
         if (!ids.contains(tag.id())) ids.add(tag.id());
 
         PlayerAssignment updated = new PlayerAssignment(playerUuid, ids, tag.id());
+        TagValidator.validate(updated);
         assignments.save(updated);
         return updated;
     }
@@ -82,6 +87,7 @@ public final class DefaultTagService implements TagService {
 
         TagId active = Objects.equals(current.activeTagId(), tagId) ? null : current.activeTagId();
         PlayerAssignment updated = new PlayerAssignment(playerUuid, ids, active);
+        TagValidator.validate(updated);
         assignments.save(updated);
         return updated;
     }
