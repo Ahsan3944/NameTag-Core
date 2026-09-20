@@ -106,4 +106,79 @@ class DefaultConfigurationServiceTest {
                 () -> new DefaultConfigurationService(file)
         );
     }
+    
+    @Test
+    void reloadPublishesOnlyAfterValidConfiguration() throws Exception {
+        Path file = tempDir.resolve("configuration.yml");
+        Files.writeString(file, """
+                schemaVersion: 1
+                chatFormat: "OLD"
+                defaultTagPriority: 1
+                defaultGlitchIntensity: 40
+                defaultGlitchSpeedMs: 90
+                """);
+
+        DefaultConfigurationService service = new DefaultConfigurationService(file);
+        assertEquals("OLD", service.current().chatFormat());
+
+        Files.writeString(file, """
+                schemaVersion: 1
+                chatFormat: "NEW"
+                defaultTagPriority: 25
+                defaultGlitchIntensity: 70
+                defaultGlitchSpeedMs: 120
+                """);
+
+        var result = service.reload();
+
+        assertTrue(result.success());
+        assertEquals("NEW", service.current().chatFormat());
+        assertEquals(25, service.current().defaultTagPriority());
+        assertEquals(70, service.current().defaultGlitchIntensity());
+        assertEquals(120, service.current().defaultGlitchSpeedMs());
+    }
+
+    @Test
+    void failedReloadKeepsPreviousSnapshot() throws Exception {
+        Path file = tempDir.resolve("configuration.yml");
+        Files.writeString(file, """
+                schemaVersion: 1
+                chatFormat: "STABLE"
+                defaultGlitchIntensity: 45
+                """);
+
+        DefaultConfigurationService service = new DefaultConfigurationService(file);
+        NameTagConfiguration before = service.current();
+
+        Files.writeString(file, """
+                schemaVersion: 1
+                chatFormat: "BROKEN"
+                defaultGlitchIntensity: 101
+                """);
+
+        var result = service.reload();
+
+        assertFalse(result.success());
+        assertEquals(before, service.current());
+        assertEquals("STABLE", service.current().chatFormat());
+    }
+
+    @Test
+    void reloadFailsWithoutStorageAndKeepsPreviousSnapshot() throws Exception {
+        Path file = tempDir.resolve("configuration.yml");
+        Files.writeString(file, """
+                schemaVersion: 1
+                chatFormat: "STABLE"
+                """);
+
+        DefaultConfigurationService service = new DefaultConfigurationService(file);
+        Files.delete(file);
+
+        var result = service.reload();
+
+        assertFalse(result.success());
+        assertEquals("STABLE", service.current().chatFormat());
+    }
+
+
 }
