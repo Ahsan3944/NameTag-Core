@@ -57,12 +57,6 @@ public final class TagColorParser {
             return fromHex(hex6.group(1));
         }
 
-        // A value that explicitly starts as hex must be rejected when malformed;
-        // it must not silently become a preset color.
-        if (input.startsWith("#")) {
-            throw new IllegalArgumentException("Invalid hex color: " + input);
-        }
-
         Matcher hex3 = HEX_3.matcher(input);
         if (hex3.matches()) {
             String value3 = hex3.group(1);
@@ -71,6 +65,12 @@ public final class TagColorParser {
                     Integer.parseInt("" + value3.charAt(1) + value3.charAt(1), 16),
                     Integer.parseInt("" + value3.charAt(2) + value3.charAt(2), 16)
             );
+        }
+
+        // A value that explicitly starts as hex must be rejected when malformed;
+        // it must not silently become a preset color.
+        if (input.startsWith("#")) {
+            throw new IllegalArgumentException("Invalid hex color: " + input);
         }
 
         if (input.regionMatches(true, 0, "rgb", 0, 3)) {
