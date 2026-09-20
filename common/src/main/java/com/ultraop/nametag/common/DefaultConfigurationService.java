@@ -31,7 +31,7 @@ public final class DefaultConfigurationService implements ConfigurationService, 
         try {
             NameTagConfiguration replacement = loadFromDisk();
             current = replacement;
-            return ConfigurationReloadResult.success();
+            return ConfigurationReloadResult.successResult();
         } catch (RuntimeException exception) {
             return ConfigurationReloadResult.failure(
                     safeMessage(exception)
