@@ -86,7 +86,7 @@ Core must never import Minecraft, Fabric, Bukkit or Paper classes.
 
 Chat should reuse the same active tag and effect definition.
 
-If a platform chat API cannot safely reproduce animated per-glyph glitch frames, it should use a graceful static representation rather than corrupting signed chat or registering duplicate listeners.
+If a platform chat API cannot safely reproduce animated per-glyph glitch frames, it should use a graceful static representation rather than corrupting signed chat or registering duplicate listeners. The Paper 1.21.11 adapter currently uses the stable tag display name in chat.
 
 ## Relationship to GlitchIdentity
 
