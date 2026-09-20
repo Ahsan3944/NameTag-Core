@@ -94,6 +94,39 @@ final class DefaultNameTagCommandHandlerTest {
     }
 
     @Test
+    void commandHandlerUsesConfiguredTagDefaults() {
+        InMemoryTagRepository tags = new InMemoryTagRepository();
+        DefaultTagService service = new DefaultTagService(
+                tags,
+                new InMemoryPlayerAssignmentRepository()
+        );
+        NameTagConfiguration configuration = new NameTagConfiguration(
+                true,
+                false,
+                "<{tag}> {player}: {message}",
+                25,
+                false,
+                false,
+                70,
+                120
+        );
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service,
+                new EmptyPlayerResolver(),
+                new DefaultMessageService(),
+                () -> configuration
+        );
+        RecordingSource source = new RecordingSource();
+
+        handler.execute(new CommandContext(source, new String[]{"create", "vip", "VIP"}));
+
+        Tag created = service.find(new TagId("vip")).orElseThrow();
+        assertEquals(25, created.priority());
+        assertFalse(created.enabled());
+        assertFalse(created.chatEnabled());
+    }
+
+    @Test
     void deniesCommandWithoutPermission() {
         RecordingSource source = new RecordingSource();
         source.allowed = false;
