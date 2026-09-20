@@ -87,6 +87,11 @@ public final class DefaultTagService implements TagService {
     }
 
     @Override
+    public void clear(UUID playerUuid) {
+        assignments.delete(playerUuid);
+    }
+
+    @Override
     public Optional<Tag> activeTag(UUID playerUuid) {
         return assignments.find(playerUuid)
                 .flatMap(a -> Optional.ofNullable(a.activeTagId()))
