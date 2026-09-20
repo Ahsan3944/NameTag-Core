@@ -113,7 +113,7 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
                 : new PlaceholderMatch(start, start + placeholder.length(), placeholder);
     }
 
-    private static Component styledTag(Tag tag) {
+    static Component styledTag(Tag tag) {
         Component component = Component.text(tag.displayName());
         TagStyle style = tag.style();
         component = component
