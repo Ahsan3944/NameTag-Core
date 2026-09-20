@@ -82,7 +82,7 @@ public final class Fabric2111Adapter {
                                                 true
                                         );
                                         return 1;
-                                    })));
+                                    }))));
 
             root.then(CommandManager.literal("delete")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
@@ -151,7 +151,7 @@ public final class Fabric2111Adapter {
                                                 true
                                         );
                                         return 1;
-                                    })));
+                                    }))));
 
             dispatcher.register(root);
         });
