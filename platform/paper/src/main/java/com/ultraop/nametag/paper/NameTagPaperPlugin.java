@@ -2,8 +2,8 @@ package com.ultraop.nametag.paper;
 
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.common.DefaultTagService;
-import com.ultraop.nametag.common.InMemoryPlayerAssignmentRepository;
-import com.ultraop.nametag.common.InMemoryTagRepository;
+import com.ultraop.nametag.common.YamlPlayerAssignmentRepository;
+import com.ultraop.nametag.common.YamlTagRepository;
 import com.ultraop.nametag.core.model.GlitchMode;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
@@ -30,9 +30,10 @@ public final class NameTagPaperPlugin extends JavaPlugin implements CommandExecu
 
     @Override
     public void onEnable() {
+        java.nio.file.Path dataDirectory = getDataFolder().toPath();
         tagService = new DefaultTagService(
-                new InMemoryTagRepository(),
-                new InMemoryPlayerAssignmentRepository()
+                new YamlTagRepository(dataDirectory.resolve("tags.yml")),
+                new YamlPlayerAssignmentRepository(dataDirectory.resolve("assignments.yml"))
         );
         adapter = new Paper2111Adapter(this, tagService);
         adapter.start();
