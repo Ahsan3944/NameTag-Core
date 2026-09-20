@@ -80,6 +80,20 @@ class DefaultConfigurationServiceTest {
     }
 
     @Test
+    void rejectsDecimalWhereIntegerIsRequired() throws Exception {
+        Path file = tempDir.resolve("configuration.yml");
+        Files.writeString(file, """
+                schemaVersion: 1
+                defaultTagPriority: 1.5
+                """);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> new DefaultConfigurationService(file)
+        );
+    }
+
+    @Test
     void rejectsOutOfRangeGlitchConfiguration() throws Exception {
         Path file = tempDir.resolve("configuration.yml");
         Files.writeString(file, """
