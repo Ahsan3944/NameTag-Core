@@ -1,12 +1,14 @@
 package com.ultraop.nametag.common;
 
+import com.ultraop.nametag.api.ConfigurationReloadResult;
+import com.ultraop.nametag.api.ConfigurationReloadService;
 import com.ultraop.nametag.api.ConfigurationService;
 import com.ultraop.nametag.core.model.NameTagConfiguration;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public final class DefaultConfigurationService implements ConfigurationService {
+public final class DefaultConfigurationService implements ConfigurationService, ConfigurationReloadService {
     private final YamlFileStore store;
     private volatile NameTagConfiguration current;
 
@@ -20,6 +22,23 @@ public final class DefaultConfigurationService implements ConfigurationService {
         return current;
     }
 
+    /**
+     * Loads and validates the replacement snapshot completely before publishing it.
+     * The volatile reference is changed only after every validation step succeeds.
+     */
+    @Override
+    public synchronized ConfigurationReloadResult reload() {
+        try {
+            NameTagConfiguration replacement = loadFromDisk();
+            current = replacement;
+            return ConfigurationReloadResult.success();
+        } catch (RuntimeException exception) {
+            return ConfigurationReloadResult.failure(
+                    "Configuration reload failed: " + safeMessage(exception)
+            );
+        }
+    }
+
     private NameTagConfiguration loadOrCreate() {
         Map<String, Object> document = store.load();
 
@@ -30,6 +49,20 @@ public final class DefaultConfigurationService implements ConfigurationService {
         }
 
         return fromDocument(document);
+    }
+
+    private NameTagConfiguration loadFromDisk() {
+        if (!store.hasAnyFile()) {
+            throw new IllegalStateException("Configuration file is missing");
+        }
+        return fromDocument(store.load());
+    }
+
+    private static String safeMessage(RuntimeException exception) {
+        String message = exception.getMessage();
+        return message == null || message.isBlank()
+                ? exception.getClass().getSimpleName()
+                : message;
     }
 
     private static NameTagConfiguration fromDocument(Map<String, Object> document) {
