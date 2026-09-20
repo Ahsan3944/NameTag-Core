@@ -52,6 +52,9 @@
 ## Phase 5 — Common Services
 - [x] Command contracts.
 - [x] Message/localization service.
+- [x] Paper command source/player adapters.
+- [x] Fabric command source/player adapters.
+- [x] Common command handler wired to Paper/Fabric.
 - [ ] Configuration service.
 - [ ] Reload service.
 - [ ] Caching.
