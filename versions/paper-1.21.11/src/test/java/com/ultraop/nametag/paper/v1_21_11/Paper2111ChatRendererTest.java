@@ -35,7 +35,6 @@ class Paper2111ChatRendererTest {
         );
 
         assertEquals("[OWNER] UltraOP: Hello!", result.textContent());
-        assertNotNull(result);
     }
 
     @Test
