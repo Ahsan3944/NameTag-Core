@@ -442,4 +442,4 @@ The common command path is platform-neutral. Platform adapters provide native im
 
 The initial common implementation is `DefaultNameTagCommandHandler` plus `DefaultMessageService`. These own NameTag command business rules and default English messages so Fabric and Paper adapters do not independently reimplement command behavior.
 
-Reload/configuration and platform command registration remain separate milestones and must not be coupled to this contract.
+Platform command registration is now an adapter concern: Paper and Fabric convert their native command sources/arguments into this common handler, while preserving their native command parsing where appropriate. Reload/configuration remains a separate milestone and must not be coupled to this contract.
