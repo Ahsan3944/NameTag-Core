@@ -49,8 +49,9 @@ public final class GlitchEffectEngine {
 
                 // Avoid a no-op corruption frame.
                 if (output == original) {
-                    output = GLITCH_POOL[(random.nextInt(GLITCH_POOL.length - 1)
-                            + indexOf(original)) % GLITCH_POOL.length];
+                    int nextIndex = (indexOf(original) + 1 + random.nextInt(GLITCH_POOL.length - 1))
+                            % GLITCH_POOL.length;
+                    output = GLITCH_POOL[nextIndex];
                 }
             }
 
