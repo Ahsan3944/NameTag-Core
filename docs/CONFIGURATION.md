@@ -47,6 +47,10 @@ The configuration service validates values before exposing the immutable runtime
 
 Invalid typed values are rejected rather than silently coerced.
 
+### Chat placeholders
+
+`chatFormat` supports `{tag}`, `{player}` and `{message}`. Unknown placeholders remain literal text. The Paper adapter applies the active tag's supported color and text style to the `{tag}` component. See [CHAT.md](CHAT.md) for platform rendering details.
+
 ## Persistence and recovery
 
 The configuration uses the same atomic YAML file-store foundation as tag/assignment persistence:
