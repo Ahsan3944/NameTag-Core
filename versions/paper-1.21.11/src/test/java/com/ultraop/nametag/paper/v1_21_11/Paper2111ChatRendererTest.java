@@ -6,6 +6,7 @@ import com.ultraop.nametag.core.model.TagEffect;
 import com.ultraop.nametag.core.model.TagId;
 import com.ultraop.nametag.core.model.TagStyle;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +36,12 @@ class Paper2111ChatRendererTest {
                 Component.text("Hello!")
         );
 
-        assertEquals("[OWNER] UltraOP: Hello!", result.textContent());
+        assertEquals("[", textOf(result.children().get(0)));
+        assertEquals("OWNER", textOf(result.children().get(1)));
+        assertEquals("] ", textOf(result.children().get(2)));
+        assertEquals("UltraOP", textOf(result.children().get(3)));
+        assertEquals(": ", textOf(result.children().get(4)));
+        assertEquals("Hello!", textOf(result.children().get(5)));
 
         Component styledTag = Paper2111ChatRenderer.styledTag(tag);
         assertEquals(0xFFAA00, styledTag.color().value());
@@ -63,6 +69,13 @@ class Paper2111ChatRendererTest {
                 Component.text("Hi")
         );
 
-        assertEquals("{unknown} MEMBER: Hi", result.textContent());
+        assertEquals("{unknown} ", textOf(result.children().get(0)));
+        assertEquals("MEMBER", textOf(result.children().get(1)));
+        assertEquals(": ", textOf(result.children().get(2)));
+        assertEquals("Hi", textOf(result.children().get(3)));
+    }
+
+    private static String textOf(Component component) {
+        return ((TextComponent) component).content();
     }
 }
