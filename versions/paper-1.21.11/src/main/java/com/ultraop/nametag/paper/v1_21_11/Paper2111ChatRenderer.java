@@ -6,7 +6,6 @@ import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagStyle;
 import io.papermc.paper.chat.ChatRenderer;
-import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -14,7 +13,6 @@ import org.bukkit.entity.Player;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiFunction;
 
 /**
  * Paper 1.21.11 chat renderer.
