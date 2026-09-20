@@ -34,7 +34,7 @@ public final class DefaultConfigurationService implements ConfigurationService, 
             return ConfigurationReloadResult.success();
         } catch (RuntimeException exception) {
             return ConfigurationReloadResult.failure(
-                    "Configuration reload failed: " + safeMessage(exception)
+                    safeMessage(exception)
             );
         }
     }
