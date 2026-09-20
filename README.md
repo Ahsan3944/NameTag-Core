@@ -49,7 +49,10 @@ This separation prevents Minecraft API changes from spreading through the entire
 
 ### Effects
 - Effect API from the beginning.
-- Glitch effect in the initial feature design.
+- Glitch NameTag effect in the initial feature design.
+- Glitch modes: **white** and **colorful**.
+- Source tag length is preserved while characters are selectively corrupted.
+- Configurable glitch intensity and animation speed.
 - Future effects can be added without changing the tag model.
 - Configurable effect speed/intensity where supported.
 
@@ -83,6 +86,7 @@ Planned commands:
 - `/nametag clear <player>`
 - `/nametag delete <tag>`
 - `/nametag reload`
+- `/nametag glitch <tag> <white|colorful>`
 
 Exact syntax may be finalized during implementation, but command behavior must remain consistent between Fabric and Paper.
 
@@ -118,6 +122,22 @@ Planned API capabilities:
 - Register storage providers where supported.
 - Listen to tag/player lifecycle events.
 
+
+## Glitch NameTag
+
+The built-in Glitch effect is based on the earlier GlitchIdentity rendering concept, adapted for persistent NameTags. It does not replace the complete tag with a random short string; instead, it preserves the original tag length and generates rapidly changing corrupted-character frames.
+
+Two modes are supported:
+- **white** — glitch frames use white glyphs.
+- **colorful** — each glyph can receive a rapidly changing RGB color.
+
+Example:
+```text
+/nametag glitch owner white
+/nametag glitch creator colorful
+```
+
+The command changes only the effect and keeps the tag's other properties intact. See [docs/GLITCH.md](docs/GLITCH.md) for the effect contract and rendering rules.
 
 ## Chat Integration
 
@@ -288,7 +308,7 @@ The project will be built in controlled milestones:
 7. Paper 1.21.11 adapter.
 8. Fabric 1.21.11 adapter.
 9. Rendering/nameplate integration.
-10. Glitch effect.
+10. Glitch effect, including white/colorful modes and frame generation.
 11. Tests and regression checks.
 12. GUI/editor.
 13. Release packaging.
