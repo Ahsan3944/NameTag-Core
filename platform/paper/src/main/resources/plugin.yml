@@ -4,3 +4,14 @@ main: com.ultraop.nametag.paper.NameTagPaperPlugin
 api-version: '1.21'
 author: UltraOP
 description: Cross-platform NameTag system for Paper servers.
+
+commands:
+  nametag:
+    description: NameTag-Core administration commands
+    usage: /nametag glitch <tag> <white|colorful>
+    permission: nametag.edit
+
+permissions:
+  nametag.edit:
+    description: Allows editing NameTag effects
+    default: op
