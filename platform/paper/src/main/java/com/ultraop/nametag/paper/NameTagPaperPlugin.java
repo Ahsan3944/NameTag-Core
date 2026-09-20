@@ -40,7 +40,7 @@ public final class NameTagPaperPlugin extends JavaPlugin implements CommandExecu
                 configurationService,
                 configurationService
         );
-        adapter = new Paper2111Adapter(this, tagService);
+        adapter = new Paper2111Adapter(this, tagService, configurationService);
         adapter.start();
 
         if (getCommand("nametag") != null) {
