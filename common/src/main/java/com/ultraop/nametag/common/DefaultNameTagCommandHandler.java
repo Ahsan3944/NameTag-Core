@@ -2,6 +2,8 @@ package com.ultraop.nametag.common;
 
 import com.ultraop.nametag.api.CommandContext;
 import com.ultraop.nametag.api.CommandSource;
+import com.ultraop.nametag.api.ConfigurationReloadResult;
+import com.ultraop.nametag.api.ConfigurationReloadService;
 import com.ultraop.nametag.api.ConfigurationService;
 import com.ultraop.nametag.api.MessageService;
 import com.ultraop.nametag.api.NameTagCommandHandler;
@@ -27,12 +29,13 @@ import java.util.Objects;
 
 public final class DefaultNameTagCommandHandler implements NameTagCommandHandler {
     private static final List<String> SUBCOMMANDS =
-            List.of("create", "list", "give", "set", "remove", "clear", "delete", "glitch");
+            List.of("create", "list", "give", "set", "remove", "clear", "delete", "glitch", "reload");
 
     private final TagService tagService;
     private final PlayerResolver playerResolver;
     private final MessageService messages;
     private final ConfigurationService configuration;
+    private final ConfigurationReloadService reloadService;
 
     public DefaultNameTagCommandHandler(
             TagService tagService,
@@ -48,10 +51,21 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             MessageService messages,
             ConfigurationService configuration
     ) {
+        this(tagService, playerResolver, messages, configuration, null);
+    }
+
+    public DefaultNameTagCommandHandler(
+            TagService tagService,
+            PlayerResolver playerResolver,
+            MessageService messages,
+            ConfigurationService configuration,
+            ConfigurationReloadService reloadService
+    ) {
         this.tagService = Objects.requireNonNull(tagService, "tagService");
         this.playerResolver = Objects.requireNonNull(playerResolver, "playerResolver");
         this.messages = Objects.requireNonNull(messages, "messages");
         this.configuration = Objects.requireNonNull(configuration, "configuration");
+        this.reloadService = reloadService;
     }
 
     @Override
@@ -66,6 +80,13 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         if ("list".equals(subcommand)) {
             if (allowed(context.source(), "nametag.use")) {
                 list(context.source());
+            }
+            return;
+        }
+
+        if ("reload".equals(subcommand)) {
+            if (allowed(context.source(), "nametag.reload")) {
+                reload(context.source());
             }
             return;
         }
@@ -231,6 +252,18 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         ));
     }
 
+    private void reload(CommandSource source) {
+        if (reloadService == null) {
+            source.sendMessage(messages.message("error.reload.unavailable"));
+            return;
+        }
+
+        ConfigurationReloadResult result = reloadService.reload();
+        source.sendMessage(result.success()
+                ? messages.message("message.reload_success")
+                : messages.format("error.reload.failed", Map.of("reason", result.message())));
+    }
+
     private void list(CommandSource source) {
         tagService.list().stream()
                 .sorted(Comparator.comparing(tag -> tag.id().value()))
@@ -259,6 +292,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             case "give", "set" -> "nametag.give";
             case "remove", "clear" -> "nametag.remove";
             case "glitch" -> "nametag.edit";
+            case "reload" -> "nametag.reload";
             default -> null;
         };
     }
