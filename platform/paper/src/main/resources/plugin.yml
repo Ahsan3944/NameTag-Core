@@ -8,10 +8,33 @@ description: Cross-platform NameTag system for Paper servers.
 commands:
   nametag:
     description: NameTag-Core administration commands
-    usage: /nametag create <tag> <displayName>
-    permission: nametag.edit
+    usage: /nametag <subcommand>
 
 permissions:
+  nametag.use:
+    description: Allows viewing NameTags
+    default: op
+  nametag.create:
+    description: Allows creating NameTags
+    default: op
   nametag.edit:
-    description: Allows editing NameTag settings
+    description: Allows editing NameTag effects
+    default: op
+  nametag.delete:
+    description: Allows deleting NameTags
+    default: op
+  nametag.give:
+    description: Allows assigning NameTags
+    default: op
+  nametag.remove:
+    description: Allows removing NameTags from players
+    default: op
+  nametag.reload:
+    description: Allows reloading NameTag configuration
+    default: op
+  nametag.chat:
+    description: Allows using NameTags in chat
+    default: op
+  nametag.admin:
+    description: Grants all NameTag administration permissions
     default: op
