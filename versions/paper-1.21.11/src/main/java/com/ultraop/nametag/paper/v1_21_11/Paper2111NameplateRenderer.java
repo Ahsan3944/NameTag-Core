@@ -71,36 +71,51 @@ public final class Paper2111NameplateRenderer {
         playerTeams.clear();
     }
 
+    public void refreshPlayer(Player player) {
+        long now = System.nanoTime();
+        renderPlayer(player, now);
+    }
+
+    public void clearPlayer(Player player) {
+        removePlayerFromTeam(player, playerTeams.get(player.getUniqueId()));
+    }
+
     private void tick() {
         long now = System.nanoTime();
         Set<String> activeTeamNames = new HashSet<>();
 
         for (Player player : Bukkit.getOnlinePlayers()) {
-            String currentTeamName = playerTeams.get(player.getUniqueId());
-            Tag tag = tagService.activeTag(player.getUniqueId()).filter(Tag::enabled).orElse(null);
+            renderPlayer(player, now);
+        }
 
-            if (tag == null) {
-                removePlayerFromTeam(player, currentTeamName);
-                continue;
-            }
-
-            String teamName = teamName(tag);
+        for (String teamName : playerTeams.values()) {
             activeTeamNames.add(teamName);
-            Team team = teams.computeIfAbsent(teamName, ignored -> createTeam(teamName));
-            if (!team.hasEntry(player.getName())) {
-                if (currentTeamName != null && !currentTeamName.equals(teamName)) {
-                    removePlayerFromTeam(player, currentTeamName);
-                }
-                team.addEntry(player.getName());
-            }
-            playerTeams.put(player.getUniqueId(), teamName);
-
-            updateTeamVisual(team, tag, now);
         }
 
         playerTeams.entrySet().removeIf(entry -> Bukkit.getPlayer(entry.getKey()) == null);
 
         animations.entrySet().removeIf(entry -> !activeTeamNames.contains(entry.getKey()));
+    }
+
+    private void renderPlayer(Player player, long now) {
+        String currentTeamName = playerTeams.get(player.getUniqueId());
+        Tag tag = tagService.activeTag(player.getUniqueId()).filter(Tag::enabled).orElse(null);
+
+        if (tag == null) {
+            removePlayerFromTeam(player, currentTeamName);
+            return;
+        }
+
+        String teamName = teamName(tag);
+        Team team = teams.computeIfAbsent(teamName, ignored -> createTeam(teamName));
+        if (!team.hasEntry(player.getName())) {
+            if (currentTeamName != null && !currentTeamName.equals(teamName)) {
+                removePlayerFromTeam(player, currentTeamName);
+            }
+            team.addEntry(player.getName());
+        }
+        playerTeams.put(player.getUniqueId(), teamName);
+        updateTeamVisual(team, tag, now);
     }
 
     private void removePlayerFromTeam(Player player, String teamName) {
