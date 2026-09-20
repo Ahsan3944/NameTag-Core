@@ -37,11 +37,14 @@ public final class DefaultMessageService implements MessageService {
     private static Map<String, String> defaultMessages() {
         Map<String, String> defaults = new LinkedHashMap<>();
         defaults.put("error.permission", "You do not have permission to edit NameTags.");
+        defaults.put("error.reload.unavailable", "Configuration reload is not available.");
+        defaults.put("error.reload.failed", "Configuration reload failed: {reason}");
+        defaults.put("message.reload_success", "Configuration reloaded successfully.");
         defaults.put("error.usage.create", "Usage: /nametag create <tag> <displayName>");
         defaults.put("error.usage.delete", "Usage: /nametag delete <tag>");
         defaults.put("error.usage.assign", "Usage: /nametag give <player> <tag>");
         defaults.put("error.usage.remove", "Usage: /nametag remove <player>");
-        defaults.put("error.usage.glitch", "Usage: /nametag glitch <tag> <white|colorful>");
+        defaults.put("error.usage.glitch", "Usage: /nametag glitch <tag> <white|colorful> | reload");
         defaults.put("error.player.offline", "Player must be online: {player}");
         defaults.put("error.tag.not_found", "Tag not found: {tag}");
         defaults.put("message.created", "Created NameTag: {tag}");
