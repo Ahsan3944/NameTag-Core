@@ -55,7 +55,7 @@
 - [x] Paper command source/player adapters.
 - [x] Fabric command source/player adapters.
 - [x] Common command handler wired to Paper/Fabric.
-- [ ] Configuration service.
+- [x] Configuration service.
 - [ ] Reload service.
 - [ ] Caching.
 
