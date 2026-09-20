@@ -4,7 +4,7 @@ A cross-platform, version-aware Minecraft NameTag framework designed to provide 
 
 ## Project Status
 
-**Phase:** Common Services — command/message/configuration/reload foundations implemented; caching remains in progress  
+**Phase:** Common Services — command/message/configuration/reload/caching foundations implemented  
 **Target baseline:** Minecraft Java Edition **1.21.11**  
 **Platforms:** Fabric Server + Paper Server  
 **Primary goal:** Build the core once, isolate platform/version-specific code, and make future Minecraft version upgrades predictable and maintainable.
@@ -117,6 +117,10 @@ The message layer is also platform-neutral and currently provides default Englis
 ## Configuration
 
 The common configuration service provides an immutable typed runtime snapshot backed by `configuration.yml`. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the schema, defaults, validation rules and platform file locations.
+
+## Caching
+
+Active NameTag resolution uses a bounded LRU cache with mutation-aware invalidation. See [docs/CACHING.md](docs/CACHING.md) for the cache scope and safety rules.
 
 ## API
 
