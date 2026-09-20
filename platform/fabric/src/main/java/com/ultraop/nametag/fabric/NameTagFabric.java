@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
+import com.ultraop.nametag.api.ConfigurationService;
 import com.ultraop.nametag.api.NameTagCommandHandler;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.common.DefaultMessageService;
@@ -30,16 +31,19 @@ public final class NameTagFabric {
         java.nio.file.Path dataDirectory = FabricLoader.getInstance()
                 .getConfigDir()
                 .resolve("nametag-core");
+        ConfigurationService configuration = new com.ultraop.nametag.common.DefaultConfigurationService(
+                dataDirectory.resolve("configuration.yml")
+        );
         TagService service = new DefaultTagService(
                 new YamlTagRepository(dataDirectory.resolve("tags.yml")),
                 new YamlPlayerAssignmentRepository(dataDirectory.resolve("assignments.yml"))
         );
 
         new Fabric2111Adapter(service);
-        registerCommands(service);
+        registerCommands(service, configuration);
     }
 
-    private static void registerCommands(TagService service) {
+    private static void registerCommands(TagService service, ConfigurationService configuration) {
         DefaultMessageService messages = new DefaultMessageService();
 
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
@@ -123,7 +127,7 @@ public final class NameTagFabric {
             DefaultMessageService messages,
             String[] args
     ) {
-        handler(context.getSource(), service, messages)
+        handler(context.getSource(), service, messages, configuration)
                 .execute(new com.ultraop.nametag.api.CommandContext(
                         new FabricCommandSource(context.getSource()),
                         args
@@ -183,7 +187,8 @@ public final class NameTagFabric {
         NameTagCommandHandler handler = handler(
                 context.getSource(),
                 service,
-                new DefaultMessageService()
+                new DefaultMessageService(),
+                configuration
         );
         return CommandSource.suggestMatching(
                 handler.suggest(new com.ultraop.nametag.api.CommandContext(
@@ -199,7 +204,8 @@ public final class NameTagFabric {
     private static NameTagCommandHandler handler(
             ServerCommandSource source,
             TagService service,
-            DefaultMessageService messages
+            DefaultMessageService messages,
+            ConfigurationService configuration
     ) {
         return new DefaultNameTagCommandHandler(
                 service,
