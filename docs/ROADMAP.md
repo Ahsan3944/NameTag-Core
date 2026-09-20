@@ -16,7 +16,7 @@
 - [x] Multi-module configuration.
 - [x] Java/toolchain configuration.
 - [ ] Checkstyle/formatting policy if required.
-- [ ] Test framework.
+- [x] Test framework.
 - [x] Base package structure.
 
 ## Phase 2 — Core Domain
@@ -80,13 +80,18 @@
 - [ ] Integration tests.
 
 ## Phase 8 — Glitch
-- [ ] Glitch configuration.
-- [ ] Glitch processor.
-- [ ] Scheduling.
-- [ ] Intensity.
-- [ ] Speed.
-- [ ] Performance safeguards.
+- [x] Glitch configuration model.
+- [x] White mode.
+- [x] Colorful RGB mode.
+- [x] Glitch processor/frame engine.
+- [ ] `/nametag glitch <tag> <white|colorful>` platform command wiring.
+- [ ] Nameplate frame scheduling.
+- [x] Intensity validation.
+- [x] Speed validation.
+- [x] Core unit tests.
 - [ ] Platform-specific rendering tests.
+- [ ] Chat fallback integration.
+- [ ] Performance safeguards.
 
 ## Phase 9 — GUI
 - [ ] Tag browser.
