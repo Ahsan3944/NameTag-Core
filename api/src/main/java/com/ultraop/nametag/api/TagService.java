@@ -18,7 +18,17 @@ public interface TagService {
     Optional<Tag> find(TagId id);
     Collection<Tag> list();
 
+    /**
+     * Assigns a tag without replacing an existing explicit active tag.
+     * If the player has no active tag, the newly assigned tag becomes active.
+     */
     PlayerAssignment assign(UUID playerUuid, TagId tagId);
+
+    /**
+     * Makes an already-assigned tag the player's explicit active tag.
+     */
+    PlayerAssignment setActive(UUID playerUuid, TagId tagId);
+
     PlayerAssignment remove(UUID playerUuid, TagId tagId);
     void clear(UUID playerUuid);
     Optional<Tag> activeTag(UUID playerUuid);

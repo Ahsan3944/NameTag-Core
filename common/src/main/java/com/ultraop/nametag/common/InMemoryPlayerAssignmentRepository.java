@@ -3,6 +3,7 @@ package com.ultraop.nametag.common;
 import com.ultraop.nametag.api.PlayerAssignmentRepository;
 import com.ultraop.nametag.core.model.PlayerAssignment;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -12,6 +13,7 @@ public final class InMemoryPlayerAssignmentRepository implements PlayerAssignmen
     private final Map<UUID, PlayerAssignment> values = new ConcurrentHashMap<>();
 
     @Override public Optional<PlayerAssignment> find(UUID playerUuid) { return Optional.ofNullable(values.get(playerUuid)); }
+    @Override public Collection<PlayerAssignment> findAll() { return java.util.List.copyOf(values.values()); }
     @Override public void save(PlayerAssignment assignment) { values.put(assignment.playerUuid(), assignment); }
     @Override public void delete(UUID playerUuid) { values.remove(playerUuid); }
 }
