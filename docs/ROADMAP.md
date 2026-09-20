@@ -42,12 +42,12 @@
 - [x] Permission contracts.
 
 ## Phase 4 — Persistence
-- [ ] Tag repository.
-- [ ] Player assignment repository.
-- [ ] File provider.
-- [ ] Schema version.
-- [ ] Migration foundation.
-- [ ] Atomic save/recovery strategy.
+- [x] Tag repository.
+- [x] Player assignment repository.
+- [x] File provider.
+- [x] Schema version.
+- [x] Migration foundation.
+- [x] Atomic save/recovery strategy.
 
 ## Phase 5 — Common Services
 - [ ] Command contracts.
