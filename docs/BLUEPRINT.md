@@ -43,8 +43,10 @@ The same active-tag resolution must be used by nameplate and chat rendering.
 - Effect engine from day one.
 - None.
 - Glitch as the first built-in effect.
+- Glitch has two required modes: `white` and `colorful`.
+- Glitch preserves the source tag length and selectively corrupts individual characters.
+- Glitch supports configurable intensity and animation speed.
 - Future Rainbow, Pulse, Wave, Flicker, Color Cycle, animated Gradient, etc.
-- Speed/intensity configuration.
 - Effects must be scheduled efficiently; never blindly run expensive work every tick.
 
 ### Chat
@@ -93,6 +95,7 @@ Initial contract:
 /nametag clear <player>
 /nametag delete <tag>
 /nametag reload
+/nametag glitch <tag> <white|colorful>
 ```
 
 Tab completion is required for subcommands, players, tags and valid options.
@@ -190,15 +193,39 @@ processor/renderer contract
 Effect lifecycle may be static, time-based, player-dependent or scheduled. Runtime scheduling belongs outside core.
 
 ### Glitch
-Supported modes may include:
-- Character corruption.
-- Flicker.
-- Color glitch.
-- Obfuscation bursts.
-- Configurable intensity.
-- Configurable speed.
+The built-in Glitch NameTag is adapted from the earlier GlitchIdentity concept but uses a stable NameTag contract.
+
+Required modes:
+- `white` — all glitch-frame glyphs render white.
+- `colorful` — each glyph receives a rapidly changing RGB color.
+
+Frame rules:
+- Preserve the source tag length.
+- Preserve whitespace.
+- Selectively replace non-whitespace characters from a controlled glitch-character pool.
+- Allow the original character to survive in a frame.
+- Generate fast-changing frames from a stable seed and frame index.
+- Do not replace the complete NameTag with a random 5–7 character identity; that behavior belongs to the earlier death-message GlitchIdentity design and is unsuitable for a persistent nameplate.
+
+Configuration:
+- `mode`: `white` or `colorful`.
+- `intensity`: 0–100, default 45.
+- `speed-ms`: 30–2000, default 80.
+
+The core exposes a platform-independent `GlitchFrame` containing final text and per-glyph RGB values. Scheduling and native rendering remain platform/version responsibilities.
+
+Canonical command:
+`/nametag glitch <tag> <white|colorful>`
+
+The command changes only the tag effect; display name, base color, style, priority, enabled state, chat visibility and metadata remain unchanged.
 
 The adapter must degrade gracefully if a target rendering API cannot support a specific effect.
+
+## 9.1 Glitch Nameplate Animation
+
+When the active tag has `effect.id = glitch`, the platform adapter schedules frame updates using `speed-ms`. Only players currently using an animated glitch tag are scheduled. The renderer consumes `GlitchFrame` output from core and converts glyph RGB values to the platform's native text component format.
+
+A platform adapter must not assume that a scoreboard/team implementation is always safe to own globally; it must account for existing server-side team/nameplate integrations and isolate its own rendering state.
 
 ## 9. Nameplate Rendering
 
@@ -360,6 +387,7 @@ Unit:
 - Colors/RGB/gradient.
 - Styles.
 - Effects.
+- Glitch modes and frame generation.
 - Assignment.
 - Priority.
 
@@ -387,7 +415,9 @@ Every new Minecraft adapter must pass the same core behavior suite.
 - Persistence survives restart.
 - Preset/RGB/random colors work.
 - Formatting works.
-- Glitch works within supported rendering limits.
+- Glitch white mode works within supported rendering limits.
+- Glitch colorful mode works within supported rendering limits.
+- `/nametag glitch <tag> white|colorful` changes only the effect configuration.
 - Active tag renders in nameplate.
 - Active tag renders in chat when enabled.
 - Chat permission and per-tag visibility work.
