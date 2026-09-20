@@ -1,6 +1,7 @@
 package com.ultraop.nametag.paper;
 
 import com.ultraop.nametag.api.CommandContext;
+import com.ultraop.nametag.api.ConfigurationService;
 import com.ultraop.nametag.api.NameTagCommandHandler;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.common.DefaultMessageService;
@@ -19,12 +20,14 @@ import java.util.List;
 
 public final class NameTagPaperPlugin extends JavaPlugin implements CommandExecutor, TabCompleter {
     private TagService tagService;
+    private ConfigurationService configurationService;
     private NameTagCommandHandler commandHandler;
     private Paper2111Adapter adapter;
 
     @Override
     public void onEnable() {
         java.nio.file.Path dataDirectory = getDataFolder().toPath();
+        configurationService = new com.ultraop.nametag.common.DefaultConfigurationService(dataDirectory.resolve("configuration.yml"));
         tagService = new DefaultTagService(
                 new YamlTagRepository(dataDirectory.resolve("tags.yml")),
                 new YamlPlayerAssignmentRepository(dataDirectory.resolve("assignments.yml"))
@@ -32,7 +35,8 @@ public final class NameTagPaperPlugin extends JavaPlugin implements CommandExecu
         commandHandler = new DefaultNameTagCommandHandler(
                 tagService,
                 new PaperPlayerResolver(),
-                new DefaultMessageService()
+                new DefaultMessageService(),
+                configurationService
         );
         adapter = new Paper2111Adapter(this, tagService);
         adapter.start();
