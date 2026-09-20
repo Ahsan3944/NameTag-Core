@@ -235,7 +235,7 @@ final class DefaultNameTagCommandHandlerTest {
                 new InMemoryTagRepository(),
                 new InMemoryPlayerAssignmentRepository()
         );
-        ConfigurationReloadService reloadService = () -> ConfigurationReloadResult.success();
+        ConfigurationReloadService reloadService = () -> ConfigurationReloadResult.successResult();
 
         DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
                 service,
