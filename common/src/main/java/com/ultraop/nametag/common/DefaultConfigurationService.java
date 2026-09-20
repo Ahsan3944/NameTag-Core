@@ -1,0 +1,90 @@
+package com.ultraop.nametag.common;
+
+import com.ultraop.nametag.api.ConfigurationService;
+import com.ultraop.nametag.core.model.NameTagConfiguration;
+import org.yaml.snakeyaml.error.YAMLException;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+public final class DefaultConfigurationService implements ConfigurationService {
+    private final YamlFileStore store;
+    private volatile NameTagConfiguration current;
+
+    public DefaultConfigurationService(Path file) {
+        this.store = new YamlFileStore(file);
+        this.current = loadOrCreate();
+    }
+
+    @Override
+    public NameTagConfiguration current() {
+        return current;
+    }
+
+    private NameTagConfiguration loadOrCreate() {
+        Map<String, Object> document;
+        try {
+            document = store.load();
+        } catch (YAMLException exception) {
+            throw new IllegalStateException("Unable to parse NameTag-Core configuration", exception);
+        }
+
+        if (document.size() == 1 && document.containsKey("schemaVersion")) {
+            NameTagConfiguration defaults = NameTagConfiguration.defaults();
+            store.save(toDocument(defaults));
+            return defaults;
+        }
+
+        return fromDocument(document);
+    }
+
+    private static NameTagConfiguration fromDocument(Map<String, Object> document) {
+        return new NameTagConfiguration(
+                booleanValue(document, "nameplateEnabled", true),
+                booleanValue(document, "chatEnabled", true),
+                stringValue(document, "chatFormat", NameTagConfiguration.DEFAULT_CHAT_FORMAT),
+                intValue(document, "defaultTagPriority", 0),
+                booleanValue(document, "defaultTagEnabled", true),
+                booleanValue(document, "defaultTagChatEnabled", true),
+                intValue(document, "defaultGlitchIntensity", 45),
+                intValue(document, "defaultGlitchSpeedMs", 80)
+        );
+    }
+
+    private static Map<String, Object> toDocument(NameTagConfiguration configuration) {
+        Map<String, Object> document = new LinkedHashMap<>();
+        document.put("schemaVersion", YamlFileStore.CURRENT_SCHEMA_VERSION);
+        document.put("nameplateEnabled", configuration.nameplateEnabled());
+        document.put("chatEnabled", configuration.chatEnabled());
+        document.put("chatFormat", configuration.chatFormat());
+        document.put("defaultTagPriority", configuration.defaultTagPriority());
+        document.put("defaultTagEnabled", configuration.defaultTagEnabled());
+        document.put("defaultTagChatEnabled", configuration.defaultTagChatEnabled());
+        document.put("defaultGlitchIntensity", configuration.defaultGlitchIntensity());
+        document.put("defaultGlitchSpeedMs", configuration.defaultGlitchSpeedMs());
+        return document;
+    }
+
+    private static boolean booleanValue(Map<String, Object> document, String key, boolean fallback) {
+        Object value = document.get(key);
+        if (value == null) return fallback;
+        if (value instanceof Boolean booleanValue) return booleanValue;
+        throw new IllegalStateException("Configuration value '" + key + "' must be boolean");
+    }
+
+    private static String stringValue(Map<String, Object> document, String key, String fallback) {
+        Object value = document.get(key);
+        if (value == null) return fallback;
+        if (value instanceof String stringValue && !stringValue.isBlank()) return stringValue;
+        throw new IllegalStateException("Configuration value '" + key + "' must be a non-blank string");
+    }
+
+    private static int intValue(Map<String, Object> document, String key, int fallback) {
+        Object value = document.get(key);
+        if (value == null) return fallback;
+        if (value instanceof Number number) return number.intValue();
+        throw new IllegalStateException("Configuration value '" + key + "' must be an integer");
+    }
+}
