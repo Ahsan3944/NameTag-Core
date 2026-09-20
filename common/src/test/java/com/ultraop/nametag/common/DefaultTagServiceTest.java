@@ -6,7 +6,9 @@ import com.ultraop.nametag.core.model.TagEffect;
 import com.ultraop.nametag.core.model.TagId;
 import com.ultraop.nametag.core.model.TagStyle;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
 
@@ -14,8 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DefaultTagServiceTest {
 
-    @org.junit.jupiter.api.io.TempDir
-    java.nio.file.Path tempDir;
+    @TempDir
+    Path tempDir;
 
     @Test
     void assignPreservesExistingActiveTag() {
@@ -93,6 +95,25 @@ class DefaultTagServiceTest {
         assertFalse(service.delete(new TagId("missing")));
     }
 
+    @Test
+    void yamlBackedServiceSurvivesRestart() {
+        UUID player = UUID.randomUUID();
+
+        DefaultTagService first = new DefaultTagService(
+                new YamlTagRepository(tempDir.resolve("tags.yml")),
+                new YamlPlayerAssignmentRepository(tempDir.resolve("assignments.yml"))
+        );
+        first.create(tag("owner", "OWNER", 100, true));
+        first.assign(player, new TagId("owner"));
+
+        DefaultTagService restarted = new DefaultTagService(
+                new YamlTagRepository(tempDir.resolve("tags.yml")),
+                new YamlPlayerAssignmentRepository(tempDir.resolve("assignments.yml"))
+        );
+
+        assertEquals("OWNER", restarted.activeTag(player).orElseThrow().displayName());
+    }
+
     private static DefaultTagService newService() {
         return new DefaultTagService(
                 new InMemoryTagRepository(),
@@ -120,23 +141,3 @@ class DefaultTagServiceTest {
         return new PlayerAssignmentSnapshot(assignment.activeTagId(), assignment.assignedTagIds().size());
     }
 }
-
-    @org.junit.jupiter.api.Test
-    void yamlBackedServiceSurvivesRestart() {
-        java.nio.file.Path directory = tempDir;
-        java.util.UUID player = java.util.UUID.randomUUID();
-
-        DefaultTagService first = new DefaultTagService(
-                new YamlTagRepository(directory.resolve("tags.yml")),
-                new YamlPlayerAssignmentRepository(directory.resolve("assignments.yml"))
-        );
-        first.create(tag("owner", "OWNER", 100, true));
-        first.assign(player, new TagId("owner"));
-
-        DefaultTagService restarted = new DefaultTagService(
-                new YamlTagRepository(directory.resolve("tags.yml")),
-                new YamlPlayerAssignmentRepository(directory.resolve("assignments.yml"))
-        );
-
-        assertEquals("OWNER", restarted.activeTag(player).orElseThrow().displayName());
-    }
