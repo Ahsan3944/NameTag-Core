@@ -4,6 +4,7 @@ import com.ultraop.nametag.api.CommandContext;
 import com.ultraop.nametag.api.CommandSource;
 import com.ultraop.nametag.api.OnlinePlayer;
 import com.ultraop.nametag.api.PlayerResolver;
+import com.ultraop.nametag.core.model.NameTagConfiguration;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagEffect;
