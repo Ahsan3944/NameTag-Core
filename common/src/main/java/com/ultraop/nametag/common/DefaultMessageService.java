@@ -44,7 +44,7 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("error.usage.delete", "Usage: /nametag delete <tag>");
         defaults.put("error.usage.assign", "Usage: /nametag give <player> <tag>");
         defaults.put("error.usage.remove", "Usage: /nametag remove <player>");
-        defaults.put("error.usage.glitch", "Usage: /nametag glitch <tag> <white|colorful> | reload");
+        defaults.put("error.usage.glitch", "Usage: /nametag glitch <tag> <white|colorful>");
         defaults.put("error.player.offline", "Player must be online: {player}");
         defaults.put("error.tag.not_found", "Tag not found: {tag}");
         defaults.put("message.created", "Created NameTag: {tag}");
