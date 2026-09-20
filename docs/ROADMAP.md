@@ -56,7 +56,7 @@
 - [x] Fabric command source/player adapters.
 - [x] Common command handler wired to Paper/Fabric.
 - [x] Configuration service.
-- [ ] Reload service.
+- [x] Reload service.
 - [ ] Caching.
 
 ## Phase 6 — Paper 1.21.11
@@ -113,7 +113,7 @@
 - [ ] Full unit test suite.
 - [ ] Full integration suite.
 - [x] Restart persistence test.
-- [ ] Reload test.
+- [x] Reload test.
 - [ ] Permission regression test.
 - [ ] Cross-platform behavior comparison.
 - [ ] Performance test.
