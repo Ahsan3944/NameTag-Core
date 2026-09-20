@@ -2,6 +2,8 @@ package com.ultraop.nametag.common;
 
 import com.ultraop.nametag.api.CommandContext;
 import com.ultraop.nametag.api.CommandSource;
+import com.ultraop.nametag.api.ConfigurationReloadResult;
+import com.ultraop.nametag.api.ConfigurationReloadService;
 import com.ultraop.nametag.api.OnlinePlayer;
 import com.ultraop.nametag.api.PlayerResolver;
 import com.ultraop.nametag.core.model.NameTagConfiguration;
@@ -226,4 +228,47 @@ final class DefaultNameTagCommandHandlerTest {
             return List.of(player);
         }
     }
+    @Test
+    void reloadCommandUsesReloadServiceAndPermission() {
+        RecordingSource source = new RecordingSource();
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(),
+                new InMemoryPlayerAssignmentRepository()
+        );
+        ConfigurationReloadService reloadService = () -> ConfigurationReloadResult.success();
+
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service,
+                new EmptyPlayerResolver(),
+                new DefaultMessageService(),
+                NameTagConfiguration::defaults,
+                reloadService
+        );
+
+        handler.execute(new CommandContext(source, new String[]{"reload"}));
+
+        assertEquals("Configuration reloaded successfully.", source.lastMessage);
+    }
+
+    @Test
+    void reloadCommandDeniesWithoutReloadPermission() {
+        RecordingSource source = new RecordingSource();
+        source.allowed = false;
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                new DefaultTagService(
+                        new InMemoryTagRepository(),
+                        new InMemoryPlayerAssignmentRepository()
+                ),
+                new EmptyPlayerResolver(),
+                new DefaultMessageService(),
+                NameTagConfiguration::defaults,
+                () -> ConfigurationReloadResult.success()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{"reload"}));
+
+        assertEquals("You do not have permission to edit NameTags.", source.lastMessage);
+    }
+
+
 }
