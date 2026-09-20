@@ -2,7 +2,7 @@
 
 NameTag-Core uses a human-readable `configuration.yml` file with a schema version.
 
-The configuration service is platform-independent. Paper and Fabric load it during bootstrap, while reload lifecycle behavior remains a separate milestone.
+The configuration service is platform-independent. Paper and Fabric load it during bootstrap, and the reload lifecycle uses a separate API contract.
 
 ## File location
 
@@ -57,10 +57,18 @@ The configuration uses the same atomic YAML file-store foundation as tag/assignm
 - recovery from the backup when the primary YAML cannot be loaded;
 - schema-version validation.
 
-The current configuration service loads one immutable snapshot at startup. It does not mutate live configuration while commands or renderers are running.
+The current configuration service exposes one immutable snapshot at runtime. Reload builds and validates a complete replacement snapshot before atomically publishing it.
 
-## Reload boundary
+## Reload
 
-`/nametag reload` is intentionally not implemented by this milestone.
+`/nametag reload` is available through the common command layer and requires `nametag.reload` (or `nametag.admin`).
 
-A future reload service will load and validate a new snapshot first, then replace the runtime snapshot only after successful validation. This prevents a malformed configuration from partially replacing live state.
+Reload behavior is deliberately fail-safe:
+
+1. Read the current YAML storage.
+2. Validate schema and all typed configuration values.
+3. Build a complete immutable replacement snapshot.
+4. Publish the replacement only after every validation step succeeds.
+5. If loading or validation fails, keep the previous runtime snapshot unchanged.
+
+If the primary YAML is unreadable, the existing file-store recovery path may load the backup. If the configuration is semantically invalid, reload reports the failure and does not replace the active snapshot.
