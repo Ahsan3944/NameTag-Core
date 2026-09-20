@@ -57,7 +57,7 @@
 - [x] Common command handler wired to Paper/Fabric.
 - [x] Configuration service.
 - [x] Reload service.
-- [ ] Caching.
+- [x] Caching.
 
 ## Phase 6 — Paper 1.21.11
 - [ ] Chat integration.
