@@ -60,7 +60,7 @@
 - [x] Caching.
 
 ## Phase 6 — Paper 1.21.11
-- [ ] Chat integration.
+- [x] Chat integration.
 - [x] Paper bootstrap.
 - [x] Commands.
 - [x] Permissions.
