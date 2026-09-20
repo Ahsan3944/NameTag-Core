@@ -6,6 +6,7 @@ import com.ultraop.nametag.core.model.TagEffect;
 import com.ultraop.nametag.core.model.TagId;
 import com.ultraop.nametag.core.model.TagStyle;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -35,6 +36,10 @@ class Paper2111ChatRendererTest {
         );
 
         assertEquals("[OWNER] UltraOP: Hello!", result.textContent());
+
+        Component styledTag = Paper2111ChatRenderer.styledTag(tag);
+        assertEquals(0xFFAA00, styledTag.color().value());
+        assertEquals(TextDecoration.State.TRUE, styledTag.decoration(TextDecoration.BOLD));
     }
 
     @Test
