@@ -428,3 +428,18 @@ Every new Minecraft adapter must pass the same core behavior suite.
 ## 20. Documentation Rule
 
 `docs/BLUEPRINT.md` is the master technical source of truth. Any intentional architectural change must update this document first, then README/roadmap. No undocumented duplicate implementation is allowed.
+
+
+## 21. Common Command and Message Contracts
+
+The common command path is platform-neutral. Platform adapters provide native implementations of:
+
+- `CommandSource`: sender identity, permissions and message delivery.
+- `PlayerResolver`: online-player lookup without exposing platform classes to common code.
+- `CommandContext`: immutable command arguments plus the platform-neutral source.
+- `NameTagCommandHandler`: command execution and tab-suggestion contract.
+- `MessageService`: message lookup and placeholder formatting.
+
+The initial common implementation is `DefaultNameTagCommandHandler` plus `DefaultMessageService`. These own NameTag command business rules and default English messages so Fabric and Paper adapters do not independently reimplement command behavior.
+
+Reload/configuration and platform command registration remain separate milestones and must not be coupled to this contract.
