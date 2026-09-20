@@ -10,7 +10,7 @@ public record ConfigurationReloadResult(boolean success, String message) {
         }
     }
 
-    public static ConfigurationReloadResult success() {
+    public static ConfigurationReloadResult successResult() {
         return new ConfigurationReloadResult(true, "Configuration reloaded successfully.");
     }
 
