@@ -213,7 +213,15 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         TagId id = new TagId(args[1].toLowerCase(Locale.ROOT));
         GlitchMode mode = GlitchMode.from(args[2]);
-        Tag updated = tagService.setGlitch(id, mode);
+        NameTagConfiguration settings = configuration.current();
+        Tag updated = tagService.setGlitch(
+                id,
+                new GlitchSettings(
+                        mode,
+                        settings.defaultGlitchIntensity(),
+                        settings.defaultGlitchSpeedMs()
+                )
+        );
         source.sendMessage(messages.format(
                 "message.glitch_set",
                 Map.of(
