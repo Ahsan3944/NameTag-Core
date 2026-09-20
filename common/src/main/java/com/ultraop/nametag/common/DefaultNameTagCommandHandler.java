@@ -170,7 +170,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             tagService.assign(player.uuid(), id);
         }
         source.sendMessage(messages.format(
-                "message.assigned",
+                "set".equalsIgnoreCase(args[0]) ? "message.set_active" : "message.assigned",
                 Map.of("tag", id.value(), "player", player.name())
         ));
     }
