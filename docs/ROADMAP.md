@@ -12,7 +12,8 @@
 - [x] Testing strategy defined.
 
 ## Phase 1 — Build Foundation
-- [ ] Gradle wrapper and root build.
+- [ ] Gradle wrapper.
+- [x] Root build.
 - [x] Multi-module configuration.
 - [x] Java/toolchain configuration.
 - [ ] Checkstyle/formatting policy if required.
@@ -23,13 +24,13 @@
 - [x] Tag model.
 - [x] Tag ID/display name.
 - [x] Color model.
-- [ ] RGB parser.
+- [x] RGB parser.
 - [ ] Random color strategy.
-- [ ] Gradient model.
+- [x] Gradient model.
 - [x] Text style model.
 - [x] Effect model.
-- [ ] Priority.
-- [ ] Validation.
+- [x] Priority.
+- [x] Validation.
 
 ## Phase 3 — API
 - [x] Tag service.
