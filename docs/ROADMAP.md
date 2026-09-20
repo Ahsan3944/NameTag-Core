@@ -57,26 +57,26 @@
 
 ## Phase 6 — Paper 1.21.11
 - [ ] Chat integration.
-- [ ] Paper bootstrap.
-- [ ] Commands.
-- [ ] Permissions.
+- [x] Paper bootstrap.
+- [x] Commands.
+- [x] Permissions.
 - [ ] Player lifecycle.
 - [ ] Storage integration.
-- [ ] Nameplate rendering.
-- [ ] Text styles.
-- [ ] Effects.
+- [x] Nameplate rendering.
+- [x] Text styles.
+- [x] Effects.
 - [ ] Integration tests.
 
 ## Phase 7 — Fabric 1.21.11
 - [ ] Chat integration.
-- [ ] Fabric bootstrap.
-- [ ] Commands.
-- [ ] Permissions.
+- [x] Fabric bootstrap.
+- [x] Commands.
+- [x] Permissions.
 - [ ] Player lifecycle.
 - [ ] Storage integration.
-- [ ] Nameplate rendering.
-- [ ] Text styles.
-- [ ] Effects.
+- [x] Nameplate rendering.
+- [x] Text styles.
+- [x] Effects.
 - [ ] Integration tests.
 
 ## Phase 8 — Glitch
@@ -84,8 +84,8 @@
 - [x] White mode.
 - [x] Colorful RGB mode.
 - [x] Glitch processor/frame engine.
-- [ ] `/nametag glitch <tag> <white|colorful>` platform command wiring.
-- [ ] Nameplate frame scheduling.
+- [x] `/nametag glitch <tag> <white|colorful>` platform command wiring.
+- [x] Nameplate frame scheduling.
 - [x] Intensity validation.
 - [x] Speed validation.
 - [x] Core unit tests.
