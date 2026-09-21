@@ -14,7 +14,7 @@ import com.ultraop.nametag.fabric.v1_21_11.Fabric2111PlayerLifecycleListener;
 import net.fabricmc.fabric.api.gametest.v1.CustomTestMethodInvoker;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.fabricmc.fabric.api.entity.FakePlayer;
-import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.test.TestContext;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 
@@ -24,8 +24,8 @@ import java.util.UUID;
 
 public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
     @GameTest
-    public void bootstrapRegistersNameTagCommands(GameTestHelper helper) {
-        boolean registered = helper.getLevel()
+    public void bootstrapRegistersNameTagCommands(TestContext context) {
+        boolean registered = context.getWorld()
                 .getServer()
                 .getCommands()
                 .getDispatcher()
@@ -33,11 +33,11 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
                 .getChild("nametag") != null;
 
         if (!registered) {
-            helper.fail("NameTag command root was not registered");
+            context.throwGameTestException("NameTag command root was not registered");
             return;
         }
 
-        helper.succeed();
+        context.complete();
     }
 
     @GameTest
@@ -102,7 +102,7 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
     }
 
     @Override
-    public void invokeTestMethod(GameTestHelper helper, Method method) throws ReflectiveOperationException {
-        method.invoke(this, helper);
+    public void invokeTestMethod(TestContext context, Method method) throws ReflectiveOperationException {
+        method.invoke(this, context);
     }
 }
