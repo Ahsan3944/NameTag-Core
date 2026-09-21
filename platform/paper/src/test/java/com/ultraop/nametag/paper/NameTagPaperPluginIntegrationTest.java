@@ -79,8 +79,9 @@ class NameTagPaperPluginIntegrationTest {
                 .getMainScoreboard()
                 .getEntryTeam(player.getName()));
 
-        var rejoined = server.addPlayer(player.getUniqueId(), "UltraOP");
+        assertTrue(player.reconnect());
         server.getScheduler().performTicks(1);
+        var rejoined = server.getPlayerExact("UltraOP");
 
         assertNotNull(server.getScoreboardManager()
                 .getMainScoreboard()
