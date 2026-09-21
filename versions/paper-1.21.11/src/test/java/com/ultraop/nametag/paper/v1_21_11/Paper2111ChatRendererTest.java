@@ -44,8 +44,9 @@ class Paper2111ChatRendererTest {
         assertEquals("Hello!", textOf(result.children().get(5)));
 
         Component styledTag = Paper2111ChatRenderer.styledTag(tag);
-        assertEquals(0xFFAA00, styledTag.color().value());
-        assertEquals(TextDecoration.State.TRUE, styledTag.decoration(TextDecoration.BOLD));
+        Component firstGlyph = styledTag.children().get(0);
+        assertEquals(0xFFAA00, firstGlyph.color().value());
+        assertEquals(TextDecoration.State.TRUE, firstGlyph.decoration(TextDecoration.BOLD));
     }
 
     @Test
