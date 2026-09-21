@@ -306,7 +306,7 @@ public final class DefaultTagService implements TagService {
                 .filter(Tag::enabled)
                 .filter(tag -> matchesContext(tag, context))
                 .sorted(Comparator.comparingInt(Tag::priority).reversed()
-                        .thenComparing(tag -> tag.id().value(), Comparator.reverseOrder()))
+                        .thenComparing(tag -> tag.id().value()))
                 .toList();
 
         if (candidates.isEmpty()) return List.of();
