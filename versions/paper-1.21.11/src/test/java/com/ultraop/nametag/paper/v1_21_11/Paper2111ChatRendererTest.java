@@ -105,6 +105,11 @@ class Paper2111ChatRendererTest {
         );
         Component random = Paper2111ChatRenderer.styledTag(randomTag);
         assertEquals(random.children().get(0).color(), random.children().get(1).color());
+
+        Component nameplate = Paper2111NameplateRenderer.buildStaticPrefix(gradientTag);
+        assertEquals(0x000000, nameplate.children().get(0).color().value());
+        assertEquals(0x808080, nameplate.children().get(1).color().value());
+        assertEquals(0xFFFFFF, nameplate.children().get(2).color().value());
     }
 
 
