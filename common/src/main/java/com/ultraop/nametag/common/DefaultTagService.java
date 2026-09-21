@@ -283,17 +283,26 @@ public final class DefaultTagService implements TagService {
 
         Optional<PlayerAssignment> stored = assignments.find(playerUuid);
         List<Tag> resolved;
+        boolean cacheable = false;
         if (stored.isPresent()) {
             PlayerAssignment assignment = removeExpired(playerUuid, stored.get());
             resolved = resolveActiveTags(assignment, context);
+            cacheable = !assignment.hasExpirations() && !resolved.isEmpty();
             if (resolved.isEmpty()) {
+                // Permission-derived roles are intentionally not cached because permission
+                // providers can change independently of NameTag-Core mutations.
                 resolved = automaticRoleTags(playerUuid, context);
+                cacheable = false;
             }
         } else {
+            // Automatic roles are intentionally resolved on every request so external
+            // permission changes are reflected without a cache invalidation hook.
             resolved = automaticRoleTags(playerUuid, context);
         }
 
-        contextualTagCache.put(playerUuid, context, resolved);
+        if (cacheable) {
+            contextualTagCache.put(playerUuid, context, resolved);
+        }
         return resolved;
     }
 
@@ -333,7 +342,7 @@ public final class DefaultTagService implements TagService {
                 .filter(tag -> permissions.has(playerUuid, tag.metadata().get("auto-permission")))
                 .filter(tag -> matchesContext(tag, context))
                 .sorted(Comparator.comparingInt(Tag::priority).reversed()
-                        .thenComparing(tag -> tag.id().value(), Comparator.reverseOrder()))
+                        .thenComparing(tag -> tag.id().value()))
                 .toList();
     }
 
