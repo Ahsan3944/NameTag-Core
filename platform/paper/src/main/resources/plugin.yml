@@ -24,7 +24,7 @@ permissions:
     description: Allows creating NameTags
     default: op
   nametag.edit:
-    description: Allows editing NameTag effects
+    description: Allows editing NameTag properties and effects
     default: op
   nametag.delete:
     description: Allows deleting NameTags
