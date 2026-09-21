@@ -116,11 +116,12 @@ class DefaultTagServiceTest {
         service.setActive(player, owner.id());
         service.delete(owner.id());
 
-        assertEquals(4, events.size());
+        assertEquals(5, events.size());
         assertInstanceOf(com.ultraop.nametag.api.TagEvent.Created.class, events.get(0));
         assertInstanceOf(com.ultraop.nametag.api.TagEvent.Updated.class, events.get(1));
         assertInstanceOf(com.ultraop.nametag.api.TagEvent.AssignmentChanged.class, events.get(2));
         assertInstanceOf(com.ultraop.nametag.api.TagEvent.AssignmentChanged.class, events.get(3));
+        assertInstanceOf(com.ultraop.nametag.api.TagEvent.Deleted.class, events.get(4));
     }
 
     @Test
