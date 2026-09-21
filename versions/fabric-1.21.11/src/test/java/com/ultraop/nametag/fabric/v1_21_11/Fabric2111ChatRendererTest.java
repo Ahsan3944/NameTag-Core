@@ -133,6 +133,11 @@ class Fabric2111ChatRendererTest {
                 random.getSiblings().get(0).getStyle().getColor().getRgb(),
                 random.getSiblings().get(1).getStyle().getColor().getRgb()
         );
+
+        Text nameplate = Fabric2111NameplateRenderer.buildStaticPrefix(gradientTag);
+        assertEquals(0x000000, nameplate.getSiblings().get(0).getStyle().getColor().getRgb());
+        assertEquals(0x808080, nameplate.getSiblings().get(1).getStyle().getColor().getRgb());
+        assertEquals(0xFFFFFF, nameplate.getSiblings().get(2).getStyle().getColor().getRgb());
     }
 
 }
