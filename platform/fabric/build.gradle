@@ -13,10 +13,6 @@ dependencies {
     implementation project(path: ':versions:fabric-1.21.11', configuration: 'namedElements')
 }
 
-loom {
-    serverOnlyMinecraftJar()
-}
-
 fabricApi {
     configureTests {
         createSourceSet = true
