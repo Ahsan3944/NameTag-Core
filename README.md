@@ -132,9 +132,9 @@ Planned API capabilities:
 - Read active tag.
 - Query tag existence.
 - Access color/style/effect definitions.
-- Register custom effects.
+- Register custom effects through the EffectRegistry.
 - Register storage providers where supported.
-- Listen to tag/player lifecycle events.
+- Listen to tag/player lifecycle events through the domain event bus.
 
 
 ## Glitch NameTag
@@ -199,7 +199,7 @@ Conceptual dependency direction:
           Minecraft API       Minecraft API
 ```
 
-The core must never directly depend on Fabric-only or Paper-only classes.
+The core must never directly depend on Fabric-only or Paper-only classes. Domain events and effect registration remain platform-neutral; only rendering providers depend on platform/version APIs.
 
 ## Repository Structure
 
