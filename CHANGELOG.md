@@ -1,29 +1,19 @@
 # Changelog
 
 ## Unreleased
+
 - Layered/world/region tag resolution with deterministic multi-tag rendering and persistent metadata-defined scopes.
 - Added `{tags}` chat placeholder while preserving existing single-tag placeholders.
 - Added `/nametag scope` command and regression coverage for contextual resolution.
-
-
-## Unreleased
-
 - Added configurable YAML, SQLite, MySQL, MariaDB, and PostgreSQL persistence through JDBC.
 - Added versioned database schema initialization, transactional repository writes, and one-time YAML-to-database migration.
 - Wired database storage selection into both Paper and Fabric bootstraps and added SQLite persistence/restart regression coverage.
-
-
-
-### Stability hardening
-
 - Added automatic role-tag resolution through the `auto-permission` tag metadata key, with deterministic priority resolution and explicit-assignment precedence.
 - Synchronized README/API/roadmap documentation with the implemented effect, role and tag-pack import/export command surface.
 - Added `/nametag role <tag> <permission|clear>` command support across the common command layer and Fabric command tree.
 - Added optional Fabric LuckPerms API integration and Paper native permission bridging for automatic role checks.
-
 - Added deterministic RGB resolution for random and gradient tag colors.
-- Added per-glyph gradient/random rendering coverage for Fabric and Paper chat.
-- Added per-glyph gradient/random rendering for Fabric and Paper nameplates.
+- Added per-glyph gradient/random rendering coverage for Fabric and Paper chat and nameplates.
 - Added Fabric server GameTests for command bootstrap and player lifecycle.
 - Added a GameTest proving a pre-existing scoreboard team is not hijacked by the nameplate renderer.
 - Changed runtime nameplate team identity from hash-only names to tag-ID-derived names to avoid Java String hash collisions.
@@ -34,7 +24,7 @@
 - Added thread-safe domain events for tag and player-assignment mutations.
 - Added a concurrent EffectRegistry with duplicate-ID validation and immutable snapshots.
 - Added a 50,000-entry bounded-cache stress regression test to guard against unbounded active-tag cache growth.
-- CI now publishes the verified module JARs as a retained build artifact after a successful build.
+- CI publishes verified module JARs as retained build artifacts after successful builds.
 - Added the official Gradle 9.2.1 Wrapper and distribution SHA-256 verification for reproducible CI/local builds.
 - Added manual CI workflow dispatch and read-only repository permissions.
 - Updated installation instructions to use the checked-in Gradle Wrapper on Linux/macOS and Windows.
