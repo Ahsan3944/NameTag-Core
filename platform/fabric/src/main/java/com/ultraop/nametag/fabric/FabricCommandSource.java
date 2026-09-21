@@ -34,7 +34,7 @@ public final class FabricCommandSource implements CommandSource {
         if (playerUuid != null && permissions.has(playerUuid, permission)) {
             return true;
         }
-        return source.getEntity() == null && source.hasPermissionLevel(4);
+        return playerUuid == null;
     }
 
     @Override
