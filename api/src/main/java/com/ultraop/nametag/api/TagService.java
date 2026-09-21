@@ -40,6 +40,15 @@ public interface TagService {
     void clear(UUID playerUuid);
     Optional<Tag> activeTag(UUID playerUuid);
 
+    /**
+     * Resolves all simultaneously visible tags for the supplied player context.
+     * The first tag is the explicit active tag when one exists; remaining tags are
+     * ordered deterministically by priority and id.
+     */
+    default List<Tag> activeTags(UUID playerUuid, TagResolutionContext context) {
+        return activeTag(playerUuid).map(List::of).orElseGet(List::of);
+    }
+
     /** Applies or replaces an effect while preserving all other tag properties. */
     default Tag setEffect(TagId tagId, TagEffect effect) {
         Tag tag = find(tagId).orElseThrow(() -> new IllegalArgumentException("Tag not found: " + tagId.value()));
