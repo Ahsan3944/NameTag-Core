@@ -76,7 +76,7 @@
 - [x] Fabric bootstrap.
 - [x] Commands.
 - [x] Permissions.
-- [ ] Player lifecycle.
+- [x] Player lifecycle.
 - [x] Storage integration.
 - [x] Nameplate rendering.
 - [x] Text styles.
