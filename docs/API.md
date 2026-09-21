@@ -12,6 +12,7 @@ Core operations:
 - `find(TagId)`
 - `list()`
 - `assign(UUID, TagId)`
+- `assignUntil(UUID, TagId, Instant)`
 - `setActive(UUID, TagId)`
 - `remove(UUID, TagId)`
 - `clear(UUID)`

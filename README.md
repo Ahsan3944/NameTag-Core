@@ -30,7 +30,7 @@ This separation prevents Minecraft API changes from spreading through the entire
 - One primary active tag in the first release, with the core designed to support multiple/layered tags later.
 - UUID-based player identity.
 - Tag priority support.
-- Optional temporary/expiring tags in a later release.
+- Temporary tag assignments with persistent per-tag expiration.
 
 ### Colors
 - Minecraft named/preset colors supported by the target text API.
@@ -81,7 +81,7 @@ The initial command namespace is:
 Planned commands:
 - `/nametag create`
 - `/nametag list`
-- `/nametag give <player> <tag>`
+- `/nametag give <player> <tag> [duration]`
 - `/nametag remove <player>`
 - `/nametag set <player> <tag>`
 - `/nametag clear <player>`

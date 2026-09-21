@@ -25,7 +25,7 @@ The same active-tag resolution must be used by nameplate and chat rendering.
 - Multiple tag definitions.
 - UUID-based player assignment.
 - Active-tag and priority resolution.
-- Optional future temporary/expiring tags.
+- Temporary tag assignments with per-tag expiration timestamps.
 
 ### Appearance
 - Minecraft preset colors.
@@ -164,7 +164,7 @@ Player assignment:
 playerUuid
 assignedTagIds
 activeTagId
-expirationMetadata
+per-tag expiration timestamps
 ```
 
 Tag ID and display name are separate. Player UUID is the persistent identity; username is never the primary key.

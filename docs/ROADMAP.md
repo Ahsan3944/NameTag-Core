@@ -148,8 +148,8 @@ Potential future additions:
 - Multiple active/layered tags.
 - [x] Prefix/suffix.
 - [x] Chat placeholders (tag ID, priority, prefix, suffix).
-- Temporary tags.
-- Expiration.
+- [x] Temporary tag assignments.
+- [x] Per-tag expiration with persistent timestamps.
 - Automatic role tags.
 - Rainbow animation.
 - Pulse/wave effects.
