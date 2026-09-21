@@ -9,6 +9,7 @@ import com.ultraop.nametag.core.model.TagId;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 public interface TagService {
