@@ -47,7 +47,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             PlayerResolver playerResolver,
             MessageService messages
     ) {
-        this(tagService, playerResolver, messages, () -> NameTagConfiguration.defaults());
+        this(tagService, playerResolver, messages, () -> NameTagConfiguration.defaults(), null, null);
     }
 
     public DefaultNameTagCommandHandler(
@@ -66,11 +66,23 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             ConfigurationService configuration,
             ConfigurationReloadService reloadService
     ) {
+        this(tagService, playerResolver, messages, configuration, reloadService, null);
+    }
+
+    public DefaultNameTagCommandHandler(
+            TagService tagService,
+            PlayerResolver playerResolver,
+            MessageService messages,
+            ConfigurationService configuration,
+            ConfigurationReloadService reloadService,
+            Path dataDirectory
+    ) {
         this.tagService = Objects.requireNonNull(tagService, "tagService");
         this.playerResolver = Objects.requireNonNull(playerResolver, "playerResolver");
         this.messages = Objects.requireNonNull(messages, "messages");
         this.configuration = Objects.requireNonNull(configuration, "configuration");
         this.reloadService = reloadService;
+        this.dataDirectory = dataDirectory;
     }
 
     @Override
