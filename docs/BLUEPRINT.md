@@ -7,7 +7,7 @@
 
 ## 1. Product Definition
 
-NameTag-Core provides server-side custom rank/name-tag management. An assigned active tag can be rendered:
+NameTag-Core provides server-side custom rank/name-tag management. One or more matching active tag layers can be rendered:
 1. Above/around the player's in-world nameplate.
 2. In player chat as a rank/prefix.
 3. Through future integrations/API consumers.
@@ -15,7 +15,7 @@ NameTag-Core provides server-side custom rank/name-tag management. An assigned a
 Example chat:
 `[OWNER] UltraOP: Hello everyone!`
 
-The same active-tag resolution must be used by nameplate and chat rendering.
+The same contextual multi-tag resolution rules are used by nameplate and chat rendering.
 
 ## 2. Core Features
 
@@ -287,15 +287,14 @@ TagRepository
 PlayerAssignmentRepository
 ```
 
-Initial provider: local human-readable files.
-
-Future providers:
-- JSON/YAML.
+Current providers:
+- YAML file storage.
 - SQLite.
-- MySQL/MariaDB.
+- MySQL.
+- MariaDB.
 - PostgreSQL.
 
-The current production baseline remains YAML. Database providers are intentionally not marked complete until a configuration path, lifecycle management, migration coverage, and platform runtime packaging are implemented and tested end-to-end.
+All providers implement the same repository contracts. JDBC providers initialize a versioned schema, use transactional repository writes, and support one-time YAML-to-database migration when configured.
 
 Storage is replaceable, versioned and preferably atomic. Persistent data has a schema version and migration path.
 
@@ -307,24 +306,22 @@ Separate:
 
 ## 13. API
 
-Stable API must expose:
+Stable API exposes:
 - Tag CRUD.
 - Assignment.
-- Active-tag lookup.
+- Legacy single active-tag lookup.
+- Contextual multi-tag lookup.
 - Querying.
 - Events.
 - Effect registration.
 - Storage contracts.
 - Permission contracts.
 
-Planned events:
-- TagCreated.
-- TagUpdated.
-- TagDeleted.
-- TagAssigned.
-- TagRemoved.
-- ActiveTagChanged.
-- EffectRegistered.
+Current domain events:
+- `TagEvent.Created`.
+- `TagEvent.Updated`.
+- `TagEvent.Deleted`.
+- `TagEvent.AssignmentChanged`.
 
 No API event exposes platform-specific classes.
 
@@ -414,20 +411,22 @@ Platform:
 Regression:
 Every new Minecraft adapter must pass the same core behavior suite.
 
-## 19. Definition of Done — v1.0
+## 19. Definition of Done — v1.0 baseline
 
 - Core/API build cleanly.
 - Fabric 1.21.11 build/start/test.
 - Paper 1.21.11 build/start/test.
 - Create/list/give/remove/delete/reload work.
 - Persistence survives restart.
+- YAML and configured JDBC providers use the same repository contracts.
 - Preset/RGB/random colors work.
 - Formatting works.
 - Glitch white mode works within supported rendering limits.
 - Glitch colorful mode works within supported rendering limits.
 - `/nametag glitch <tag> white|colorful` changes only the effect configuration.
-- Active tag renders in nameplate.
-- Active tag renders in chat when enabled.
+- Active contextual/layered tags render in nameplate.
+- Contextual/layered tags render in chat when enabled.
+- Automatic role resolution works without persisting derived assignments.
 - Chat permission and per-tag visibility work.
 - Reload does not duplicate formatting/listeners.
 - No platform dependency leaks into core.
