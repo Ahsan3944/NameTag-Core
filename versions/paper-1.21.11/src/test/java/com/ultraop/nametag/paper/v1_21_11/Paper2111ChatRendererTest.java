@@ -118,4 +118,8 @@ class Paper2111ChatRendererTest {
         }
         return result.toString();
     }
+
+    private static String textOf(Component component) {
+        return ((TextComponent) component).content();
+    }
 }
