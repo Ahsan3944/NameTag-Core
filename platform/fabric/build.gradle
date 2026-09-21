@@ -36,22 +36,17 @@ afterEvaluate {
         extendsFrom(configurations.named("minecraftNamedRuntime").get())
     }
 
-    // Loom wires the Minecraft named classpath directly onto its own JavaCompile
-    // tasks. The GameTest source set is created by Fabric API, so explicitly attach
-    // the same named/common Minecraft classpaths to the generated compile task.
+    // Loom attaches the fully transformed/mapped Minecraft classpath to its
+    // main JavaCompile task. Reuse that exact classpath for the generated
+    // GameTest compiler instead of reconstructing Loom's internal classpath.
     tasks.named("compileGametestJava", JavaCompile) {
-        classpath += sourceSets.main.compileClasspath
-        classpath += sourceSets.main.output
-
-        def minecraftNamedCompile = configurations.findByName("minecraftNamedCompile")
-        if (minecraftNamedCompile != null) {
-            classpath += minecraftNamedCompile
-        }
-
-        def minecraftCommonNamedCompile = configurations.findByName("minecraftCommonNamedCompile")
-        if (minecraftCommonNamedCompile != null) {
-            classpath += minecraftCommonNamedCompile
-        }
+        def mainCompile = tasks.named("compileJava", JavaCompile).get()
+        dependsOn(mainCompile)
+        classpath = files(
+            mainCompile.classpath,
+            sourceSets.main.output,
+            sourceSets.gametest.compileClasspath
+        )
     }
 }
 
