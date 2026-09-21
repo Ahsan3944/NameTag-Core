@@ -294,13 +294,7 @@ class DefaultTagServiceTest {
         service.assign(player, new TagId("spawn"));
         service.setActive(player, new TagId("spawn"));
 
-        List<Tag> inside;
-        try {
-            inside = service.activeTags(player, new TagResolutionContext("world_nether", 0, 64, 0));
-        } catch (RuntimeException exception) {
-            fail("Contextual resolution threw: " + exception, exception);
-            return;
-        }
+        List<Tag> inside = service.activeTags(player, new TagResolutionContext("world_nether", 0, 64, 0));
         assertEquals(List.of("spawn", "world", "global"), inside.stream().map(tag -> tag.id().value()).toList());
 
         List<Tag> outside = service.activeTags(player, new TagResolutionContext("world_nether", 100, 64, 100));
