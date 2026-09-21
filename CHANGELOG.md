@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Clarified the two bounded resolution caches: 1024-entry legacy active-tag cache and 2048-entry contextual multi-tag cache.
 
 - Layered/world/region tag resolution with deterministic multi-tag rendering and persistent metadata-defined scopes.
 - Added `{tags}` chat placeholder while preserving existing single-tag placeholders.
