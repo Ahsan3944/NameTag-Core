@@ -146,11 +146,33 @@ public final class Fabric2111NameplateRenderer {
         return TEAM_PREFIX + Long.toUnsignedString(hash, 36);
     }
 
-    private static MutableText buildStaticPrefix(Tag tag) {
-        MutableText text = Text.literal(tag.displayName());
-        text.setStyle(applyColor(text.getStyle(), tag.color()));
-        text.setStyle(applyStyle(text.getStyle(), tag.style()));
-        return text.append(Text.literal(" "));
+    static MutableText buildStaticPrefix(Tag tag) {
+        TagStyle style = tag.style();
+        TagColor color = tag.color();
+        MutableText result = Text.empty();
+        int[] codePoints = tag.displayName().codePoints().toArray();
+        long seed = tag.id().value().hashCode();
+
+        for (int index = 0; index < codePoints.length; index++) {
+            MutableText glyph = Text.literal(new String(Character.toChars(codePoints[index])));
+            Style glyphStyle = applyStyle(Style.EMPTY, style);
+
+            if (color instanceof TagColor.Preset preset) {
+                TextColor presetColor = presetColor(preset.name());
+                if (presetColor != null) {
+                    glyphStyle = glyphStyle.withColor(presetColor);
+                }
+            } else {
+                Integer rgb = TagColor.resolve(color, index, codePoints.length, seed);
+                if (rgb != null) {
+                    glyphStyle = glyphStyle.withColor(rgb);
+                }
+            }
+
+            glyph.setStyle(glyphStyle);
+            result.append(glyph);
+        }
+        return result.append(Text.literal(" "));
     }
 
     private static MutableText buildGlitchPrefix(GlitchFrame frame, TagStyle style) {
