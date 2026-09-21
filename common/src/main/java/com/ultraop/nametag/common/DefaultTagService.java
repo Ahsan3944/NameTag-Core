@@ -1,5 +1,6 @@
 package com.ultraop.nametag.common;
 
+import com.ultraop.nametag.api.PermissionService;
 import com.ultraop.nametag.api.PlayerAssignmentRepository;
 import com.ultraop.nametag.api.TagEvent;
 import com.ultraop.nametag.api.TagEventBus;
@@ -30,9 +31,14 @@ public final class DefaultTagService implements TagService {
     private final ActiveTagCache activeTagCache;
     private final TagEventBus events;
     private final Clock clock;
+    private final PermissionService permissions;
 
     public DefaultTagService(TagRepository tags, PlayerAssignmentRepository assignments) {
-        this(tags, assignments, DEFAULT_CACHE_CAPACITY, new TagEventBus(), Clock.systemUTC());
+        this(tags, assignments, null, DEFAULT_CACHE_CAPACITY, new TagEventBus(), Clock.systemUTC());
+    }
+
+    public DefaultTagService(TagRepository tags, PlayerAssignmentRepository assignments, PermissionService permissions) {
+        this(tags, assignments, permissions, DEFAULT_CACHE_CAPACITY, new TagEventBus(), Clock.systemUTC());
     }
 
     DefaultTagService(
@@ -40,7 +46,7 @@ public final class DefaultTagService implements TagService {
             PlayerAssignmentRepository assignments,
             int cacheCapacity
     ) {
-        this(tags, assignments, cacheCapacity, new TagEventBus(), Clock.systemUTC());
+        this(tags, assignments, null, cacheCapacity, new TagEventBus(), Clock.systemUTC());
     }
 
     public DefaultTagService(
@@ -49,12 +55,13 @@ public final class DefaultTagService implements TagService {
             int cacheCapacity,
             TagEventBus events
     ) {
-        this(tags, assignments, cacheCapacity, events, Clock.systemUTC());
+        this(tags, assignments, null, cacheCapacity, events, Clock.systemUTC());
     }
 
     DefaultTagService(
             TagRepository tags,
             PlayerAssignmentRepository assignments,
+            PermissionService permissions,
             int cacheCapacity,
             TagEventBus events,
             Clock clock
@@ -64,6 +71,7 @@ public final class DefaultTagService implements TagService {
         this.activeTagCache = new ActiveTagCache(cacheCapacity);
         this.events = Objects.requireNonNull(events);
         this.clock = Objects.requireNonNull(clock);
+        this.permissions = permissions;
     }
 
     @Override
@@ -254,16 +262,28 @@ public final class DefaultTagService implements TagService {
 
         Optional<PlayerAssignment> stored = assignments.find(playerUuid);
         if (stored.isEmpty()) {
-            activeTagCache.put(playerUuid, Optional.empty());
-            return Optional.empty();
+            return automaticRoleTag(playerUuid);
         }
 
         PlayerAssignment assignment = removeExpired(playerUuid, stored.get());
         if (assignment.hasExpirations()) return resolveActiveTag(assignment);
 
         Optional<Tag> resolved = resolveActiveTag(assignment);
-        activeTagCache.put(playerUuid, resolved);
-        return resolved;
+        if (resolved.isPresent()) {
+            activeTagCache.put(playerUuid, resolved);
+            return resolved;
+        }
+        return automaticRoleTag(playerUuid);
+    }
+
+    private Optional<Tag> automaticRoleTag(UUID playerUuid) {
+        if (permissions == null) return Optional.empty();
+        return tags.findAll().stream()
+                .filter(Tag::enabled)
+                .filter(tag -> tag.metadata().get("auto-permission") != null)
+                .filter(tag -> permissions.has(playerUuid, tag.metadata().get("auto-permission")))
+                .max(Comparator.comparingInt(Tag::priority)
+                        .thenComparing(tag -> tag.id().value(), Comparator.reverseOrder()));
     }
 
     private PlayerAssignment removeExpired(UUID playerUuid, PlayerAssignment assignment) {
