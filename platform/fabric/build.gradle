@@ -40,6 +40,8 @@ tasks.named("compileGametestJava") {
     doFirst {
         logger.lifecycle("GAMETEST_COMPILE_CLASSPATH=" + sourceSets.gametest.compileClasspath.files.collect { it.name }.sort().join(","))
         logger.lifecycle("MAIN_RUNTIME_CLASSPATH=" + sourceSets.main.runtimeClasspath.files.collect { it.name }.sort().join(","))
+        def matches = sourceSets.gametest.compileClasspath.files.findAll { file -> file.isFile() && file.name.endsWith(".jar") && zipTree(file).matching { include("**/GameTestHelper.class") }.files }
+        logger.lifecycle("GAMETEST_HELPER_JARS=" + matches.collect { it.name }.join(","))
     }
 }
 
