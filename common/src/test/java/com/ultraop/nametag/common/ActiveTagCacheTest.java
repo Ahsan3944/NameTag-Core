@@ -26,6 +26,9 @@ class ActiveTagCacheTest {
 
         assertEquals(Optional.of(tag), cache.get(first));
         assertEquals(Optional.empty(), cache.get(second));
+        assertEquals(Optional.of(Optional.of(tag)), cache.findCached(first));
+        assertEquals(Optional.of(Optional.empty()), cache.findCached(second));
+        assertEquals(Optional.empty(), cache.findCached(UUID.randomUUID()));
         assertEquals(2, cache.size());
     }
 
