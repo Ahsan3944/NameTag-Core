@@ -29,7 +29,9 @@ public final class Fabric2111NameplateRenderer {
     private final TagService tagService;
     private final GlitchEffectEngine glitchEngine = new GlitchEffectEngine();
     private final Map<String, Team> teams = new HashMap<>();
+    private final Set<String> ownedTeamNames = new HashSet<>();
     private final Map<UUID, String> playerTeams = new HashMap<>();
+    private final Map<String, Tag> staticVisualTags = new HashMap<>();
     private final Map<String, AnimationState> animations = new HashMap<>();
 
     public Fabric2111NameplateRenderer(TagService tagService) {
@@ -40,10 +42,14 @@ public final class Fabric2111NameplateRenderer {
     public void stop(MinecraftServer server) {
         ServerScoreboard scoreboard = server.getScoreboard();
         for (Team team : new HashSet<>(teams.values())) {
-            scoreboard.removeTeam(team);
+            if (ownedTeamNames.contains(team.getName())) {
+                scoreboard.removeTeam(team);
+            }
         }
         teams.clear();
+        ownedTeamNames.clear();
         playerTeams.clear();
+        staticVisualTags.clear();
         animations.clear();
     }
 
@@ -100,9 +106,14 @@ public final class Fabric2111NameplateRenderer {
             Team team = teams.get(teamName);
             if (team != null) {
                 scoreboard.removeScoreHolderFromTeam(player.getName().getString(), team);
-                if (team.getPlayerList().isEmpty()) {
+                if (team.getPlayerList().isEmpty() && ownedTeamNames.remove(team.getName())) {
                     scoreboard.removeTeam(team);
                     teams.remove(teamName);
+                    staticVisualTags.remove(teamName);
+                    animations.remove(teamName);
+                } else if (team.getPlayerList().isEmpty()) {
+                    teams.remove(teamName);
+                    staticVisualTags.remove(teamName);
                     animations.remove(teamName);
                 }
             }
@@ -112,7 +123,11 @@ public final class Fabric2111NameplateRenderer {
 
     private void updateTeamVisual(Team team, Tag tag, long nowNanos) {
         if (!tag.effect().isGlitch()) {
-            team.setPrefix(buildStaticPrefix(tag));
+            Tag previous = staticVisualTags.get(team.getName());
+            if (!tag.equals(previous)) {
+                team.setPrefix(buildStaticPrefix(tag));
+                staticVisualTags.put(team.getName(), tag);
+            }
             animations.remove(team.getName());
             return;
         }
@@ -136,14 +151,20 @@ public final class Fabric2111NameplateRenderer {
         }
     }
 
-    private static Team createTeam(ServerScoreboard scoreboard, String name) {
-        Team existing = scoreboard.getTeam(name);
-        return existing != null ? existing : scoreboard.addTeam(name);
+    private Team createTeam(ServerScoreboard scoreboard, String baseName) {
+        String name = baseName;
+        int collision = 0;
+        while (scoreboard.getTeam(name) != null) {
+            collision++;
+            name = baseName + "_" + collision;
+        }
+        Team team = scoreboard.addTeam(name);
+        ownedTeamNames.add(name);
+        return team;
     }
 
     private static String teamName(Tag tag) {
-        long hash = Integer.toUnsignedLong(tag.id().value().hashCode());
-        return TEAM_PREFIX + Long.toUnsignedString(hash, 36);
+        return TEAM_PREFIX + tag.id().value();
     }
 
     static MutableText buildStaticPrefix(Tag tag) {
