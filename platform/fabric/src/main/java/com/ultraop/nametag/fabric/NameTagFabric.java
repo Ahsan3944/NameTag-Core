@@ -166,7 +166,7 @@ public final class NameTagFabric {
                                     .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
                                             "scope",
                                             StringArgumentType.getString(context, "tag"),
-                                            ...StringArgumentType.getString(context, "settings").trim().split("\\s+")
+                                            StringArgumentType.getString(context, "settings")
                                     })))));
  
             root.then(CommandManager.literal("role")
