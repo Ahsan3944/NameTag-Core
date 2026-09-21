@@ -15,9 +15,8 @@ import net.fabricmc.fabric.api.gametest.v1.CustomTestMethodInvoker;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.GameType;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -43,7 +42,7 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
 
     @GameTest
     public void playerLifecycleRestoresAndClearsRuntimeNameplate(GameTestHelper helper) {
-        ServerLevel world = helper.getLevel();
+        ServerWorld world = helper.getLevel();
         var server = world.getServer();
 
         DefaultTagService service = new DefaultTagService(
@@ -71,7 +70,7 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
         Fabric2111PlayerLifecycleListener lifecycle = new Fabric2111PlayerLifecycleListener(renderer);
         lifecycle.register();
 
-        ServerPlayer player = FakePlayer.get(
+        ServerPlayerEntity player = FakePlayer.get(
                 world,
                 new GameProfile(playerUuid, "UltraOP")
         );
