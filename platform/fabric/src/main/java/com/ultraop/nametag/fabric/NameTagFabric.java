@@ -12,8 +12,8 @@ import com.ultraop.nametag.common.DefaultMessageService;
 import com.ultraop.nametag.common.DefaultNameTagCommandHandler;
 import com.ultraop.nametag.common.DefaultTagService;
 import com.ultraop.nametag.common.FileTagAuditLogger;
-import com.ultraop.nametag.common.YamlPlayerAssignmentRepository;
-import com.ultraop.nametag.common.YamlTagRepository;
+import com.ultraop.nametag.common.StorageConfiguration;
+import com.ultraop.nametag.common.StorageFactory;
 import com.ultraop.nametag.fabric.v1_21_11.Fabric2111Adapter;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
@@ -36,10 +36,14 @@ public final class NameTagFabric {
         DefaultConfigurationService configuration = new DefaultConfigurationService(
                 dataDirectory.resolve("configuration.yml")
         );
+        StorageConfiguration storageConfiguration = StorageConfiguration.loadOrCreate(
+                dataDirectory.resolve("storage.yml"), dataDirectory);
+        StorageFactory.StorageRepositories storage = StorageFactory.open(
+                dataDirectory, storageConfiguration);
         PermissionService permissions = new FabricPermissionService();
         TagService service = new DefaultTagService(
-                new YamlTagRepository(dataDirectory.resolve("tags.yml")),
-                new YamlPlayerAssignmentRepository(dataDirectory.resolve("assignments.yml")),
+                storage.tags(),
+                storage.assignments(),
                 permissions
         );
 
