@@ -156,7 +156,10 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
 
     static Component styledTags(List<Tag> tags) {
         Component result = Component.empty();
-        for (Tag tag : tags) result = result.append(styledTag(tag)).append(Component.text(" "));
+        for (int index = 0; index < tags.size(); index++) {
+            if (index > 0) result = result.append(Component.text(" "));
+            result = result.append(styledTag(tags.get(index)));
+        }
         return result;
     }
 
