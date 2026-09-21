@@ -1,0 +1,15 @@
+.gradle/
+build/
+*/build/
+out/
+.idea/
+.vscode/
+*.iml
+
+# Local server/runtime data
+nametag.db
+*.db
+*.db-shm
+*.db-wal
+plugins/NameTag-Core/
+config/nametag-core/
