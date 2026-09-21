@@ -37,12 +37,11 @@ final class ActiveTagCache {
         };
     }
 
-    synchronized Optional<Tag> get(UUID playerUuid) {
-        return values.get(playerUuid);
-    }
-
-    synchronized boolean contains(UUID playerUuid) {
-        return values.containsKey(playerUuid);
+    synchronized Optional<Optional<Tag>> findCached(UUID playerUuid) {
+        if (!values.containsKey(playerUuid)) {
+            return Optional.empty();
+        }
+        return Optional.of(values.get(playerUuid));
     }
 
     synchronized void put(UUID playerUuid, Optional<Tag> tag) {
