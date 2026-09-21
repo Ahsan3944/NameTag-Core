@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- Completed common tab-completion for tag arguments of the effect and automatic-role commands, with regression coverage.
 - Clarified the two bounded resolution caches: 1024-entry legacy active-tag cache and 2048-entry contextual multi-tag cache.
 
 - Layered/world/region tag resolution with deterministic multi-tag rendering and persistent metadata-defined scopes.
