@@ -206,7 +206,7 @@ public final class DefaultTagService implements TagService {
     public void clear(UUID playerUuid) {
         Optional<PlayerAssignment> current = assignments.find(playerUuid);
         assignments.delete(playerUuid);
-        activeTagCache.invalidatePlayer(playerUuid);
+        activeTagCache.put(playerUuid, Optional.empty());
         current.ifPresent(previous ->
                 events.publish(new TagEvent.AssignmentChanged(
                         playerUuid, previous, new PlayerAssignment(playerUuid, List.of(), null))));
@@ -214,9 +214,8 @@ public final class DefaultTagService implements TagService {
 
     @Override
     public Optional<Tag> activeTag(UUID playerUuid) {
-        Optional<Tag> cached = activeTagCache.get(playerUuid);
-        if (cached != null) {
-            return cached;
+        if (activeTagCache.contains(playerUuid)) {
+            return activeTagCache.get(playerUuid);
         }
 
         Optional<Tag> resolved = assignments.find(playerUuid).flatMap(this::resolveActiveTag);
