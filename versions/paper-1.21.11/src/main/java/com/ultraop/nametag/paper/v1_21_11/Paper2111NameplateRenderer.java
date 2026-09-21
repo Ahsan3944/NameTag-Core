@@ -191,7 +191,7 @@ public final class Paper2111NameplateRenderer {
     }
 
     static Component buildStaticPrefix(Tag tag) {
-        return buildStaticPrefix(List.of(tag));
+        return buildSingleStaticPrefix(tag);
     }
 
     static Component buildStaticPrefix(List<Tag> tags) {
