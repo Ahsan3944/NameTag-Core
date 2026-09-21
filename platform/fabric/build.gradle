@@ -34,12 +34,5 @@ sourceSets.named("gametest") {
     runtimeClasspath += sourceSets.main.output
 }
 
-configurations.named("gametestCompileClasspath") {
-    extendsFrom(configurations.named("compileClasspath"))
-}
-
-configurations.named("gametestRuntimeClasspath") {
-    extendsFrom(configurations.named("runtimeClasspath"))
-}
 
 tasks.withType(JavaCompile).configureEach { options.release = 21 }
