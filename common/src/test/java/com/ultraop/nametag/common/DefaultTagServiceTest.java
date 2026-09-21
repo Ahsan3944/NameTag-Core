@@ -160,6 +160,77 @@ class DefaultTagServiceTest {
     }
 
     @Test
+    void contextualResolutionDoesNotCacheExpiringAssignments() {
+        Instant now = Instant.parse("2026-01-01T00:00:00Z");
+        MutableClock clock = new MutableClock(now);
+        InMemoryTagRepository tags = new InMemoryTagRepository();
+        InMemoryPlayerAssignmentRepository assignments = new InMemoryPlayerAssignmentRepository();
+        DefaultTagService service = new DefaultTagService(
+                tags, assignments, 8, new com.ultraop.nametag.api.TagEventBus(), clock
+        );
+        UUID player = UUID.randomUUID();
+
+        service.create(tag("member", "MEMBER", 10, true));
+        service.create(tag("vip", "VIP", 50, true));
+        service.assign(player, new TagId("member"));
+        service.assignUntil(player, new TagId("vip"), now.plusSeconds(60));
+        service.setActive(player, new TagId("vip"));
+
+        assertEquals(List.of("vip", "member"),
+                service.activeTags(player, new TagResolutionContext("world", 0, 64, 0))
+                        .stream().map(Tag::id).map(TagId::value).toList());
+
+        clock.advanceSeconds(61);
+
+        assertEquals(List.of("member"),
+                service.activeTags(player, new TagResolutionContext("world", 0, 64, 0))
+                        .stream().map(Tag::id).map(TagId::value).toList());
+    }
+
+    @Test
+    void contextualAutomaticRolesReflectPermissionChangesWithoutCaching() {
+        UUID player = UUID.randomUUID();
+        java.util.Set<String> granted = new java.util.HashSet<>();
+        PermissionService permissions = (uuid, permission) ->
+                player.equals(uuid) && granted.contains(permission);
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(),
+                new InMemoryPlayerAssignmentRepository(),
+                permissions
+        );
+        service.create(roleTag("vip", "VIP", 10, "group.vip"));
+        service.create(roleTag("staff", "STAFF", 20, "group.staff"));
+        TagResolutionContext context = new TagResolutionContext("world", 0, 64, 0);
+
+        granted.add("group.vip");
+        assertEquals(List.of("vip"),
+                service.activeTags(player, context).stream().map(Tag::id).map(TagId::value).toList());
+
+        granted.remove("group.vip");
+        granted.add("group.staff");
+        assertEquals(List.of("staff"),
+                service.activeTags(player, context).stream().map(Tag::id).map(TagId::value).toList());
+    }
+
+    @Test
+    void contextualAutomaticRolesUseAscendingTagIdAsTieBreaker() {
+        UUID player = UUID.randomUUID();
+        PermissionService permissions = (uuid, permission) ->
+                player.equals(uuid) && permission.equals("group.staff");
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(),
+                new InMemoryPlayerAssignmentRepository(),
+                permissions
+        );
+        service.create(roleTag("omega", "OMEGA", 50, "group.staff"));
+        service.create(roleTag("alpha", "ALPHA", 50, "group.staff"));
+
+        assertEquals(List.of("alpha", "omega"),
+                service.activeTags(player, new TagResolutionContext("world", 0, 64, 0))
+                        .stream().map(Tag::id).map(TagId::value).toList());
+    }
+
+    @Test
     void temporaryAssignmentExpiresAndFallsBack() {
         Instant now=Instant.parse("2026-01-01T00:00:00Z");
         InMemoryTagRepository tags=new InMemoryTagRepository();
@@ -355,6 +426,33 @@ class DefaultTagServiceTest {
                 true,
                 Map.of()
         );
+    }
+
+    private static final class MutableClock extends Clock {
+        private Instant current;
+
+        private MutableClock(Instant current) {
+            this.current = current;
+        }
+
+        private void advanceSeconds(long seconds) {
+            current = current.plusSeconds(seconds);
+        }
+
+        @Override
+        public Instant instant() {
+            return current;
+        }
+
+        @Override
+        public ZoneOffset getZone() {
+            return ZoneOffset.UTC;
+        }
+
+        @Override
+        public Clock withZone(java.time.ZoneId zone) {
+            return this;
+        }
     }
 
     private record PlayerAssignmentSnapshot(TagId active, int assignedCount) {}
