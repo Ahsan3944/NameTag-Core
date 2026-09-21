@@ -37,7 +37,7 @@ class Fabric2111ChatRendererTest {
 
         assertEquals("[<OWNER>/owner/0 <UltraOP>: Hello!", result.getString());
         assertNotNull(result.getSiblings());
-        assertEquals(6, result.getSiblings().size());
+        assertEquals(12, result.getSiblings().size());
 
         Text styledTag = result.getSiblings().get(1);
         Text firstGlyph = styledTag.getSiblings().get(0);
@@ -91,7 +91,7 @@ class Fabric2111ChatRendererTest {
                 message
         );
 
-        Text messagePart = result.getSiblings().get(5);
+        Text messagePart = result.getSiblings().get(11);
         assertEquals("Hello", messagePart.getString());
         assertEquals(Boolean.TRUE, messagePart.getStyle().isItalic());
     }
