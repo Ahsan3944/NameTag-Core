@@ -52,6 +52,9 @@ afterEvaluate {
             logger.lifecycle("GAMETEST_CP=" + classpath.files.collect { it.name }.findAll { it.toLowerCase().contains("minecraft") || it.toLowerCase().contains("fabric") || it.toLowerCase().contains("yarn") }.sort().join("|"))
             logger.lifecycle("LOOM_NAMED_CP=" + configurations.findByName("minecraftNamedCompile")?.files?.collect { it.name }?.join("|"))
             logger.lifecycle("LOOM_COMMON_NAMED_CP=" + configurations.findByName("minecraftCommonNamedCompile")?.files?.collect { it.name }?.join("|"))
+            def helperEntry = "net/minecraft/gametest/framework/GameTestHelper.class"
+            def helperJars = classpath.files.findAll { it.isFile() && it.name.endsWith(".jar") && zipTree(it).matching { include(helperEntry) }.files }
+            logger.lifecycle("GAMETEST_HELPER_JARS=" + helperJars.collect { it.name }.join("|"))
         }
     }
 }
