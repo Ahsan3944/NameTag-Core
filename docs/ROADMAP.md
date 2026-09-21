@@ -121,13 +121,14 @@
 - [x] Performance/stress regression coverage for bounded cache behavior.
 - [x] Documentation audit.
 
-## Phase 11 — v1.0 Release
+## Phase 11 — v1.0 Release Preparation
 - [x] Release artifacts published by CI.
 - [x] Compatibility matrix.
 - [x] Changelog.
 - [x] Installation instructions.
 - [x] Configuration reference.
 - [x] API reference.
+- [ ] Final release-version promotion.
 - [ ] Git tag.
 
 ## Phase 12 — Future Minecraft Versions
@@ -144,7 +145,7 @@ For each new version:
 
 ## Deferred feature gates
 
-The following items remain intentionally unimplemented and are tracked as separate implementation batches. The layered/world/region batch below is complete.
+The following items remain intentionally unimplemented and are tracked as separate implementation batches. The layered/world/region batch is complete.
 
 - **Multiple active/layered tags:** [x] Implemented with contextual multi-tag resolution and deterministic renderer/chat composition on Paper and Fabric.
 - **Per-world tags:** [x] Implemented with world-aware resolution context and persistent tag metadata scopes.
@@ -173,7 +174,6 @@ Potential future additions:
 - [x] Import/export.
 - [x] Per-world tags.
 - [x] Per-region tags.
-- Web management.
 - [x] Audit logs.
 - [x] Tag packs.
 - [x] Generic animated-effect contract and built-in rainbow/pulse/wave effects.
