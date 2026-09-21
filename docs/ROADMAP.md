@@ -144,11 +144,11 @@ For each new version:
 
 ## Deferred feature gates
 
-The following items remain intentionally unimplemented because completing them requires a cross-cutting contract that is not present in the current 1.21.11 server-only API. They are tracked as separate implementation batches rather than partial flags or metadata-only approximations.
+The following items remain intentionally unimplemented and are tracked as separate implementation batches. The layered/world/region batch below is complete.
 
-- **Multiple active/layered tags:** requires a multi-tag resolution contract and renderer/chat composition semantics on both Paper and Fabric. The current public renderer contract accepts one resolved tag.
-- **Per-world tags:** requires world-aware resolution context to flow from both platform adapters into nameplate and chat rendering, plus persistent world-scoped assignment/configuration semantics.
-- **Per-region tags:** requires the same world/position context plus a region definition/provider contract. A hard dependency on a single region plugin would violate the platform-neutral common layer.
+- **Multiple active/layered tags:** [x] Implemented with contextual multi-tag resolution and deterministic renderer/chat composition on Paper and Fabric.
+- **Per-world tags:** [x] Implemented with world-aware resolution context and persistent tag metadata scopes.
+- **Per-region tags:** [x] Implemented as persistent metadata-defined cuboid regions, without a hard dependency on a region plugin.
 - **Web management:** requires an authenticated HTTP boundary, permission mapping, CSRF/session handling, audit integration, lifecycle management, and a server-side mutation API. A standalone web endpoint without these controls is not an acceptable implementation.
 - **GUI:** requires a client entrypoint, screens/widgets, server-authoritative mutation packets, protocol/version handling, and client/server tests.
 - **Future Minecraft versions:** each version requires a dedicated version adapter/mapping pass and regression run; it is not safe to bulk-change the existing 1.21.11 adapter.
@@ -157,7 +157,7 @@ The following items remain intentionally unimplemented because completing them r
 ## Backlog
 
 Potential future additions:
-- Multiple active/layered tags.
+- [x] Multiple active/layered tags.
 - [x] Prefix/suffix.
 - [x] Chat placeholders (tag ID, priority, prefix, suffix).
 - [x] Temporary tag assignments.
@@ -171,8 +171,8 @@ Potential future additions:
 - [x] MySQL/MariaDB.
 - [x] PostgreSQL.
 - [x] Import/export.
-- Per-world tags.
-- Per-region tags.
+- [x] Per-world tags.
+- [x] Per-region tags.
 - Web management.
 - [x] Audit logs.
 - [x] Tag packs.
