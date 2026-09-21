@@ -41,6 +41,10 @@ final class ActiveTagCache {
         return values.get(playerUuid);
     }
 
+    synchronized boolean contains(UUID playerUuid) {
+        return values.containsKey(playerUuid);
+    }
+
     synchronized void put(UUID playerUuid, Optional<Tag> tag) {
         values.put(playerUuid, tag);
     }
