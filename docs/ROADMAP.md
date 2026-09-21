@@ -25,7 +25,7 @@
 - [x] Tag ID/display name.
 - [x] Color model.
 - [x] RGB parser.
-- [ ] Random color strategy.
+- [x] Random color strategy.
 - [x] Gradient model.
 - [x] Text style model.
 - [x] Effect model.
@@ -95,7 +95,7 @@
 - [x] Core unit tests.
 - [x] Platform-specific rendering tests.
 - [x] Chat fallback integration.
-- [ ] Performance safeguards.
+- [x] Performance safeguards.
 
 ## Phase 9 — GUI
 - [ ] Tag browser.
@@ -110,22 +110,22 @@
 - [ ] Save/cancel.
 
 ## Phase 10 — Stability
-- [ ] Full unit test suite.
+- [x] Full unit test suite.
 - [x] Full integration suite.
 - [x] Restart persistence test.
 - [x] Reload test.
-- [ ] Permission regression test.
-- [ ] Cross-platform behavior comparison.
+- [x] Permission regression test.
+- [x] Cross-platform behavior comparison.
 - [ ] Performance test.
 - [x] Documentation audit.
 
 ## Phase 11 — v1.0 Release
 - [ ] Release artifacts.
-- [ ] Compatibility matrix.
-- [ ] Changelog.
-- [ ] Installation instructions.
-- [ ] Configuration reference.
-- [ ] API reference.
+- [x] Compatibility matrix.
+- [x] Changelog.
+- [x] Installation instructions.
+- [x] Configuration reference.
+- [x] API reference.
 - [ ] Git tag.
 
 ## Phase 12 — Future Minecraft Versions
