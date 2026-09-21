@@ -101,6 +101,7 @@
 - [x] Command-only administration.
 - [x] Tag create/list/delete.
 - [x] Tag edit for display name.
+- [x] Tag priority editing.
 - [x] Preset/RGB/random/gradient color commands.
 - [x] Bold/italic/plain style commands.
 - [x] Enable/disable and chat-visibility commands.
