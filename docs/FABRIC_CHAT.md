@@ -14,7 +14,7 @@ Fabric 1.21.11 chat integration uses Fabric API's server-side ServerMessageDecor
 
 ## Secure chat boundary
 
-The Fabric server-side decorator changes the displayed chat component. Fabric documents the message decorator as the supported server-side mechanism for message modification, while also noting that server-side message decoration interacts with signed-chat preview/verification behavior. The renderer therefore keeps its output deterministic for the same sender, active tag and message inputs and does not perform time-based animation in chat.
+The Fabric server-side decorator changes the displayed chat component. Minecraft's 1.21.11 message-decorator API documents that changed text can no longer be verified as the original signed message. The renderer therefore keeps its output deterministic for the same sender, active tag and message inputs and does not perform time-based animation in chat.
 
 NameTag-Core does not cancel chat when the feature is disabled or when a sender does not meet the Fabric chat conditions; vanilla/other-mod chat handling remains untouched.
 
