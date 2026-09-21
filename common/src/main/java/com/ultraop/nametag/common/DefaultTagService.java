@@ -61,6 +61,16 @@ public final class DefaultTagService implements TagService {
     DefaultTagService(
             TagRepository tags,
             PlayerAssignmentRepository assignments,
+            int cacheCapacity,
+            TagEventBus events,
+            Clock clock
+    ) {
+        this(tags, assignments, null, cacheCapacity, events, clock);
+    }
+
+    DefaultTagService(
+            TagRepository tags,
+            PlayerAssignmentRepository assignments,
             PermissionService permissions,
             int cacheCapacity,
             TagEventBus events,
