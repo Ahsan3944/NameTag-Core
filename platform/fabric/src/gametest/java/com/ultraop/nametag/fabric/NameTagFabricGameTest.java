@@ -101,6 +101,62 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
         context.complete();
     }
 
+    @GameTest
+    public void foreignScoreboardTeamIsNotHijacked(TestContext context) {
+        ServerWorld world = context.getWorld();
+        var server = world.getServer();
+        var scoreboard = server.getScoreboard();
+
+        String foreignTeamName = "nametag_core_owner";
+        var foreignTeam = scoreboard.getTeam(foreignTeamName);
+        if (foreignTeam != null) {
+            scoreboard.removeTeam(foreignTeam);
+        }
+        foreignTeam = scoreboard.addTeam(foreignTeamName);
+        foreignTeam.setPrefix(net.minecraft.text.Text.literal("FOREIGN "));
+        scoreboard.addScoreHolderToTeam("ForeignPlayer", foreignTeam);
+
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(),
+                new InMemoryPlayerAssignmentRepository()
+        );
+        Tag tag = new Tag(
+                new TagId("owner"),
+                "OWNER",
+                new TagColor.Rgb(255, 170, 0),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of()
+        );
+        service.create(tag);
+        UUID playerUuid = UUID.randomUUID();
+        service.assign(playerUuid, tag.id());
+
+        Fabric2111NameplateRenderer renderer = new Fabric2111NameplateRenderer(service);
+        ServerPlayerEntity player = FakePlayer.get(world, new GameProfile(playerUuid, "UltraOP"));
+        renderer.refreshPlayer(player);
+
+        if (scoreboard.getTeam(foreignTeamName) == null
+                || !"FOREIGN ".equals(scoreboard.getTeam(foreignTeamName).getPrefix().getString())) {
+            renderer.stop(server);
+            context.throwGameTestException("NameTag renderer hijacked the pre-existing scoreboard team");
+            return;
+        }
+
+        if (scoreboard.getScoreHolderTeam(player.getName().getString()) == scoreboard.getTeam(foreignTeamName)) {
+            renderer.stop(server);
+            context.throwGameTestException("Player was assigned to the foreign scoreboard team");
+            return;
+        }
+
+        renderer.stop(server);
+        scoreboard.removeTeam(foreignTeam);
+        context.complete();
+    }
+
     @Override
     public void invokeTestMethod(TestContext context, Method method) throws ReflectiveOperationException {
         method.invoke(this, context);
