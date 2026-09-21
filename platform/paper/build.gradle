@@ -15,4 +15,3 @@ processResources {
         expand(project: project)
     }
 }
-
