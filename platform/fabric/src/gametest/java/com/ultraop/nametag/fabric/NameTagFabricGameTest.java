@@ -14,7 +14,7 @@ import com.ultraop.nametag.fabric.v1_21_11.Fabric2111PlayerLifecycleListener;
 import net.fabricmc.fabric.api.gametest.v1.CustomTestMethodInvoker;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.fabricmc.fabric.api.entity.FakePlayer;
-import net.minecraft.test.GameTestHelper;
+import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 
@@ -25,7 +25,7 @@ import java.util.UUID;
 public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
     @GameTest
     public void bootstrapRegistersNameTagCommands(GameTestHelper helper) {
-        boolean registered = helper.getWorld()
+        boolean registered = helper.getLevel()
                 .getServer()
                 .getCommands()
                 .getDispatcher()
@@ -42,7 +42,7 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
 
     @GameTest
     public void playerLifecycleRestoresAndClearsRuntimeNameplate(GameTestHelper helper) {
-        ServerWorld world = helper.getWorld();
+        ServerWorld world = helper.getLevel();
         var server = world.getServer();
 
         DefaultTagService service = new DefaultTagService(
