@@ -1,6 +1,7 @@
 package com.ultraop.nametag.fabric.v1_21_11;
 
 import com.ultraop.nametag.api.ConfigurationService;
+import com.ultraop.nametag.api.TagResolutionContext;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
@@ -16,6 +17,7 @@ import net.minecraft.text.TextColor;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.List;
 
 public final class Fabric2111ChatRenderer {
     private static final String TAG_PLACEHOLDER = "{tag}";
@@ -78,7 +80,7 @@ public final class Fabric2111ChatRenderer {
             }
 
             Text replacement = switch (match.placeholder()) {
-                case TAG_PLACEHOLDER -> styledTag(tag);
+                case TAG_PLACEHOLDER, "{tags}" -> styledTags(tags);
                 case "{tag_id}" -> Text.literal(tag.id().value());
                 case "{tag_priority}" -> Text.literal(String.valueOf(tag.priority()));
                 case "{tag_prefix}" -> Text.literal(TagPresentation.prefix(tag));
@@ -165,6 +167,7 @@ public final class Fabric2111ChatRenderer {
 
     private static PlaceholderMatch nextPlaceholder(String format, int fromIndex) {
         int tag = format.indexOf(TAG_PLACEHOLDER, fromIndex);
+        int tags = format.indexOf("{tags}", fromIndex);
         int player = format.indexOf(PLAYER_PLACEHOLDER, fromIndex);
         int message = format.indexOf(MESSAGE_PLACEHOLDER, fromIndex);
         int tagId = format.indexOf("{tag_id}", fromIndex);
@@ -185,6 +188,7 @@ public final class Fabric2111ChatRenderer {
         }
         // {tag_id}, {tag_priority}, {tag_prefix}, and {tag_suffix} all begin with {tag}.
         // Resolve the longer placeholders first so the generic {tag} token cannot consume them.
+        if (tags >= 0 && tags < start) { start = tags; placeholder = "{tags}"; }
         if (tag >= 0 && tag < start) {
             start = tag;
             placeholder = TAG_PLACEHOLDER;
