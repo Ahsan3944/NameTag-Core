@@ -292,6 +292,7 @@ class DefaultTagServiceTest {
         service.assign(player, new TagId("global"));
         service.assign(player, new TagId("world"));
         service.assign(player, new TagId("spawn"));
+        service.setActive(player, new TagId("spawn"));
 
         List<Tag> inside = service.activeTags(player, new TagResolutionContext("world_nether", 0, 64, 0));
         assertEquals(List.of("spawn", "world", "global"), inside.stream().map(tag -> tag.id().value()).toList());
