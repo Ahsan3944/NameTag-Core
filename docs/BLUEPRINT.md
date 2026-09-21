@@ -96,6 +96,10 @@ Initial contract:
 /nametag delete <tag>
 /nametag reload
 /nametag glitch <tag> <white|colorful>
+/nametag effect <tag> <none|rainbow|pulse|wave>
+/nametag role <tag> <permission|clear>
+/nametag export <file>
+/nametag import <file>
 ```
 
 Tab completion is required for subcommands, players, tags and valid options.
@@ -271,6 +275,8 @@ nametag.chat
 nametag.admin
 ```
 
+Automatic role tags use the reserved tag metadata key `auto-permission`. Platform permission bridges resolve that node for online players; explicit assigned tags remain authoritative.
+
 OP is the default admin fallback where supported.
 
 ## 12. Storage
@@ -288,6 +294,8 @@ Future providers:
 - SQLite.
 - MySQL/MariaDB.
 - PostgreSQL.
+
+The current production baseline remains YAML. Database providers are intentionally not marked complete until a configuration path, lifecycle management, migration coverage, and platform runtime packaging are implemented and tested end-to-end.
 
 Storage is replaceable, versioned and preferably atomic. Persistent data has a schema version and migration path.
 
