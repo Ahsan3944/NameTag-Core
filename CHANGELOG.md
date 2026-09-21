@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added configurable YAML, SQLite, MySQL, MariaDB, and PostgreSQL persistence through JDBC.
+- Added versioned database schema initialization, transactional repository writes, and one-time YAML-to-database migration.
+- Wired database storage selection into both Paper and Fabric bootstraps and added SQLite persistence/restart regression coverage.
+
+
+## Unreleased
+
 ### Stability hardening
 
 - Added automatic role-tag resolution through the `auto-permission` tag metadata key, with deterministic priority resolution and explicit-assignment precedence.
