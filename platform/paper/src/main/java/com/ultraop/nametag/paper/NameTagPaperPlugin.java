@@ -19,7 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 
-public final class NameTagPaperPlugin extends JavaPlugin implements CommandExecutor, TabCompleter {
+public class NameTagPaperPlugin extends JavaPlugin implements CommandExecutor, TabCompleter {
     private TagService tagService;
     private DefaultConfigurationService configurationService;
     private NameTagCommandHandler commandHandler;
