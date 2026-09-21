@@ -5,6 +5,7 @@
 ### Stability hardening
 
 - Added automatic role-tag resolution through the `auto-permission` tag metadata key, with deterministic priority resolution and explicit-assignment precedence.
+- Synchronized README/API/roadmap documentation with the implemented effect, role and tag-pack import/export command surface.
 - Added `/nametag role <tag> <permission|clear>` command support across the common command layer and Fabric command tree.
 - Added optional Fabric LuckPerms API integration and Paper native permission bridging for automatic role checks.
 
