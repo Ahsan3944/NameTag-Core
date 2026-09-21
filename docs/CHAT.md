@@ -20,6 +20,7 @@ The configured `chatFormat` supports these placeholders:
 - `{tag}` — active tag display name.
 - `{player}` — the normal Paper player display-name component.
 - `{message}` — the original chat message component.
+- `{tag_meta:key}` — a tag metadata value; unknown keys remain literal.
 
 Unknown placeholders remain literal text.
 

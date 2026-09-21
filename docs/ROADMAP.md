@@ -153,7 +153,7 @@ Potential future additions:
 - Automatic role tags.
 - Rainbow animation.
 - Pulse/wave effects.
-- Placeholder support.
+- [x] Dynamic tag metadata placeholders.
 - LuckPerms integration.
 - SQLite.
 - MySQL/MariaDB.

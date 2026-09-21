@@ -28,4 +28,6 @@
 - Added `{tag_id}`, `{tag_priority}`, `{tag_prefix}`, and `{tag_suffix}` chat placeholders across Fabric, Paper, and the common renderer.
 - Added core and platform regression tests for the new presentation and placeholder behavior.
 - Added per-tag temporary assignments with persistent expiration timestamps and duration-aware `/nametag give` support.
+- Added append-only domain audit logging for tag and assignment mutations.
+- Added dynamic `{tag_meta:key}` chat placeholder support across the common, Fabric, and Paper renderers.
 - Kept the GUI milestone explicitly deferred until the client entrypoint, server-authoritative networking contract, and version-specific client implementation can be delivered together.
