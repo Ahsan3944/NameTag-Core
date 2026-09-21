@@ -20,3 +20,19 @@ jobs:
           gradle-version: '9.2.1'
       - name: Run build
         run: gradle build --no-daemon
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nametag-core-build-artifacts
+          path: |
+            core/build/libs/*.jar
+            api/build/libs/*.jar
+            common/build/libs/*.jar
+            platform/fabric/build/libs/*.jar
+            platform/paper/build/libs/*.jar
+            versions/fabric-1.21.11/build/libs/*.jar
+            versions/paper-1.21.11/build/libs/*.jar
+          if-no-files-found: error
+          retention-days: 14
