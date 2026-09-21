@@ -27,21 +27,13 @@ dependencies {
     add("gametestImplementation", "net.fabricmc.fabric-api:fabric-gametest-api-v1:3.1.27+4fc5413f3e")
 }
 
-configurations {
-    gametestMinecraft {
-        canBeResolved = true
-        canBeConsumed = false
-        extendsFrom(minecraft)
-    }
-}
-
 sourceSets.named("gametest") {
     compileClasspath += sourceSets.main.compileClasspath
     compileClasspath += sourceSets.main.output
     compileClasspath += configurations.gametestMinecraft
     runtimeClasspath += sourceSets.main.runtimeClasspath
     runtimeClasspath += sourceSets.main.output
-    runtimeClasspath += configurations.gametestMinecraft
+    runtimeClasspath += sourceSets.main.runtimeClasspath
 }
 
 
