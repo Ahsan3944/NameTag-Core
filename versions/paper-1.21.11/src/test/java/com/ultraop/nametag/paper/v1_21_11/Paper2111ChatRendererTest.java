@@ -36,12 +36,7 @@ class Paper2111ChatRendererTest {
                 Component.text("Hello!")
         );
 
-        assertEquals("[", textOf(result.children().get(0)));
-        assertEquals("OWNER", textOf(result.children().get(1)));
-        assertEquals("] ", textOf(result.children().get(2)));
-        assertEquals("UltraOP", textOf(result.children().get(3)));
-        assertEquals(": ", textOf(result.children().get(4)));
-        assertEquals("Hello!", textOf(result.children().get(5)));
+        assertEquals("[OWNER] UltraOP: Hello!", plain(result));
 
         Component styledTag = Paper2111ChatRenderer.styledTag(tag);
         Component firstGlyph = styledTag.children().get(0);
@@ -113,7 +108,14 @@ class Paper2111ChatRendererTest {
     }
 
 
-    private static String textOf(Component component) {
-        return ((TextComponent) component).content();
+    private static String plain(Component component) {
+        StringBuilder result = new StringBuilder();
+        if (component instanceof TextComponent text) {
+            result.append(text.content());
+        }
+        for (Component child : component.children()) {
+            result.append(plain(child));
+        }
+        return result.toString();
     }
 }
