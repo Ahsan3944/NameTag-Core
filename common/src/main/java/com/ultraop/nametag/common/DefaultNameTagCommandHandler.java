@@ -355,6 +355,14 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     }
 
     private void scope(CommandSource source, String[] args) {
+        if (args.length == 3 && args[2].contains(" ")) {
+            String[] split = args[2].trim().split("\\s+");
+            String[] expanded = new String[2 + split.length];
+            expanded[0] = args[0];
+            expanded[1] = args[1];
+            System.arraycopy(split, 0, expanded, 2, split.length);
+            args = expanded;
+        }
         if (args.length < 3) {
             throw new IllegalArgumentException("Usage: /nametag scope <tag> clear|world <world>|region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>");
         }
