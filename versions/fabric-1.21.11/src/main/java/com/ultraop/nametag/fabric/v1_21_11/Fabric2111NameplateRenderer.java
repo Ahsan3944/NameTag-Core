@@ -170,7 +170,9 @@ public final class Fabric2111NameplateRenderer {
 
     private static String teamName(List<Tag> tags) {
         String composition = tags.stream().map(tag -> tag.id().value()).reduce((a, b) -> a + "|" + b).orElse("empty");
-        String hash = Integer.toUnsignedString(composition.hashCode(), 36);\n        if (hash.length() > 3) hash = hash.substring(hash.length() - 3);\n        return TEAM_PREFIX + hash;
+        String hash = Integer.toUnsignedString(composition.hashCode(), 36);
+        if (hash.length() > 3) hash = hash.substring(hash.length() - 3);
+        return TEAM_PREFIX + hash;
     }
 
     static MutableText buildStaticPrefix(Tag tag) {
