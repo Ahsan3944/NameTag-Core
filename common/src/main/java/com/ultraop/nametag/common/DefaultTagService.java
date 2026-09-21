@@ -1,6 +1,8 @@
 package com.ultraop.nametag.common;
 
 import com.ultraop.nametag.api.PlayerAssignmentRepository;
+import com.ultraop.nametag.api.TagEvent;
+import com.ultraop.nametag.api.TagEventBus;
 import com.ultraop.nametag.api.TagRepository;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.core.model.PlayerAssignment;
@@ -22,9 +24,10 @@ public final class DefaultTagService implements TagService {
 
     private final PlayerAssignmentRepository assignments;
     private final ActiveTagCache activeTagCache;
+    private final TagEventBus events;
 
     public DefaultTagService(TagRepository tags, PlayerAssignmentRepository assignments) {
-        this(tags, assignments, DEFAULT_CACHE_CAPACITY);
+        this(tags, assignments, DEFAULT_CACHE_CAPACITY, new TagEventBus());
     }
 
     DefaultTagService(
@@ -32,9 +35,24 @@ public final class DefaultTagService implements TagService {
             PlayerAssignmentRepository assignments,
             int cacheCapacity
     ) {
+        this(tags, assignments, cacheCapacity, new TagEventBus());
+    }
+
+    public DefaultTagService(
+            TagRepository tags,
+            PlayerAssignmentRepository assignments,
+            int cacheCapacity,
+            TagEventBus events
+    ) {
         this.tags = Objects.requireNonNull(tags);
         this.assignments = Objects.requireNonNull(assignments);
         this.activeTagCache = new ActiveTagCache(cacheCapacity);
+        this.events = Objects.requireNonNull(events);
+    }
+
+    @Override
+    public TagEventBus events() {
+        return events;
     }
 
     @Override
@@ -44,27 +62,31 @@ public final class DefaultTagService implements TagService {
             throw new IllegalArgumentException("Tag already exists: " + tag.id().value());
         }
         tags.save(tag);
+        events.publish(new TagEvent.Created(tag));
         return tag;
     }
 
     @Override
     public Tag update(Tag tag) {
         TagValidator.validate(tag);
-        if (tags.find(tag.id()).isEmpty()) {
-            throw new IllegalArgumentException("Tag does not exist: " + tag.id().value());
-        }
+        Tag previous = tags.find(tag.id()).orElseThrow(() ->
+                new IllegalArgumentException("Tag does not exist: " + tag.id().value()));
         tags.save(tag);
         // Any tag update can change priority/enabled resolution for players using other tags.
         activeTagCache.clear();
+        events.publish(new TagEvent.Updated(previous, tag));
         return tag;
     }
 
     @Override
     public boolean delete(TagId id) {
-        if (tags.find(id).isEmpty()) return false;
+        Tag deleted = tags.find(id).orElse(null);
+        if (deleted == null) return false;
 
         tags.delete(id);
         activeTagCache.invalidateTag(id);
+
+        List<TagEvent.AssignmentChanged> assignmentEvents = new ArrayList<>();
 
         for (PlayerAssignment current : assignments.findAll()) {
             if (!current.assignedTagIds().contains(id)) {
@@ -84,8 +106,14 @@ public final class DefaultTagService implements TagService {
                 assignments.save(updated);
             }
             activeTagCache.invalidatePlayer(current.playerUuid());
+            assignmentEvents.add(new TagEvent.AssignmentChanged(
+                    current.playerUuid(), current, updated));
         }
 
+        for (TagEvent.AssignmentChanged event : assignmentEvents) {
+            events.publish(event);
+        }
+        events.publish(new TagEvent.Deleted(deleted));
         return true;
     }
 
@@ -115,6 +143,9 @@ public final class DefaultTagService implements TagService {
         TagValidator.validate(updated);
         assignments.save(updated);
         activeTagCache.invalidatePlayer(playerUuid);
+        if (!updated.equals(current)) {
+            events.publish(new TagEvent.AssignmentChanged(playerUuid, current, updated));
+        }
         return updated;
     }
 
@@ -140,6 +171,9 @@ public final class DefaultTagService implements TagService {
         TagValidator.validate(updated);
         assignments.save(updated);
         activeTagCache.invalidatePlayer(playerUuid);
+        if (!updated.equals(current)) {
+            events.publish(new TagEvent.AssignmentChanged(playerUuid, current, updated));
+        }
         return updated;
     }
 
@@ -162,13 +196,20 @@ public final class DefaultTagService implements TagService {
         }
 
         activeTagCache.invalidatePlayer(playerUuid);
+        if (!updated.equals(current)) {
+            events.publish(new TagEvent.AssignmentChanged(playerUuid, current, updated));
+        }
         return updated;
     }
 
     @Override
     public void clear(UUID playerUuid) {
+        Optional<PlayerAssignment> current = assignments.find(playerUuid);
         assignments.delete(playerUuid);
         activeTagCache.invalidatePlayer(playerUuid);
+        current.ifPresent(previous ->
+                events.publish(new TagEvent.AssignmentChanged(
+                        playerUuid, previous, new PlayerAssignment(playerUuid, List.of(), null))));
     }
 
     @Override
