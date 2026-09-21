@@ -175,21 +175,30 @@ public final class Paper2111NameplateRenderer {
         return TEAM_PREFIX + Long.toUnsignedString(hash, 36);
     }
 
-    private static Component buildStaticPrefix(Tag tag) {
-        Component text = Component.text(tag.displayName());
-        text = applyStyle(text, tag.style());
-
+    static Component buildStaticPrefix(Tag tag) {
+        TagStyle style = tag.style();
         TagColor color = tag.color();
-        if (color instanceof TagColor.Rgb rgb) {
-            text = text.color(TextColor.color(rgb.red(), rgb.green(), rgb.blue()));
-        } else if (color instanceof TagColor.Preset preset) {
-            TextColor presetColor = presetColor(preset.name());
-            if (presetColor != null) {
-                text = text.color(presetColor);
+        Component result = Component.empty();
+        int[] codePoints = tag.displayName().codePoints().toArray();
+        long seed = tag.id().value().hashCode();
+
+        for (int index = 0; index < codePoints.length; index++) {
+            Component glyph = Component.text(new String(Character.toChars(codePoints[index])));
+            if (color instanceof TagColor.Preset preset) {
+                TextColor presetColor = presetColor(preset.name());
+                if (presetColor != null) {
+                    glyph = glyph.color(presetColor);
+                }
+            } else {
+                Integer rgb = TagColor.resolve(color, index, codePoints.length, seed);
+                if (rgb != null) {
+                    glyph = glyph.color(TextColor.color(rgb));
+                }
             }
+            result = result.append(applyStyle(glyph, style));
         }
 
-        return text.append(Component.text(" "));
+        return result.append(Component.text(" "));
     }
 
     private static Component buildGlitchPrefix(GlitchFrame frame, TagStyle style) {
