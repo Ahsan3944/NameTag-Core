@@ -151,8 +151,8 @@ Potential future additions:
 - [x] Temporary tag assignments.
 - [x] Per-tag expiration with persistent timestamps.
 - Automatic role tags.
-- Rainbow animation.
-- Pulse/wave effects.
+- [x] Rainbow animation.
+- [x] Pulse/wave effects.
 - [x] Dynamic tag metadata placeholders.
 - LuckPerms integration.
 - SQLite.
@@ -164,3 +164,4 @@ Potential future additions:
 - Web management.
 - [x] Audit logs.
 - [x] Tag packs.
+- [x] Generic animated-effect contract and built-in rainbow/pulse/wave effects.

@@ -37,6 +37,7 @@ This separation prevents Minecraft API changes from spreading through the entire
 - Custom RGB/hex colors.
 - Random color.
 - Animated/randomized color mode as an optional future effect.
+- Built-in Rainbow, Pulse and Wave nameplate effects with bounded animation cadence/intensity.
 - Gradient colors.
 
 ### Text formatting
@@ -88,6 +89,7 @@ Planned commands:
 - `/nametag delete <tag>`
 - `/nametag reload`
 - `/nametag glitch <tag> <white|colorful>`
+- `/nametag effect <tag> <none|rainbow|pulse|wave>`
 
 Exact syntax may be finalized during implementation, but command behavior must remain consistent between Fabric and Paper.
 

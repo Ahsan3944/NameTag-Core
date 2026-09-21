@@ -48,6 +48,7 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("message.imported", "Imported {count} tags from {file}");
         defaults.put("error.usage.remove", "Usage: /nametag remove <player>");
         defaults.put("error.usage.glitch", "Usage: /nametag glitch <tag> <white|colorful>");
+        defaults.put("error.usage.effect", "Usage: /nametag effect <tag> <none|rainbow|pulse|wave>");
         defaults.put("error.player.offline", "Player must be online: {player}");
         defaults.put("error.tag.not_found", "Tag not found: {tag}");
         defaults.put("message.created", "Created NameTag: {tag}");
@@ -56,8 +57,9 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("message.set_active", "Set {tag} as active for {player}");
         defaults.put("message.cleared", "Cleared NameTags from {player}");
         defaults.put("message.glitch_set", "Glitch effect set to {mode} for tag {tag}");
+        defaults.put("message.effect_set", "Effect set to {effect} for tag {tag}");
         defaults.put("message.list_entry", "{tag} -> {displayName}{glitch}");
-        defaults.put("message.usage", "/nametag create <tag> <displayName> | list | give <player> <tag> | set <player> <tag> | remove <player> | clear <player> | delete <tag> | reload | glitch <tag> <white|colorful>");
+        defaults.put("message.usage", "/nametag create <tag> <displayName> | list | give <player> <tag> | set <player> <tag> | remove <player> | clear <player> | delete <tag> | reload | glitch <tag> <white|colorful> | effect <tag> <none|rainbow|pulse|wave>");
         return defaults;
     }
 }

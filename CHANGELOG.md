@@ -31,4 +31,7 @@
 - Added append-only domain audit logging for tag and assignment mutations.
 - Added dynamic `{tag_meta:key}` chat placeholder support across the common, Fabric, and Paper renderers.
 - Added safe YAML tag-pack import/export with sandboxed filenames.
+- Added a generic animated-effect contract with built-in Rainbow, Pulse and Wave nameplate effects.
+- Added `/nametag effect <tag> <none|rainbow|pulse|wave>` with validated animation cadence/intensity defaults.
+- Added deterministic core regression coverage and wired animated effects into Fabric/Paper 1.21.11 nameplate rendering.
 - Kept the GUI milestone explicitly deferred until the client entrypoint, server-authoritative networking contract, and version-specific client implementation can be delivered together.

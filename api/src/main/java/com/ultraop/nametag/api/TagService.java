@@ -40,25 +40,20 @@ public interface TagService {
     void clear(UUID playerUuid);
     Optional<Tag> activeTag(UUID playerUuid);
 
+    /** Applies or replaces an effect while preserving all other tag properties. */
+    default Tag setEffect(TagId tagId, TagEffect effect) {
+        Tag tag = find(tagId).orElseThrow(() -> new IllegalArgumentException("Tag not found: " + tagId.value()));
+        if (effect == null) throw new IllegalArgumentException("Effect cannot be null");
+        return update(new Tag(tag.id(), tag.displayName(), tag.color(), tag.style(), effect,
+                tag.priority(), tag.enabled(), tag.chatEnabled(), tag.metadata()));
+    }
+
     /**
      * Applies or replaces the built-in glitch effect on an existing tag.
      * The tag's other appearance settings remain unchanged.
      */
     default Tag setGlitch(TagId tagId, GlitchSettings settings) {
-        Tag tag = find(tagId).orElseThrow(() ->
-                new IllegalArgumentException("Tag not found: " + tagId.value()));
-
-        return update(new Tag(
-                tag.id(),
-                tag.displayName(),
-                tag.color(),
-                tag.style(),
-                TagEffect.glitch(settings.mode(), settings.intensity(), settings.speedMs()),
-                tag.priority(),
-                tag.enabled(),
-                tag.chatEnabled(),
-                tag.metadata()
-        ));
+        return setEffect(tagId, TagEffect.glitch(settings.mode(), settings.intensity(), settings.speedMs()));
     }
 
     default Tag setGlitch(TagId tagId, GlitchMode mode) {
@@ -69,19 +64,6 @@ public interface TagService {
      * Removes the glitch effect while keeping all other tag properties.
      */
     default Tag clearGlitch(TagId tagId) {
-        Tag tag = find(tagId).orElseThrow(() ->
-                new IllegalArgumentException("Tag not found: " + tagId.value()));
-
-        return update(new Tag(
-                tag.id(),
-                tag.displayName(),
-                tag.color(),
-                tag.style(),
-                TagEffect.none(),
-                tag.priority(),
-                tag.enabled(),
-                tag.chatEnabled(),
-                tag.metadata()
-        ));
+        return setEffect(tagId, TagEffect.none());
     }
 }

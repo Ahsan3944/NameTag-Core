@@ -16,6 +16,7 @@ Core operations:
 - `setActive(UUID, TagId)`
 - Tag-pack import/export through the common codec
 - `remove(UUID, TagId)`
+- Generic `setEffect(TagId, TagEffect)` helper preserving all non-effect properties.
 - `clear(UUID)`
 - `activeTag(UUID)`
 

@@ -134,7 +134,13 @@ public final class NameTagFabric {
                                             "glitch",
                                             StringArgumentType.getString(context, "tag"),
                                             StringArgumentType.getString(context, "mode")
-                                    })))));
+                                    })))));            root.then(CommandManager.literal("effect")
+                    .then(CommandManager.argument("tag", StringArgumentType.word())
+                            .suggests((context, builder) -> suggestTags(context, builder, service, configuration, "effect"))
+                            .then(CommandManager.argument("effect", StringArgumentType.word())
+                                    .suggests((context, builder) -> CommandSource.suggestMatching(List.of("none", "rainbow", "pulse", "wave"), builder))
+                                    .executes(context -> execute(context, service, messages, configuration, new String[]{"effect", StringArgumentType.getString(context, "tag"), StringArgumentType.getString(context, "effect")})))));
+
 
             dispatcher.register(root);
         });

@@ -1,9 +1,12 @@
 package com.ultraop.nametag.fabric.v1_21_11;
 
 import com.ultraop.nametag.api.TagService;
+import com.ultraop.nametag.core.effect.AnimatedEffectEngine;
 import com.ultraop.nametag.core.effect.GlitchEffectEngine;
 import com.ultraop.nametag.core.model.GlitchFrame;
+import com.ultraop.nametag.core.model.AnimatedEffectSettings;
 import com.ultraop.nametag.core.model.GlitchSettings;
+import com.ultraop.nametag.core.model.TagEffect;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagStyle;
@@ -29,6 +32,7 @@ public final class Fabric2111NameplateRenderer {
 
     private final TagService tagService;
     private final GlitchEffectEngine glitchEngine = new GlitchEffectEngine();
+    private final AnimatedEffectEngine animatedEffectEngine = new AnimatedEffectEngine();
     private final Map<String, Team> teams = new HashMap<>();
     private final Set<String> ownedTeamNames = new HashSet<>();
     private final Map<UUID, String> playerTeams = new HashMap<>();
@@ -123,33 +127,27 @@ public final class Fabric2111NameplateRenderer {
     }
 
     private void updateTeamVisual(Team team, Tag tag, long nowNanos) {
-        if (!tag.effect().isGlitch()) {
+        String effectId = tag.effect().id();
+        if (!tag.effect().isGlitch() && !TagEffect.isAnimated(effectId)) {
             Tag previous = staticVisualTags.get(team.getName());
-            if (!tag.equals(previous)) {
-                team.setPrefix(buildStaticPrefix(tag));
-                staticVisualTags.put(team.getName(), tag);
-            }
+            if (!tag.equals(previous)) { team.setPrefix(buildStaticPrefix(tag)); staticVisualTags.put(team.getName(), tag); }
             animations.remove(team.getName());
             return;
         }
-
-        GlitchSettings settings = GlitchSettings.from(tag.effect());
-        AnimationState state = animations.computeIfAbsent(
-                team.getName(),
-                ignored -> new AnimationState(nowNanos, 0L)
-        );
-
-        if (nowNanos - state.lastFrameNanos >= settings.speedMs() * 1_000_000L) {
-            GlitchFrame frame = glitchEngine.render(
-                    TagPresentation.displayText(tag),
-                    settings,
-                    state.frameIndex,
-                    tag.id().value().hashCode()
-            );
-            team.setPrefix(buildGlitchPrefix(frame, tag.style()));
-            state.lastFrameNanos = nowNanos;
-            state.frameIndex++;
+        long speedMs = tag.effect().isGlitch() ? GlitchSettings.from(tag.effect()).speedMs() : AnimatedEffectSettings.from(tag.effect()).speedMs();
+        AnimationState state = animations.computeIfAbsent(team.getName(), ignored -> new AnimationState(nowNanos, 0L));
+        if (nowNanos - state.lastFrameNanos < speedMs * 1_000_000L) return;
+        GlitchFrame frame;
+        if (tag.effect().isGlitch()) {
+            GlitchSettings settings = GlitchSettings.from(tag.effect());
+            frame = glitchEngine.render(TagPresentation.displayText(tag), settings, state.frameIndex, tag.id().value().hashCode());
+        } else {
+            AnimatedEffectSettings settings = AnimatedEffectSettings.from(tag.effect());
+            String text = TagPresentation.displayText(tag); long seed = tag.id().value().hashCode();
+            frame = animatedEffectEngine.render(text, settings, state.frameIndex, seed, index -> resolveBaseColor(tag, index, text.length(), seed));
         }
+        team.setPrefix(buildGlitchPrefix(frame, tag.style()));
+        state.lastFrameNanos = nowNanos; state.frameIndex++;
     }
 
     private Team createTeam(ServerScoreboard scoreboard, String baseName) {
@@ -203,6 +201,16 @@ public final class Fabric2111NameplateRenderer {
             result.append(part);
         }
         return result.append(Text.literal(" "));
+    }
+
+    private static int resolveBaseColor(Tag tag, int index, int length, long seed) {
+        TagColor color = tag.color();
+        if (color instanceof TagColor.Preset preset) {
+            TextColor parsed = TextColor.parse(preset.name()).result().orElse(null);
+            return parsed == null ? 0xFFFFFF : parsed.getRgb();
+        }
+        Integer rgb = TagColor.resolve(color, index, length, seed);
+        return rgb == null ? 0xFFFFFF : rgb;
     }
 
     private static Style applyColor(Style style, TagColor color) {

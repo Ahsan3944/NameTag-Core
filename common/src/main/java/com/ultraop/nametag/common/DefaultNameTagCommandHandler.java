@@ -33,7 +33,7 @@ import java.nio.file.Path;
 
 public final class DefaultNameTagCommandHandler implements NameTagCommandHandler {
     private static final List<String> SUBCOMMANDS =
-            List.of("create", "list", "give", "set", "remove", "clear", "delete", "glitch", "reload", "export", "import");
+            List.of("create", "list", "give", "set", "remove", "clear", "delete", "glitch", "effect", "reload", "export", "import");
 
     private final TagService tagService;
     private final PlayerResolver playerResolver;
@@ -124,6 +124,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 case "give", "set" -> assign(context.source(), args);
                 case "remove", "clear" -> clear(context.source(), args);
                 case "glitch" -> glitch(context.source(), args);
+                case "effect" -> effect(context.source(), args);
                 case "export" -> exportTags(context.source(), args);
                 case "import" -> importTags(context.source(), args);
                 default -> sendUsage(context.source());
@@ -170,6 +171,10 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             return List.of("white", "colorful").stream()
                     .filter(value -> value.startsWith(prefix))
                     .toList();
+        }
+        if (args.length == 3 && "effect".equals(subcommand)) {
+            String prefix = args[2].toLowerCase(Locale.ROOT);
+            return List.of("none", "rainbow", "pulse", "wave").stream().filter(value -> value.startsWith(prefix)).toList();
         }
 
         return List.of();
@@ -297,6 +302,23 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         ));
     }
 
+    private void effect(CommandSource source, String[] args) {
+        if (args.length != 3) throw new IllegalArgumentException(messages.message("error.usage.effect"));
+        TagId id = new TagId(args[1].toLowerCase(Locale.ROOT));
+        String effect = args[2].toLowerCase(Locale.ROOT);
+        NameTagConfiguration settings = configuration.current();
+        int intensity = settings.defaultGlitchIntensity();
+        int speedMs = settings.defaultGlitchSpeedMs();
+        Tag updated = switch (effect) {
+            case "none" -> tagService.setEffect(id, TagEffect.none());
+            case "rainbow" -> tagService.setEffect(id, TagEffect.rainbow(intensity, speedMs));
+            case "pulse" -> tagService.setEffect(id, TagEffect.pulse(intensity, speedMs));
+            case "wave" -> tagService.setEffect(id, TagEffect.wave(intensity, speedMs));
+            default -> throw new IllegalArgumentException("Unknown effect: " + effect + ". Use none, rainbow, pulse or wave.");
+        };
+        source.sendMessage(messages.format("message.effect_set", Map.of("effect", updated.effect().id(), "tag", updated.id().value())));
+    }
+
     private void exportTags(CommandSource source, String[] args) {
         if (args.length != 2) throw new IllegalArgumentException("Usage: /nametag export <file>");
         Path file = packPath(args[1]);
@@ -360,7 +382,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             case "delete" -> "nametag.delete";
             case "give", "set" -> "nametag.give";
             case "remove", "clear" -> "nametag.remove";
-            case "glitch" -> "nametag.edit";
+            case "glitch", "effect" -> "nametag.edit";
             case "reload" -> "nametag.reload";
             case "export", "import" -> "nametag.admin";
             default -> null;
