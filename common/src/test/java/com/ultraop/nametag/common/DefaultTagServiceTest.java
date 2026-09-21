@@ -460,4 +460,29 @@ class DefaultTagServiceTest {
     private static PlayerAssignmentSnapshot snapshot(com.ultraop.nametag.core.model.PlayerAssignment assignment) {
         return new PlayerAssignmentSnapshot(assignment.activeTagId(), assignment.assignedTagIds().size());
     }
+
+    @Test
+    void effectAndRoleSuggestionsExposeTagIdsBeforeTheirValues() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(),
+                new InMemoryPlayerAssignmentRepository()
+        );
+        service.create(tag("owner", "OWNER", 100, true));
+        service.create(tag("vip", "VIP", 50, true));
+
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+        RecordingSource source = new RecordingSource();
+
+        assertEquals(List.of("owner", "vip"),
+                handler.suggest(new CommandContext(source, new String[]{"effect", ""})));
+        assertEquals(List.of("vip"),
+                handler.suggest(new CommandContext(source, new String[]{"effect", "v"})));
+        assertEquals(List.of("owner", "vip"),
+                handler.suggest(new CommandContext(source, new String[]{"role", ""})));
+        assertEquals(List.of("vip"),
+                handler.suggest(new CommandContext(source, new String[]{"role", "v"})));
+    }
+
 }
