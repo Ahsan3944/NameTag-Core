@@ -85,12 +85,20 @@ class DefaultTagServiceTest {
     @Test
     void temporaryAssignmentExpiresAndFallsBack() {
         Instant now=Instant.parse("2026-01-01T00:00:00Z");
-        DefaultTagService service=new DefaultTagService(new InMemoryTagRepository(),new InMemoryPlayerAssignmentRepository(),8,new com.ultraop.nametag.api.TagEventBus(),Clock.fixed(now.plusSeconds(61),ZoneOffset.UTC));
+        InMemoryTagRepository tags=new InMemoryTagRepository();
+        InMemoryPlayerAssignmentRepository assignments=new InMemoryPlayerAssignmentRepository();
+        DefaultTagService beforeExpiry=new DefaultTagService(
+                tags,assignments,8,new com.ultraop.nametag.api.TagEventBus(),Clock.fixed(now,ZoneOffset.UTC));
         UUID player=UUID.randomUUID();
-        service.create(tag("member","MEMBER",10,true)); service.create(tag("vip","VIP",50,true));
-        service.assign(player,new TagId("member")); service.assignUntil(player,new TagId("vip"),now.plusSeconds(60));
-        service.setActive(player,new TagId("vip"));
-        assertEquals("MEMBER",service.activeTag(player).orElseThrow().displayName());
+        beforeExpiry.create(tag("member","MEMBER",10,true)); beforeExpiry.create(tag("vip","VIP",50,true));
+        beforeExpiry.assign(player,new TagId("member"));
+        beforeExpiry.assignUntil(player,new TagId("vip"),now.plusSeconds(60));
+        beforeExpiry.setActive(player,new TagId("vip"));
+
+        DefaultTagService afterExpiry=new DefaultTagService(
+                tags,assignments,8,new com.ultraop.nametag.api.TagEventBus(),Clock.fixed(now.plusSeconds(61),ZoneOffset.UTC));
+        assertEquals("MEMBER",afterExpiry.activeTag(player).orElseThrow().displayName());
+        assertTrue(assignments.find(player).orElseThrow().expirationEpochMillis().isEmpty());
     }
 
     @Test
