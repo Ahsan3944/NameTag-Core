@@ -75,7 +75,7 @@ OP access will be the default administrative fallback where the platform support
 
 ### Commands
 
-The initial command namespace is:
+The current command namespace is:
 
 `/nametag`
 
@@ -91,8 +91,10 @@ Planned commands:
 - `/nametag glitch <tag> <white|colorful>`
 - `/nametag effect <tag> <none|rainbow|pulse|wave>`
 - `/nametag role <tag> <permission|clear>`
+- `/nametag export <file>`
+- `/nametag import <file>`
 
-Exact syntax may be finalized during implementation, but command behavior must remain consistent between Fabric and Paper.
+Command behavior is implemented through the common command layer and exposed consistently by Fabric and Paper adapters.
 
 ### Automatic Role Tags
 
