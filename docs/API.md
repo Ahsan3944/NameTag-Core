@@ -19,6 +19,9 @@ Core operations:
 - Generic `setEffect(TagId, TagEffect)` helper preserving all non-effect properties.
 - `clear(UUID)`
 - `activeTag(UUID)`
+- `activeTags(UUID, TagResolutionContext)` for contextual multi-tag resolution.
+
+`activeTag(UUID)` remains the backward-compatible single-tag API. `activeTags(UUID, context)` resolves all matching assigned or automatic-role layers for the supplied world/position context. The explicit active assignment is placed first when it matches the context; remaining layers are ordered deterministically by priority and tag ID.
 
 Built-in default operations also expose glitch configuration through `setGlitch(...)` and `clearGlitch(...)`.
 
@@ -41,8 +44,14 @@ Implemented command families:
 - `effect`
 - `reload`
 - `role`
+- `scope`
 - `export`
 - `import`
+
+The `scope` command manages persistent world and cuboid-region metadata:
+- `/nametag scope <tag> clear`
+- `/nametag scope <tag> world <world>`
+- `/nametag scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>`
 
 ## Automatic role tags
 
@@ -52,13 +61,13 @@ Implemented command families:
 
 `com.ultraop.nametag.api.NameplateRenderer`
 
-The platform adapter owns Minecraft-specific nameplate lifecycle and rendering.
+The platform adapter owns Minecraft-specific nameplate lifecycle and rendering. Paper and Fabric 1.21.11 adapters resolve contextual layers and compose multiple tags while preserving the legacy single-tag rendering contract.
 
 ## ChatTagRenderer
 
 `com.ultraop.nametag.api.ChatTagRenderer`
 
-The platform adapter translates the active tag into the native chat component type.
+The platform adapter translates resolved tags into the native chat component type. The `{tag}` placeholder remains first-layer/backward-compatible; `{tags}` renders all resolved chat-enabled layers separated by a single space.
 
 ## PermissionService
 
@@ -68,7 +77,7 @@ The stable contract is:
 
 `boolean has(UUID playerUuid, String permission)`
 
-Automatic role resolution uses tag metadata key `auto-permission`. When a player has no usable explicit assigned tag, enabled tags with a matching permission are considered and the highest-priority match is selected; tag ID provides a deterministic tie-breaker. Automatic results are not persisted.
+Automatic role resolution uses tag metadata key `auto-permission`. When a player has no usable explicit assigned tag, enabled tags with a matching permission are considered and resolved together in deterministic order. Automatic results are not persisted.
 
 The command layer uses permission nodes such as:
 
@@ -115,3 +124,11 @@ The common `DefaultEffectRegistry` provides:
 - concurrent access
 
 The registry is deliberately separate from `TagEffect`: the tag model remains a small immutable data definition while providers own runtime rendering behavior.
+
+## Contextual resolution
+
+`com.ultraop.nametag.api.TagResolutionContext` contains:
+- world identifier
+- block X/Y/Z
+
+World scopes use exact world identifiers. Region scopes use inclusive normalized cuboid bounds stored in tag metadata under `region.minX`, `region.minY`, `region.minZ`, `region.maxX`, `region.maxY`, and `region.maxZ`. Malformed region metadata is ignored during resolution.
