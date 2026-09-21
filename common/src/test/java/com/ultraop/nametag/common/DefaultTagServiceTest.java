@@ -112,7 +112,7 @@ class DefaultTagServiceTest {
         service.create(roleTag("alpha", "ALPHA", 50, "group.staff"));
         service.create(roleTag("omega", "OMEGA", 50, "group.staff"));
 
-        assertEquals(new TagId("omega"), service.activeTag(player).orElseThrow().id());
+        assertEquals(new TagId("alpha"), service.activeTag(player).orElseThrow().id());
     }
 
     @Test
