@@ -139,9 +139,10 @@ class DefaultTagServiceTest {
         java.util.Set<String> granted = new java.util.HashSet<>();
         PermissionService permissions = (uuid, permission) -> player.equals(uuid) && granted.contains(permission);
 
+        InMemoryPlayerAssignmentRepository assignments = new InMemoryPlayerAssignmentRepository();
         DefaultTagService service = new DefaultTagService(
                 new InMemoryTagRepository(),
-                new InMemoryPlayerAssignmentRepository(),
+                assignments,
                 permissions
         );
         service.create(roleTag("vip", "VIP", 50, "group.vip"));
@@ -154,7 +155,7 @@ class DefaultTagServiceTest {
         granted.add("group.staff");
         assertEquals(new TagId("staff"), service.activeTag(player).orElseThrow().id());
 
-        assertTrue(new InMemoryPlayerAssignmentRepository().find(player).isEmpty());
+        assertTrue(assignments.find(player).isEmpty());
     }
 
     @Test
