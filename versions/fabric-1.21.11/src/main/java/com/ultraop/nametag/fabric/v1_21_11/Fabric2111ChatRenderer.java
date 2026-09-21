@@ -89,33 +89,29 @@ public final class Fabric2111ChatRenderer {
     }
 
     static Text styledTag(Tag tag) {
-        MutableText component = Text.literal(tag.displayName());
         TagStyle style = tag.style();
+        TagColor color = tag.color();
+        if (color instanceof TagColor.Preset) {
+            MutableText component = Text.literal(tag.displayName());
+            component.setStyle(applyStyle(component.getStyle(), style));
+            component.setStyle(component.getStyle().withColor(presetColor(((TagColor.Preset) color).name())));
+            return component;
+        }
 
-        component.setStyle(applyStyle(component.getStyle(), style));
-
-        TextColor color = colorOf(tag.color());
-        if (color != null) {
-            component.setStyle(component.getStyle().withColor(color));
+        MutableText result = Text.empty();
+        int[] codePoints = tag.displayName().codePoints().toArray();
+        long seed = tag.id().value().hashCode();
+        for (int index = 0; index < codePoints.length; index++) {
+            MutableText glyph = Text.literal(new String(Character.toChars(codePoints[index])));
+            Style glyphStyle = applyStyle(Style.EMPTY, style);
+            Integer rgb = TagColor.resolve(color, index, codePoints.length, seed);
+            if (rgb != null) {
+                glyphStyle = glyphStyle.withColor(rgb);
+            }
+            glyph.setStyle(glyphStyle);
+            result.append(glyph);
         }
-        return component;
-    }
-
-    private static TextColor colorOf(TagColor color) {
-        if (color instanceof TagColor.Rgb rgb) {
-            return TextColor.fromRgb(rgb.red() << 16 | rgb.green() << 8 | rgb.blue());
-        }
-        if (color instanceof TagColor.Preset preset) {
-            return presetColor(preset.name());
-        }
-        if (color instanceof TagColor.Gradient gradient) {
-            return TextColor.fromRgb(
-                    gradient.start().red() << 16
-                            | gradient.start().green() << 8
-                            | gradient.start().blue()
-            );
-        }
-        return null;
+        return result;
     }
 
     private static TextColor presetColor(String name) {
