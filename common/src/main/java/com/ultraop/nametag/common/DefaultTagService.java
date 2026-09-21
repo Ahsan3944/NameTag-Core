@@ -249,7 +249,7 @@ public final class DefaultTagService implements TagService {
     public void clear(UUID playerUuid) {
         Optional<PlayerAssignment> current = assignments.find(playerUuid);
         assignments.delete(playerUuid);
-        activeTagCache.put(playerUuid, Optional.empty());
+        activeTagCache.invalidatePlayer(playerUuid);
         current.ifPresent(previous ->
                 events.publish(new TagEvent.AssignmentChanged(
                         playerUuid, previous, new PlayerAssignment(playerUuid, List.of(), null))));
