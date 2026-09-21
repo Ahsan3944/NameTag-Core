@@ -176,7 +176,7 @@ class DefaultTagServiceTest {
         service.assignUntil(player, new TagId("vip"), now.plusSeconds(60));
         service.setActive(player, new TagId("vip"));
 
-        assertEquals(List.of("vip"),
+        assertEquals(List.of("vip", "member"),
                 service.activeTags(player, new TagResolutionContext("world", 0, 64, 0))
                         .stream().map(Tag::id).map(TagId::value).toList());
 
