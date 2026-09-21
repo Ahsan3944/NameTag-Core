@@ -157,11 +157,8 @@ public final class Fabric2111NameplateRenderer {
             MutableText glyph = Text.literal(new String(Character.toChars(codePoints[index])));
             Style glyphStyle = applyStyle(Style.EMPTY, style);
 
-            if (color instanceof TagColor.Preset preset) {
-                TextColor presetColor = presetColor(preset.name());
-                if (presetColor != null) {
-                    glyphStyle = glyphStyle.withColor(presetColor);
-                }
+            if (color instanceof TagColor.Preset) {
+                glyphStyle = applyColor(glyphStyle, color);
             } else {
                 Integer rgb = TagColor.resolve(color, index, codePoints.length, seed);
                 if (rgb != null) {
