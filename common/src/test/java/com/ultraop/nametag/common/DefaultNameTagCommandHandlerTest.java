@@ -14,6 +14,7 @@ import com.ultraop.nametag.core.model.TagId;
 import com.ultraop.nametag.core.model.TagStyle;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -196,6 +197,7 @@ final class DefaultNameTagCommandHandlerTest {
     private static final class RecordingSource implements CommandSource {
         private boolean allowed = true;
         private String lastMessage;
+        private final List<String> messages = new ArrayList<>();
 
         @Override
         public String name() {
@@ -215,6 +217,7 @@ final class DefaultNameTagCommandHandlerTest {
         @Override
         public void sendMessage(String message) {
             lastMessage = message;
+            messages.add(message);
         }
     }
 
