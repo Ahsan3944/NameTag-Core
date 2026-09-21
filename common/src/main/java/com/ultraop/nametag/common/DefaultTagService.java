@@ -214,8 +214,9 @@ public final class DefaultTagService implements TagService {
 
     @Override
     public Optional<Tag> activeTag(UUID playerUuid) {
-        if (activeTagCache.contains(playerUuid)) {
-            return activeTagCache.get(playerUuid);
+        Optional<Optional<Tag>> cached = activeTagCache.findCached(playerUuid);
+        if (cached.isPresent()) {
+            return cached.orElseThrow();
         }
 
         Optional<Tag> resolved = assignments.find(playerUuid).flatMap(this::resolveActiveTag);
