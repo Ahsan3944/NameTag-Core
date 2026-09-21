@@ -39,7 +39,7 @@ public final class NameTagFabric {
                 new YamlPlayerAssignmentRepository(dataDirectory.resolve("assignments.yml"))
         );
 
-        new Fabric2111Adapter(service);
+        new Fabric2111Adapter(service, configuration);
         registerCommands(service, configuration);
     }
 
