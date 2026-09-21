@@ -94,7 +94,10 @@ public final class Fabric2111ChatRenderer {
         if (color instanceof TagColor.Preset) {
             MutableText component = Text.literal(tag.displayName());
             component.setStyle(applyStyle(component.getStyle(), style));
-            component.setStyle(component.getStyle().withColor(presetColor(((TagColor.Preset) color).name())));
+            TextColor presetColor = presetColor(((TagColor.Preset) color).name());
+            if (presetColor != null) {
+                component.setStyle(component.getStyle().withColor(presetColor));
+            }
             return component;
         }
 
