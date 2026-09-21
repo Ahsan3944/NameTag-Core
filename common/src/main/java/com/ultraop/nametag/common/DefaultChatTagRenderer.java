@@ -6,6 +6,8 @@ import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagPresentation;
 
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.UUID;
 
 /**
@@ -29,8 +31,7 @@ public final class DefaultChatTagRenderer implements ChatTagRenderer {
         Objects.requireNonNull(message, "message");
         Objects.requireNonNull(activeTag, "activeTag");
 
-        String format = configuration.current().chatFormat();
-        return format
+        String format = configuration.current().chatFormat()
                 .replace("{tag}", TagPresentation.displayText(activeTag))
                 .replace("{tag_id}", activeTag.id().value())
                 .replace("{tag_priority}", String.valueOf(activeTag.priority()))
@@ -38,5 +39,13 @@ public final class DefaultChatTagRenderer implements ChatTagRenderer {
                 .replace("{tag_suffix}", TagPresentation.suffix(activeTag))
                 .replace("{player}", playerName)
                 .replace("{message}", message);
+        Matcher matcher = Pattern.compile("\\{tag_meta:([^{}]+)\\}").matcher(format);
+        StringBuffer result = new StringBuffer();
+        while (matcher.find()) {
+            String value = activeTag.metadata().get(matcher.group(1));
+            matcher.appendReplacement(result, Matcher.quoteReplacement(value == null ? matcher.group() : value));
+        }
+        matcher.appendTail(result);
+        return result.toString();
     }
 }

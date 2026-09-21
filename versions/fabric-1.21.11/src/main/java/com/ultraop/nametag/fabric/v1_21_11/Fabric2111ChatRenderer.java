@@ -21,6 +21,7 @@ public final class Fabric2111ChatRenderer {
     private static final String TAG_PLACEHOLDER = "{tag}";
     private static final String PLAYER_PLACEHOLDER = "{player}";
     private static final String MESSAGE_PLACEHOLDER = "{message}";
+    private static final String TAG_META_PREFIX = "{tag_meta:";
 
     private final TagService tagService;
     private final ConfigurationService configuration;
@@ -84,7 +85,7 @@ public final class Fabric2111ChatRenderer {
                 case "{tag_suffix}" -> Text.literal(TagPresentation.suffix(tag));
                 case PLAYER_PLACEHOLDER -> playerName;
                 case MESSAGE_PLACEHOLDER -> message;
-                default -> Text.literal(match.placeholder());
+                default -> Text.literal(metadataValue(tag, match.placeholder()));
             };
             result.append(replacement);
             cursor = match.end();
@@ -153,6 +154,15 @@ public final class Fabric2111ChatRenderer {
                 .withObfuscated(tagStyle.obfuscated());
     }
 
+    private static String metadataValue(Tag tag, String placeholder) {
+        if (placeholder.startsWith(TAG_META_PREFIX) && placeholder.endsWith("}")) {
+            String key = placeholder.substring(TAG_META_PREFIX.length(), placeholder.length() - 1);
+            String value = tag.metadata().get(key);
+            return value == null ? placeholder : value;
+        }
+        return placeholder;
+    }
+
     private static PlaceholderMatch nextPlaceholder(String format, int fromIndex) {
         int tag = format.indexOf(TAG_PLACEHOLDER, fromIndex);
         int player = format.indexOf(PLAYER_PLACEHOLDER, fromIndex);
@@ -161,6 +171,7 @@ public final class Fabric2111ChatRenderer {
         int tagPriority = format.indexOf("{tag_priority}", fromIndex);
         int tagPrefix = format.indexOf("{tag_prefix}", fromIndex);
         int tagSuffix = format.indexOf("{tag_suffix}", fromIndex);
+        int tagMeta = format.indexOf(TAG_META_PREFIX, fromIndex);
 
         int start = Integer.MAX_VALUE;
         String placeholder = null;
@@ -168,6 +179,10 @@ public final class Fabric2111ChatRenderer {
         if (tagPriority >= 0 && tagPriority < start) { start = tagPriority; placeholder = "{tag_priority}"; }
         if (tagPrefix >= 0 && tagPrefix < start) { start = tagPrefix; placeholder = "{tag_prefix}"; }
         if (tagSuffix >= 0 && tagSuffix < start) { start = tagSuffix; placeholder = "{tag_suffix}"; }
+        if (tagMeta >= 0 && tagMeta < start) {
+            int end = format.indexOf("}", tagMeta + TAG_META_PREFIX.length());
+            if (end >= 0) { start = tagMeta; placeholder = format.substring(tagMeta, end + 1); }
+        }
         // {tag_id}, {tag_priority}, {tag_prefix}, and {tag_suffix} all begin with {tag}.
         // Resolve the longer placeholders first so the generic {tag} token cannot consume them.
         if (tag >= 0 && tag < start) {

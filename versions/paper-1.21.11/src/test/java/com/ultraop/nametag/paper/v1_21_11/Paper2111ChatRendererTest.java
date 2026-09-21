@@ -16,6 +16,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class Paper2111ChatRendererTest {
     @Test
+    void rendersMetadataPlaceholder() {
+        Tag tag = new Tag(new TagId("owner"), "OWNER", new TagColor.Preset("white"), TagStyle.plain(), TagEffect.none(), 10, true, true, Map.of("role", "Founder"));
+        Component rendered = Paper2111ChatRenderer.renderFormat("<{tag_meta:role}> {tag}", tag, Component.text("UltraOP"), Component.text("Hello"));
+        assertEquals("<Founder> OWNER", plain(rendered));
+    }
+
+    @Test
     void rendersConfiguredPlaceholdersWithTagColorAndStyle() {
         Tag tag = new Tag(
                 new TagId("owner"),

@@ -15,6 +15,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class Fabric2111ChatRendererTest {
     @Test
+    void rendersMetadataPlaceholder() {
+        Tag tag = new Tag(new TagId("owner"), "OWNER", new TagColor.Preset("white"), TagStyle.plain(), TagEffect.none(), 10, true, true, Map.of("role", "Founder"));
+        Text rendered = Fabric2111ChatRenderer.renderFormat("<{tag_meta:role}> {tag}", tag, Text.literal("UltraOP"), Text.literal("Hello"));
+        assertEquals("<Founder> OWNER", rendered.getString());
+    }
+
+    @Test
     void rendersConfiguredPlaceholdersWithTagColorAndStyle() {
         Tag tag = new Tag(
                 new TagId("owner"),
