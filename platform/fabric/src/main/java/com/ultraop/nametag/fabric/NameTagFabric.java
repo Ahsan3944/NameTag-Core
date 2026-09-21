@@ -230,6 +230,9 @@ public final class NameTagFabric {
             DefaultMessageService messages,
             DefaultConfigurationService configuration
     ) {
+        java.nio.file.Path dataDirectory = FabricLoader.getInstance()
+                .getConfigDir()
+                .resolve("nametag-core");
         return new DefaultNameTagCommandHandler(
                 service,
                 new FabricPlayerResolver(source.getServer()),
