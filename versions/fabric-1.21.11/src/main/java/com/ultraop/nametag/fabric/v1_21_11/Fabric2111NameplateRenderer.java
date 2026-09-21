@@ -176,7 +176,7 @@ public final class Fabric2111NameplateRenderer {
     }
 
     static MutableText buildStaticPrefix(Tag tag) {
-        return buildStaticPrefix(List.of(tag));
+        return buildSingleStaticPrefix(tag);
     }
 
     static MutableText buildStaticPrefix(List<Tag> tags) {
