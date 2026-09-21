@@ -190,7 +190,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             }
         }
 
-        if (args.length == 2 && "scope".equals(subcommand)) {
+        if (args.length == 2 && ("scope".equals(subcommand) || "effect".equals(subcommand) || "role".equals(subcommand))) {
             return tagNames(args[1]);
         }
 

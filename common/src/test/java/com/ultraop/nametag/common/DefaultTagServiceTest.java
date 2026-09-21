@@ -460,4 +460,5 @@ class DefaultTagServiceTest {
     private static PlayerAssignmentSnapshot snapshot(com.ultraop.nametag.core.model.PlayerAssignment assignment) {
         return new PlayerAssignmentSnapshot(assignment.activeTagId(), assignment.assignedTagIds().size());
     }
+
 }
