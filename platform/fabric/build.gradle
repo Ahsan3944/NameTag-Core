@@ -12,4 +12,14 @@ dependencies {
     implementation project(path: ':versions:fabric-1.21.11', configuration: 'namedElements')
 }
 
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "nametag-core-test"
+        enableGameTests = true
+        enableClientGameTests = false
+        eula = true
+    }
+}
+
 tasks.withType(JavaCompile).configureEach { options.release = 21 }
