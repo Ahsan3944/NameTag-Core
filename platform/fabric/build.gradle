@@ -35,11 +35,11 @@ dependencies {
 
 afterEvaluate {
     configurations.named("gametestCompileClasspath") {
-        extendsFrom(configurations.named("minecraftCommonNamedCompile").get())
+        extendsFrom(configurations.named("minecraftNamedCompile").get())
     }
 
     configurations.named("gametestRuntimeClasspath") {
-        extendsFrom(configurations.named("minecraftCommonNamedRuntime").get())
+        extendsFrom(configurations.named("minecraftNamedRuntime").get())
     }
 }
 
