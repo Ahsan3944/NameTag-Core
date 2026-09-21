@@ -168,6 +168,8 @@ public final class Fabric2111ChatRenderer {
         if (tagPriority >= 0 && tagPriority < start) { start = tagPriority; placeholder = "{tag_priority}"; }
         if (tagPrefix >= 0 && tagPrefix < start) { start = tagPrefix; placeholder = "{tag_prefix}"; }
         if (tagSuffix >= 0 && tagSuffix < start) { start = tagSuffix; placeholder = "{tag_suffix}"; }
+        // {tag_id}, {tag_priority}, {tag_prefix}, and {tag_suffix} all begin with {tag}.
+        // Resolve the longer placeholders first so the generic {tag} token cannot consume them.
         if (tag >= 0 && tag < start) {
             start = tag;
             placeholder = TAG_PLACEHOLDER;

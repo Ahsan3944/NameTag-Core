@@ -91,7 +91,10 @@ class Fabric2111ChatRendererTest {
                 message
         );
 
-        Text messagePart = result.getSiblings().get(11);
+        Text messagePart = result.getSiblings().stream()
+                .filter(sibling -> "Hello".equals(sibling.getString()))
+                .findFirst()
+                .orElseThrow();
         assertEquals("Hello", messagePart.getString());
         assertEquals(Boolean.TRUE, messagePart.getStyle().isItalic());
     }
