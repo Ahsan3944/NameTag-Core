@@ -40,8 +40,9 @@ class Fabric2111ChatRendererTest {
         assertEquals(6, result.getSiblings().size());
 
         Text styledTag = result.getSiblings().get(1);
-        assertEquals(0xFFAA00, styledTag.getStyle().getColor().getRgb());
-        assertEquals(Boolean.TRUE, styledTag.getStyle().isBold());
+        Text firstGlyph = styledTag.getSiblings().get(0);
+        assertEquals(0xFFAA00, firstGlyph.getStyle().getColor().getRgb());
+        assertEquals(Boolean.TRUE, firstGlyph.getStyle().isBold());
     }
 
     @Test
