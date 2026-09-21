@@ -69,7 +69,7 @@
 - [x] Nameplate rendering.
 - [x] Text styles.
 - [x] Effects.
-- [ ] Integration tests.
+- [x] Integration tests.
 
 ## Phase 7 — Fabric 1.21.11
 - [ ] Chat integration.
