@@ -20,4 +20,4 @@ NameTag-Core does not cancel chat when the feature is disabled or when a sender 
 
 ## Scope
 
-This milestone only adds Fabric 1.21.11 chat integration. Fabric player lifecycle and Fabric integration tests remain separate roadmap items.
+This milestone only adds Fabric 1.21.11 chat integration. Fabric player lifecycle and server GameTest coverage are implemented. Server GameTests now execute automatically through the normal Gradle `build` task.
