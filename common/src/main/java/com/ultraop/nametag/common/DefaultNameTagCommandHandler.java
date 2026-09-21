@@ -33,7 +33,15 @@ import java.nio.file.Path;
 
 public final class DefaultNameTagCommandHandler implements NameTagCommandHandler {
     private static final List<String> SUBCOMMANDS =
-            List.of("create", "list", "give", "set", "remove", "clear", "delete", "glitch", "effect", "role", "scope", "reload", "export", "import");
+            List.of("create", "edit", "list", "give", "set", "remove", "clear", "delete", "glitch", "effect", "role", "scope", "reload", "export", "import");
+    private static final List<String> EDIT_PROPERTIES =
+            List.of("name", "color", "gradient", "style", "enabled", "chat");
+    private static final List<String> PRESET_COLORS = List.of(
+            "black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
+            "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
+            "yellow", "white", "random"
+    );
+    private static final List<String> STYLE_VALUES = List.of("plain", "bold", "italic", "bold_italic");
 
     private final TagService tagService;
     private final PlayerResolver playerResolver;
@@ -120,6 +128,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         try {
             switch (subcommand) {
                 case "create" -> create(context.source(), args);
+                case "edit" -> edit(context.source(), args);
                 case "delete" -> delete(context.source(), args);
                 case "give", "set" -> assign(context.source(), args);
                 case "remove", "clear" -> clear(context.source(), args);
@@ -151,7 +160,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         }
 
         String subcommand = args[0].toLowerCase(Locale.ROOT);
-        if (args.length == 2 && ("delete".equals(subcommand) || "glitch".equals(subcommand))) {
+        if (args.length == 2 && ("delete".equals(subcommand) || "glitch".equals(subcommand) || "edit".equals(subcommand))) {
             return tagNames(args[1]);
         }
 
@@ -161,6 +170,24 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         if (args.length == 3 && List.of("give", "set").contains(subcommand)) {
             return tagNames(args[2]);
+        }
+
+        if (args.length == 3 && "edit".equals(subcommand)) {
+            String prefix = args[2].toLowerCase(Locale.ROOT);
+            return EDIT_PROPERTIES.stream().filter(value -> value.startsWith(prefix)).toList();
+        }
+        if (args.length == 4 && "edit".equals(subcommand)) {
+            String property = args[2].toLowerCase(Locale.ROOT);
+            String prefix = args[3].toLowerCase(Locale.ROOT);
+            if ("color".equals(property)) {
+                return PRESET_COLORS.stream().filter(value -> value.startsWith(prefix)).toList();
+            }
+            if ("style".equals(property)) {
+                return STYLE_VALUES.stream().filter(value -> value.startsWith(prefix)).toList();
+            }
+            if ("enabled".equals(property) || "chat".equals(property)) {
+                return List.of("true", "false").stream().filter(value -> value.startsWith(prefix)).toList();
+            }
         }
 
         if (args.length == 2 && "scope".equals(subcommand)) {
@@ -214,6 +241,139 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         );
         tagService.create(tag);
         source.sendMessage(messages.format("message.created", Map.of("tag", id.value())));
+    }
+
+    private void edit(CommandSource source, String[] args) {
+        if (args.length < 4) {
+            throw new IllegalArgumentException(
+                    "Usage: /nametag edit <tag> <name|color|gradient|style|enabled|chat> <value>"
+            );
+        }
+
+        TagId id = new TagId(args[1].toLowerCase(Locale.ROOT));
+        Tag current = tagService.find(id).orElseThrow(() ->
+                new IllegalArgumentException(messages.format("error.tag.not_found", Map.of("tag", id.value()))));
+
+        String property = args[2].toLowerCase(Locale.ROOT);
+        String value = String.join(" ", Arrays.copyOfRange(args, 3, args.length)).trim();
+        Tag updated;
+
+        switch (property) {
+            case "name" -> {
+                if (value.isBlank()) throw new IllegalArgumentException("Tag display name cannot be blank.");
+                updated = copyTag(current, value, current.color(), current.style(), current.enabled(), current.chatEnabled());
+            }
+            case "color" -> {
+                TagColor color = parseColor(value);
+                updated = copyTag(current, current.displayName(), color, current.style(), current.enabled(), current.chatEnabled());
+            }
+            case "gradient" -> {
+                String[] colors = value.split("\\s+");
+                if (colors.length != 2) {
+                    throw new IllegalArgumentException("Usage: /nametag edit <tag> gradient <startHex> <endHex>");
+                }
+                updated = copyTag(
+                        current,
+                        current.displayName(),
+                        new TagColor.Gradient(parseRgb(colors[0]), parseRgb(colors[1])),
+                        current.style(),
+                        current.enabled(),
+                        current.chatEnabled()
+                );
+            }
+            case "style" -> updated = copyTag(
+                    current,
+                    current.displayName(),
+                    current.color(),
+                    parseStyle(value),
+                    current.enabled(),
+                    current.chatEnabled()
+            );
+            case "enabled" -> updated = copyTag(
+                    current,
+                    current.displayName(),
+                    current.color(),
+                    current.style(),
+                    parseBoolean(value, "enabled"),
+                    current.chatEnabled()
+            );
+            case "chat" -> updated = copyTag(
+                    current,
+                    current.displayName(),
+                    current.color(),
+                    current.style(),
+                    current.enabled(),
+                    parseBoolean(value, "chat")
+            );
+            default -> throw new IllegalArgumentException(
+                    "Unknown edit property: " + property + ". Use name, color, gradient, style, enabled or chat."
+            );
+        }
+
+        tagService.update(updated);
+        source.sendMessage("Updated NameTag: " + updated.id().value() + " (" + property + ").");
+    }
+
+    private static Tag copyTag(
+            Tag current,
+            String displayName,
+            TagColor color,
+            TagStyle style,
+            boolean enabled,
+            boolean chatEnabled
+    ) {
+        return new Tag(
+                current.id(),
+                displayName,
+                color,
+                style,
+                current.effect(),
+                current.priority(),
+                enabled,
+                chatEnabled,
+                current.metadata()
+        );
+    }
+
+    private static TagColor parseColor(String value) {
+        String normalized = value.toLowerCase(Locale.ROOT);
+        if ("random".equals(normalized)) return new TagColor.Random();
+        if (normalized.matches("#?[0-9a-fA-F]{6}")) {
+            return parseRgb(normalized);
+        }
+        if (PRESET_COLORS.contains(normalized)) {
+            return new TagColor.Preset(normalized);
+        }
+        throw new IllegalArgumentException(
+                "Invalid color: " + value + ". Use a preset, random, or #RRGGBB."
+        );
+    }
+
+    private static TagColor.Rgb parseRgb(String value) {
+        String normalized = value.startsWith("#") ? value.substring(1) : value;
+        if (!normalized.matches("[0-9a-fA-F]{6}")) {
+            throw new IllegalArgumentException("Invalid RGB color: " + value + ". Use #RRGGBB.");
+        }
+        int rgb = Integer.parseInt(normalized, 16);
+        return new TagColor.Rgb((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
+    }
+
+    private static TagStyle parseStyle(String value) {
+        return switch (value.toLowerCase(Locale.ROOT)) {
+            case "plain", "normal", "none" -> TagStyle.plain();
+            case "bold" -> new TagStyle(true, false, false, false, false);
+            case "italic" -> new TagStyle(false, true, false, false, false);
+            case "bold_italic", "bold-italic" -> new TagStyle(true, true, false, false, false);
+            default -> throw new IllegalArgumentException(
+                    "Invalid style: " + value + ". Use plain, bold, italic or bold_italic."
+            );
+        };
+    }
+
+    private static boolean parseBoolean(String value, String property) {
+        if ("true".equalsIgnoreCase(value)) return true;
+        if ("false".equalsIgnoreCase(value)) return false;
+        throw new IllegalArgumentException("Invalid " + property + " value: " + value + ". Use true or false.");
     }
 
     private void delete(CommandSource source, String[] args) {
@@ -440,16 +600,46 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     }
 
     private void list(CommandSource source) {
-        tagService.list().stream()
+        List<Tag> tags = tagService.list().stream()
                 .sorted(Comparator.comparing(tag -> tag.id().value()))
-                .forEach(tag -> source.sendMessage(messages.format(
-                        "message.list_entry",
-                        Map.of(
-                                "tag", tag.id().value(),
-                                "displayName", tag.displayName(),
-                                "glitch", tag.effect().isGlitch() ? " [glitch]" : ""
-                        )
-                )));
+                .toList();
+        source.sendMessage(messages.format("message.list_header", Map.of("count", Integer.toString(tags.size()))));
+        tags.forEach(tag -> source.sendMessage(messages.format(
+                "message.list_entry",
+                Map.of(
+                        "tag", tag.id().value(),
+                        "displayName", tag.displayName(),
+                        "color", describeColor(tag.color()),
+                        "style", describeStyle(tag.style()),
+                        "enabled", Boolean.toString(tag.enabled()),
+                        "chat", Boolean.toString(tag.chatEnabled()),
+                        "effect", tag.effect().id()
+                )
+        )));
+    }
+
+    private static String describeColor(TagColor color) {
+        if (color instanceof TagColor.Preset preset) return preset.name();
+        if (color instanceof TagColor.Rgb rgb) return rgb.hex();
+        if (color instanceof TagColor.Random) return "random";
+        if (color instanceof TagColor.Gradient gradient) {
+            return gradient.start().hex() + "->" + gradient.end().hex();
+        }
+        return "unknown";
+    }
+
+    private static String describeStyle(TagStyle style) {
+        if (!style.bold() && !style.italic() && !style.underlined()
+                && !style.strikethrough() && !style.obfuscated()) {
+            return "plain";
+        }
+        List<String> values = new java.util.ArrayList<>();
+        if (style.bold()) values.add("bold");
+        if (style.italic()) values.add("italic");
+        if (style.underlined()) values.add("underline");
+        if (style.strikethrough()) values.add("strikethrough");
+        if (style.obfuscated()) values.add("obfuscated");
+        return String.join("+", values);
     }
 
     private boolean allowed(CommandSource source, String permission) {
@@ -466,7 +656,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             case "delete" -> "nametag.delete";
             case "give", "set" -> "nametag.give";
             case "remove", "clear" -> "nametag.remove";
-            case "glitch", "effect", "role", "scope" -> "nametag.edit";
+            case "edit", "glitch", "effect", "role", "scope" -> "nametag.edit";
             case "reload" -> "nametag.reload";
             case "export", "import" -> "nametag.admin";
             default -> null;
