@@ -109,6 +109,8 @@
 - [ ] Preview.
 - [ ] Save/cancel.
 
+> GUI remains intentionally deferred from the server-only 1.21.11 baseline. A correct implementation requires a client entrypoint, client-side screens/widgets, server-authoritative mutations, and a versioned client/server networking contract. Fabric's 1.21.11 API provides client screen and networking APIs, but introducing only part of this stack would create an incomplete and unsafe feature boundary.
+
 ## Phase 10 — Stability
 - [x] Full unit test suite.
 - [x] Full integration suite.

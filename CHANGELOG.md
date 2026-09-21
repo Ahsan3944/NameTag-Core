@@ -22,3 +22,6 @@
 - Added manual CI workflow dispatch and read-only repository permissions.
 - Updated installation instructions to use the checked-in Gradle Wrapper on Linux/macOS and Windows.
 - Added a repository-level `.editorconfig` formatting policy without introducing formatter-driven source churn.
+- Added CI architecture-boundary validation to prevent Fabric, Minecraft, Bukkit, or Paper imports from leaking into core/API/common.
+- Added CI artifact-presence validation for every expected module before artifacts are uploaded.
+- Kept the GUI milestone explicitly deferred until the client entrypoint, server-authoritative networking contract, and version-specific client implementation can be delivered together.

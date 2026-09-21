@@ -21,8 +21,36 @@ jobs:
           cache: gradle
       - name: Set up Gradle Wrapper validation
         uses: gradle/actions/setup-gradle@v4
+      - name: Check platform boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE '^[[:space:]]*import[[:space:]]+(net\\.minecraft|net\\.fabricmc|org\\.bukkit|io\\.papermc)\\.' core/src api/src common/src; then
+            echo "Platform/version imports leaked into core/api/common."
+            exit 1
+          fi
       - name: Run build with Gradle Wrapper
         run: ./gradlew build --no-daemon
+
+      - name: Verify expected build artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=(
+            core/build/libs
+            api/build/libs
+            common/build/libs
+            platform/fabric/build/libs
+            platform/paper/build/libs
+            versions/fabric-1.21.11/build/libs
+            versions/paper-1.21.11/build/libs
+          )
+          for dir in "${expected[@]}"; do
+            if ! compgen -G "$dir/*.jar" > /dev/null; then
+              echo "Missing build artifact in $dir"
+              exit 1
+            fi
+          done
 
       - name: Upload build artifacts
         if: success()
