@@ -23,7 +23,7 @@ public final class FabricPermissionService implements PermissionService {
         if (current == null) return false;
         ServerPlayerEntity player = current.getPlayerManager().getPlayer(playerUuid);
         if (player == null) return false;
-        if (player.hasPermissionLevel(4)) return true;
+        if (current.getPlayerManager().isOperator(player.getGameProfile())) return true;
         if (!FabricLoader.getInstance().isModLoaded("luckperms")) return false;
         try {
             var user = net.luckperms.api.LuckPermsProvider.get().getUserManager().getUser(playerUuid);
