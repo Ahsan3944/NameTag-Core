@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "id": "nametag-core-test",
+  "version": "1.0.0",
+  "name": "NameTag-Core Integration Tests",
+  "environment": "server",
+  "entrypoints": {
+    "fabric-gametest": [
+      "com.ultraop.nametag.fabric.NameTagFabricGameTest"
+    ]
+  }
+}
