@@ -1,6 +1,7 @@
 package com.ultraop.nametag.fabric;
 
 import com.ultraop.nametag.api.CommandSource;
+import com.ultraop.nametag.api.PermissionService;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
@@ -10,9 +11,11 @@ import java.util.UUID;
 
 public final class FabricCommandSource implements CommandSource {
     private final ServerCommandSource source;
+    private final PermissionService permissions;
 
-    public FabricCommandSource(ServerCommandSource source) {
+    public FabricCommandSource(ServerCommandSource source, PermissionService permissions) {
         this.source = Objects.requireNonNull(source, "source");
+        this.permissions = Objects.requireNonNull(permissions, "permissions");
     }
 
     @Override
@@ -27,8 +30,11 @@ public final class FabricCommandSource implements CommandSource {
 
     @Override
     public boolean hasPermission(String permission) {
-        // The native /nametag root command already enforces the gamemaster permission level.
-        return true;
+        UUID playerUuid = playerUuid().orElse(null);
+        if (playerUuid != null && permissions.has(playerUuid, permission)) {
+            return true;
+        }
+        return source.getEntity() == null && source.hasPermissionLevel(4);
     }
 
     @Override
