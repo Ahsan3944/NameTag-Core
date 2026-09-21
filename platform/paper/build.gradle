@@ -16,9 +16,3 @@ processResources {
     }
 }
 
-tasks.withType(Test).configureEach {
-    testLogging {
-        exceptionFormat = 'full'
-        showStackTraces = true
-    }
-}
