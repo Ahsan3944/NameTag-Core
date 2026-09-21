@@ -72,7 +72,7 @@
 - [x] Integration tests.
 
 ## Phase 7 — Fabric 1.21.11
-- [ ] Chat integration.
+- [x] Chat integration.
 - [x] Fabric bootstrap.
 - [x] Commands.
 - [x] Permissions.
