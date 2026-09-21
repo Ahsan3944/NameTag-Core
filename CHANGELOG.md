@@ -7,7 +7,6 @@
 - Wired database storage selection into both Paper and Fabric bootstraps and added SQLite persistence/restart regression coverage.
 
 
-## Unreleased
 
 ### Stability hardening
 
