@@ -16,7 +16,7 @@
 - [x] Root build.
 - [x] Multi-module configuration.
 - [x] Java/toolchain configuration.
-- [ ] Checkstyle/formatting policy if required.
+- [x] Formatting policy via repository-level `.editorconfig`.
 - [x] Test framework.
 - [x] Base package structure.
 
