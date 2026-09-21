@@ -4,7 +4,7 @@ A cross-platform, version-aware Minecraft NameTag framework designed to provide 
 
 ## Project Status
 
-**Phase:** Fabric/Paper 1.21.11 — core rendering, lifecycle, chat, persistence, layered/contextual resolution, GameTests and stability hardening implemented; release preparation in progress  
+**Phase:** Fabric/Paper 1.21.11 — core rendering, lifecycle, chat, persistence, layered/contextual resolution, GameTests and stability hardening implemented; core scope finalized, release preparation in progress  
 **Target baseline:** Minecraft Java Edition **1.21.11**  
 **Platforms:** Fabric Server + Paper Server  
 **Primary goal:** Build the core once, isolate platform/version-specific code, and make future Minecraft version upgrades predictable and maintainable.
@@ -114,13 +114,15 @@ Command behavior is implemented through the common command layer and exposed con
 
 Automatic role tags allow a tag to activate from a permission without storing a player assignment. Set the tag metadata key `auto-permission` to a permission node and use `/nametag role <tag> <permission|clear>` to manage it. Explicit assigned tags remain authoritative; automatic resolution is used when no usable explicit tag resolves. Matching enabled tags are ordered deterministically by priority and tag ID. Automatic results are not persisted, so permission changes are reflected on the next active-tag resolution.
 
-## GUI
+## GUI and Web Management
 
-A GUI/editor remains deferred. A correct implementation requires a Fabric client entrypoint, client-side screens/widgets, server-authoritative mutation packets, a versioned client/server networking contract, and client/server regression tests. The server-side command/API path remains the stable management surface until that complete boundary can be implemented together.
+GUI/editor and Web Management are **not part of the NameTag-Core 1.21.11 server-core release scope**. They are optional future integrations.
 
-## Web Management
+A GUI requires a client entrypoint, client-side screens/widgets, server-authoritative mutation packets, a versioned client/server networking contract, and client/server regression tests.
 
-Web management remains deferred. It requires an authenticated HTTP boundary, explicit permission mapping, CSRF/session handling or an equivalent non-browser credential model, audit integration, lifecycle management, and a server-side mutation API. A partial unauthenticated endpoint is intentionally not treated as a management implementation.
+Web management requires an authenticated HTTP boundary, explicit permission mapping, CSRF/session handling or an equivalent non-browser credential model, audit integration, lifecycle management, and a server-side mutation API.
+
+The stable management surface for the core release is the server-side command/API layer.
 
 ### Common Command Layer
 
@@ -189,7 +191,7 @@ Chat integration includes:
 - Platform-specific Fabric/Paper chat rendering adapters.
 - Graceful fallback when a specific visual effect cannot be safely represented in chat.
 
-The chat system is part of the v1.0 compatibility target, not a post-release add-on.
+The chat system is part of the 1.0 compatibility target, not a post-release add-on.
 
 ## Architecture
 
@@ -224,7 +226,6 @@ The repository layout is:
 ```
 NameTag-Core/
 ├── README.md
-├── LICENSE
 ├── .gitignore
 ├── docs/
 │   ├── BLUEPRINT.md
@@ -252,7 +253,7 @@ The project uses semantic project versioning independently from Minecraft versio
 
 Current development version: `0.1.0-SNAPSHOT`.
 
-The first stable release will use `1.0.0` only after the release gates are actually satisfied. Minecraft compatibility remains a separate dimension.
+The first stable release will use `1.0.0` only after the release version, licensing and tag steps are completed. GUI/Web Management and future Minecraft adapters are not prerequisites for that core release.
 
 A future Minecraft upgrade should normally add/update an adapter module rather than fork the entire codebase.
 
@@ -352,9 +353,9 @@ The project is built in controlled milestones:
 9. Rendering/nameplate integration.
 10. Glitch effect, including white/colorful modes and frame generation.
 11. Tests and regression checks.
-12. GUI/editor.
-13. Release packaging.
-14. Future version adapters.
+12. Core release packaging.
+13. Future version adapters.
+14. Optional GUI/Web integrations.
 
 No platform implementation should begin before the corresponding core contract is stable.
 
@@ -382,4 +383,4 @@ See [docs/BLUEPRINT.md](docs/BLUEPRINT.md).
 
 ## License
 
-License will be finalized before the first public stable release.
+A license has not yet been selected for the public stable release. This remains a release-administration decision and is separate from the NameTag-Core engineering baseline.
