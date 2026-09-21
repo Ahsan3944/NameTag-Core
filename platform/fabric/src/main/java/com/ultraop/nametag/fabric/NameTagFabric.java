@@ -229,7 +229,7 @@ public final class NameTagFabric {
                     List.of("true", "false"),
                     builder
             );
-            default -> java.util.concurrent.CompletableFuture.completedFuture(Suggestions.empty());
+            default -> Suggestions.empty();
         };
     }
 
