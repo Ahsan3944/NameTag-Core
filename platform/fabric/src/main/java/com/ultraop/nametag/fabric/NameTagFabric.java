@@ -84,7 +84,7 @@ public final class NameTagFabric {
                             .then(CommandManager.argument("property", StringArgumentType.word())
                                     .suggests((context, builder) ->
                                             CommandSource.suggestMatching(
-                                                    List.of("name", "color", "gradient", "style", "enabled", "chat"),
+                                                    List.of("name", "color", "gradient", "style", "priority", "enabled", "chat"),
                                                     builder
                                             ))
                                     .then(CommandManager.argument("value", StringArgumentType.greedyString())
