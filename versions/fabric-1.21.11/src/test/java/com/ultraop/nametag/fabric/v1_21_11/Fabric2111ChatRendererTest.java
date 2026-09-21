@@ -35,9 +35,20 @@ class Fabric2111ChatRendererTest {
                 Text.literal("Hello!")
         );
 
-        assertEquals("[<OWNER>] /owner/0 <UltraOP>: Hello!", result.getString());
         assertNotNull(result.getSiblings());
         assertEquals(12, result.getSiblings().size());
+        assertEquals("[", result.getSiblings().get(0).getString());
+        assertEquals("<OWNER>", result.getSiblings().get(1).getString());
+        assertEquals("] ", result.getSiblings().get(2).getString());
+        assertEquals("owner", result.getSiblings().get(3).getString());
+        assertEquals("/", result.getSiblings().get(4).getString());
+        assertEquals("0", result.getSiblings().get(5).getString());
+        assertEquals(" ", result.getSiblings().get(6).getString());
+        assertEquals("<", result.getSiblings().get(7).getString());
+        assertEquals("UltraOP", result.getSiblings().get(8).getString());
+        assertEquals(">", result.getSiblings().get(9).getString());
+        assertEquals(": ", result.getSiblings().get(10).getString());
+        assertEquals("Hello!", result.getSiblings().get(11).getString());
 
         Text styledTag = result.getSiblings().get(1);
         Text firstGlyph = styledTag.getSiblings().get(0);
