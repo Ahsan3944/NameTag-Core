@@ -3,6 +3,12 @@ version: "${project.version}"
 main: com.ultraop.nametag.paper.NameTagPaperPlugin
 api-version: '1.21'
 author: UltraOP
+
+libraries:
+  - org.xerial:sqlite-jdbc:3.53.0.0
+  - com.mysql:mysql-connector-j:9.7.0
+  - org.mariadb.jdbc:mariadb-java-client:3.5.8
+  - org.postgresql:postgresql:42.7.10
 description: Cross-platform NameTag system for Paper servers.
 
 commands:
