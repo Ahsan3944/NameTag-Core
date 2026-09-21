@@ -74,6 +74,43 @@ class Paper2111ChatRendererTest {
         assertEquals(": ", textOf(result.children().get(2)));
         assertEquals("Hi", textOf(result.children().get(3)));
     }
+    @Test
+    void rendersGradientAndRandomColorsInTagComponent() {
+        Tag gradientTag = new Tag(
+                new TagId("gradient"),
+                "ABC",
+                new TagColor.Gradient(
+                        new TagColor.Rgb(0, 0, 0),
+                        new TagColor.Rgb(255, 255, 255)
+                ),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of()
+        );
+
+        Component gradient = Paper2111ChatRenderer.styledTag(gradientTag);
+        assertEquals(0x000000, gradient.children().get(0).color().value());
+        assertEquals(0x808080, gradient.children().get(1).color().value());
+        assertEquals(0xFFFFFF, gradient.children().get(2).color().value());
+
+        Tag randomTag = new Tag(
+                new TagId("random"),
+                "ABC",
+                new TagColor.Random(),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of()
+        );
+        Component random = Paper2111ChatRenderer.styledTag(randomTag);
+        assertEquals(random.children().get(0).color(), random.children().get(1).color());
+    }
+
 
     private static String textOf(Component component) {
         return ((TextComponent) component).content();
