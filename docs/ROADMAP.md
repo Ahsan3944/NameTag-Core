@@ -158,7 +158,7 @@ Potential future additions:
 - SQLite.
 - MySQL/MariaDB.
 - PostgreSQL.
-- Import/export.
+- [x] Import/export.
 - Per-world tags.
 - Per-region tags.
 - Web management.
