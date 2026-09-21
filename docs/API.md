@@ -82,6 +82,8 @@ The event model currently includes:
 
 Events are emitted only after the corresponding persistence mutation succeeds. No-op assignment/clear operations do not emit redundant events.
 
+`com.ultraop.nametag.common.FileTagAuditLogger` can subscribe to the event bus and persist append-only audit lines for tag creation/update/deletion and assignment changes.
+
 ## EffectProvider
 
 `com.ultraop.nametag.api.EffectProvider`

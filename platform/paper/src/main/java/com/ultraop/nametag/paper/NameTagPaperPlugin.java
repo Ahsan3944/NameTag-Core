@@ -5,6 +5,7 @@ import com.ultraop.nametag.api.ConfigurationService;
 import com.ultraop.nametag.api.NameTagCommandHandler;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.common.DefaultConfigurationService;
+import com.ultraop.nametag.common.FileTagAuditLogger;
 import com.ultraop.nametag.common.DefaultMessageService;
 import com.ultraop.nametag.common.DefaultNameTagCommandHandler;
 import com.ultraop.nametag.common.DefaultTagService;
@@ -24,6 +25,7 @@ public class NameTagPaperPlugin extends JavaPlugin implements CommandExecutor, T
     private DefaultConfigurationService configurationService;
     private NameTagCommandHandler commandHandler;
     private Paper2111Adapter adapter;
+    private FileTagAuditLogger auditLogger;
 
     @Override
     public void onEnable() {
@@ -33,6 +35,7 @@ public class NameTagPaperPlugin extends JavaPlugin implements CommandExecutor, T
                 new YamlTagRepository(dataDirectory.resolve("tags.yml")),
                 new YamlPlayerAssignmentRepository(dataDirectory.resolve("assignments.yml"))
         );
+        auditLogger = FileTagAuditLogger.register(tagService.events(), dataDirectory.resolve("audit.log"));
         commandHandler = new DefaultNameTagCommandHandler(
                 tagService,
                 new PaperPlayerResolver(),
@@ -55,6 +58,9 @@ public class NameTagPaperPlugin extends JavaPlugin implements CommandExecutor, T
     public void onDisable() {
         if (adapter != null) {
             adapter.stop();
+        }
+        if (auditLogger != null) {
+            auditLogger.close();
         }
         getLogger().info("NameTag-Core disabled.");
     }

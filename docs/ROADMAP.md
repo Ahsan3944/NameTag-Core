@@ -162,5 +162,5 @@ Potential future additions:
 - Per-world tags.
 - Per-region tags.
 - Web management.
-- Audit logs.
+- [x] Audit logs.
 - Tag packs.

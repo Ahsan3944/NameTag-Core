@@ -7,6 +7,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.ultraop.nametag.api.NameTagCommandHandler;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.common.DefaultConfigurationService;
+import com.ultraop.nametag.common.FileTagAuditLogger;
 import com.ultraop.nametag.common.DefaultMessageService;
 import com.ultraop.nametag.common.DefaultNameTagCommandHandler;
 import com.ultraop.nametag.common.DefaultTagService;
@@ -40,6 +41,7 @@ public final class NameTagFabric {
         );
 
         new Fabric2111Adapter(service, configuration);
+        FileTagAuditLogger.register(service.events(), dataDirectory.resolve("audit.log"));
         registerCommands(service, configuration);
     }
 
