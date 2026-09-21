@@ -4,7 +4,7 @@ A cross-platform, version-aware Minecraft NameTag framework designed to provide 
 
 ## Project Status
 
-**Phase:** Fabric 1.21.11 — chat integration and player lifecycle implemented; Fabric integration tests remain  
+**Phase:** Fabric 1.21.11 — chat, player lifecycle and server GameTests implemented; stability hardening in progress  
 **Target baseline:** Minecraft Java Edition **1.21.11**  
 **Platforms:** Fabric Server + Paper Server  
 **Primary goal:** Build the core once, isolate platform/version-specific code, and make future Minecraft version upgrades predictable and maintainable.
