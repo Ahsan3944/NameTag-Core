@@ -48,7 +48,7 @@ public final class Fabric2111NameplateRenderer {
     }
 
     public void refreshPlayer(ServerPlayerEntity player) {
-        renderPlayer(player.getServer(), player, System.nanoTime());
+        renderPlayer(player.getEntityWorld().getServer(), player, System.nanoTime());
     }
 
     public void clearPlayer(ServerPlayerEntity player) {
