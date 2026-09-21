@@ -36,8 +36,8 @@
 - [x] Tag service.
 - [x] Assignment service.
 - [x] Query interfaces.
-- [ ] Events.
-- [ ] Effect registration.
+- [x] Events.
+- [x] Effect registration.
 - [x] Storage contracts.
 - [x] Permission contracts.
 
