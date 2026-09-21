@@ -47,6 +47,12 @@ afterEvaluate {
             sourceSets.main.output,
             sourceSets.gametest.compileClasspath
         )
+
+        doFirst {
+            logger.lifecycle("GAMETEST_CP=" + classpath.files.collect { it.name }.findAll { it.toLowerCase().contains("minecraft") || it.toLowerCase().contains("fabric") || it.toLowerCase().contains("yarn") }.sort().join("|"))
+            logger.lifecycle("LOOM_NAMED_CP=" + configurations.findByName("minecraftNamedCompile")?.files?.collect { it.name }?.join("|"))
+            logger.lifecycle("LOOM_COMMON_NAMED_CP=" + configurations.findByName("minecraftCommonNamedCompile")?.files?.collect { it.name }?.join("|"))
+        }
     }
 }
 
