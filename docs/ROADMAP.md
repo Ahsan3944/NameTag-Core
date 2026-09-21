@@ -155,9 +155,9 @@ Potential future additions:
 - [x] Pulse/wave effects.
 - [x] Dynamic tag metadata placeholders.
 - [x] LuckPerms integration.
-- SQLite.
-- MySQL/MariaDB.
-- PostgreSQL.
+- [x] SQLite.
+- [x] MySQL/MariaDB.
+- [x] PostgreSQL.
 - [x] Import/export.
 - Per-world tags.
 - Per-region tags.
