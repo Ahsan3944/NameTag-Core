@@ -27,7 +27,7 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
     public void bootstrapRegistersNameTagCommands(TestContext context) {
         boolean registered = context.getWorld()
                 .getServer()
-                .getCommands()
+                .getCommandManager()
                 .getDispatcher()
                 .getRoot()
                 .getChild("nametag") != null;
@@ -41,8 +41,8 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
     }
 
     @GameTest
-    public void playerLifecycleRestoresAndClearsRuntimeNameplate(GameTestHelper helper) {
-        ServerWorld world = helper.getLevel();
+    public void playerLifecycleRestoresAndClearsRuntimeNameplate(TestContext context) {
+        ServerWorld world = context.getWorld();
         var server = world.getServer();
 
         DefaultTagService service = new DefaultTagService(
@@ -79,7 +79,7 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
 
         if (server.getScoreboard().getScoreHolderTeam(player.getName().getString()) == null) {
             renderer.stop(server);
-            helper.fail("JOIN lifecycle did not restore the runtime nameplate team");
+            context.throwGameTestException("JOIN lifecycle did not restore the runtime nameplate team");
             return;
         }
 
@@ -87,18 +87,18 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
 
         if (server.getScoreboard().getScoreHolderTeam(player.getName().getString()) != null) {
             renderer.stop(server);
-            helper.fail("LEAVE lifecycle did not clear the runtime nameplate team");
+            context.throwGameTestException("LEAVE lifecycle did not clear the runtime nameplate team");
             return;
         }
 
         if (service.activeTag(playerUuid).isEmpty()) {
             renderer.stop(server);
-            helper.fail("LEAVE lifecycle modified the persistent tag assignment");
+            context.throwGameTestException("LEAVE lifecycle modified the persistent tag assignment");
             return;
         }
 
         renderer.stop(server);
-        helper.succeed();
+        context.complete();
     }
 
     @Override
