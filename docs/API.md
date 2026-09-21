@@ -68,8 +68,35 @@ The command layer uses permission nodes such as:
 - `nametag.reload`
 - `nametag.admin`
 
+## Domain events
+
+`com.ultraop.nametag.api.TagEventBus` exposes thread-safe domain events from `TagService.events()`.
+
+The event model currently includes:
+
+- `TagEvent.Created`
+- `TagEvent.Updated`
+- `TagEvent.Deleted`
+- `TagEvent.AssignmentChanged`
+
+Events are emitted only after the corresponding persistence mutation succeeds. No-op assignment/clear operations do not emit redundant events.
+
 ## EffectProvider
 
 `com.ultraop.nametag.api.EffectProvider`
 
-This is the extension contract reserved for future effect registration. A general-purpose effect registry is intentionally not declared complete while `TagEffect` remains a sealed core model containing the built-in effect variants.
+An effect provider supplies platform/version-specific rendering behavior for an effect identifier.
+
+## EffectRegistry
+
+`com.ultraop.nametag.api.EffectRegistry`
+
+The common `DefaultEffectRegistry` provides:
+
+- unique effect IDs
+- registration/unregistration
+- lookup
+- immutable list snapshots
+- concurrent access
+
+The registry is deliberately separate from `TagEffect`: the tag model remains a small immutable data definition while providers own runtime rendering behavior.
