@@ -10,6 +10,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -93,6 +95,50 @@ class DefaultTagServiceTest {
 
         assertEquals(new TagId("owner"), service.activeTag(player).orElseThrow().id());
         assertFalse(service.delete(new TagId("missing")));
+    }
+
+    
+    @Test
+    void emitsCreateUpdateAssignmentAndDeleteEvents() {
+        DefaultTagService service = newService();
+        List<com.ultraop.nametag.api.TagEvent> events = new ArrayList<>();
+        service.events().register(events::add);
+
+        UUID player = UUID.randomUUID();
+        Tag owner = tag("owner", "OWNER", 10, true);
+        service.create(owner);
+        Tag updated = new Tag(
+                owner.id(), "OWNER+", owner.color(), owner.style(), owner.effect(),
+                owner.priority(), owner.enabled(), owner.chatEnabled(), owner.metadata()
+        );
+        service.update(updated);
+        service.assign(player, owner.id());
+        service.setActive(player, owner.id());
+        service.delete(owner.id());
+
+        assertEquals(4, events.size());
+        assertInstanceOf(com.ultraop.nametag.api.TagEvent.Created.class, events.get(0));
+        assertInstanceOf(com.ultraop.nametag.api.TagEvent.Updated.class, events.get(1));
+        assertInstanceOf(com.ultraop.nametag.api.TagEvent.AssignmentChanged.class, events.get(2));
+        assertInstanceOf(com.ultraop.nametag.api.TagEvent.AssignmentChanged.class, events.get(3));
+    }
+
+    @Test
+    void doesNotEmitEventsForNoOpAssignmentOrMissingClear() {
+        DefaultTagService service = newService();
+        List<com.ultraop.nametag.api.TagEvent> events = new ArrayList<>();
+        service.events().register(events::add);
+
+        UUID player = UUID.randomUUID();
+        service.clear(player);
+        service.create(tag("owner", "OWNER", 10, true));
+        service.assign(player, new TagId("owner"));
+        service.assign(player, new TagId("owner"));
+        service.setActive(player, new TagId("owner"));
+
+        assertEquals(2, events.size());
+        assertInstanceOf(com.ultraop.nametag.api.TagEvent.Created.class, events.get(0));
+        assertInstanceOf(com.ultraop.nametag.api.TagEvent.AssignmentChanged.class, events.get(1));
     }
 
     @Test
