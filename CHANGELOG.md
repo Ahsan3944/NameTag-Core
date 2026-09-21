@@ -16,3 +16,5 @@
 - Added compatibility, installation and API reference documentation.
 - Added thread-safe domain events for tag and player-assignment mutations.
 - Added a concurrent EffectRegistry with duplicate-ID validation and immutable snapshots.
+- Added a 50,000-entry bounded-cache stress regression test to guard against unbounded active-tag cache growth.
+- CI now publishes the verified module JARs as a retained build artifact after a successful build.
