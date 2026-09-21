@@ -94,4 +94,44 @@ class Fabric2111ChatRendererTest {
         assertEquals("Hello", messagePart.getString());
         assertEquals(Boolean.TRUE, messagePart.getStyle().isItalic());
     }
+    @Test
+    void rendersGradientAndRandomColorsInTagComponent() {
+        Tag gradientTag = new Tag(
+                new TagId("gradient"),
+                "ABC",
+                new TagColor.Gradient(
+                        new TagColor.Rgb(0, 0, 0),
+                        new TagColor.Rgb(255, 255, 255)
+                ),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of()
+        );
+
+        Text gradient = Fabric2111ChatRenderer.styledTag(gradientTag);
+        assertEquals(0x000000, gradient.getSiblings().get(0).getStyle().getColor().getRgb());
+        assertEquals(0x808080, gradient.getSiblings().get(1).getStyle().getColor().getRgb());
+        assertEquals(0xFFFFFF, gradient.getSiblings().get(2).getStyle().getColor().getRgb());
+
+        Tag randomTag = new Tag(
+                new TagId("random"),
+                "ABC",
+                new TagColor.Random(),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of()
+        );
+        Text random = Fabric2111ChatRenderer.styledTag(randomTag);
+        assertEquals(
+                random.getSiblings().get(0).getStyle().getColor().getRgb(),
+                random.getSiblings().get(1).getStyle().getColor().getRgb()
+        );
+    }
+
 }
