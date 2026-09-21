@@ -2,12 +2,6 @@ plugins {
     id 'net.fabricmc.fabric-loom-remap' version '1.14.10'
 }
 
-loom {
-    // NameTag-Core is server-side; use Loom's server/common Minecraft jar so
-    // server GameTests receive the dedicated-server GameTest framework classes.
-    serverOnlyMinecraftJar()
-}
-
 dependencies {
     minecraft "com.mojang:minecraft:" + minecraft_version
     mappings "net.fabricmc:yarn:1.21.11+build.6:v2"
@@ -33,24 +27,14 @@ dependencies {
     add("gametestImplementation", "net.fabricmc.fabric-api:fabric-gametest-api-v1:3.1.27+4fc5413f3e")
 }
 
-afterEvaluate {
-    configurations.named("gametestCompileClasspath") {
-        extendsFrom(configurations.named("minecraftNamedCompile").get())
-    }
-
-    configurations.named("gametestRuntimeClasspath") {
-        extendsFrom(configurations.named("minecraftNamedRuntime").get())
-    }
-
-    tasks.named("compileGametestJava", JavaCompile) {
-        doFirst {
-            def helperEntry = "net/minecraft/gametest/framework/GameTestHelper.class"
-            def helperJars = classpath.files.findAll { it.isFile() && it.name.endsWith(".jar") && zipTree(it).matching { include(helperEntry) }.files }
-            logger.lifecycle("SERVER_ONLY_GAMETEST_HELPER_JARS=" + helperJars.collect { it.name }.join("|"))
-            logger.lifecycle("SERVER_ONLY_MINECRAFT_CP=" + configurations.named("minecraftNamedCompile").get().files.collect { it.name }.findAll { it.toLowerCase().contains("minecraft") }.join("|"))
-        }
-    }
+sourceSets.named("gametest") {
+    compileClasspath += sourceSets.main.compileClasspath
+    compileClasspath += sourceSets.main.output
+    runtimeClasspath += sourceSets.main.runtimeClasspath
+    runtimeClasspath += sourceSets.main.output
 }
+
+tasks.withType(JavaCompile).configureEach { options.release = 21 }
 
 sourceSets.named("gametest") {
     compileClasspath += sourceSets.main.compileClasspath
