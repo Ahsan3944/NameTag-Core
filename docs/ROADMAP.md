@@ -116,6 +116,7 @@
 - [x] Cross-platform behavior comparison.
 - [x] Performance/stress regression coverage for bounded cache behavior.
 - [x] Documentation audit.
+- [x] Cache behavior documented separately for the 1024-entry legacy active-tag cache and 2048-entry contextual multi-tag cache.
 
 ## Phase 11 — v1.0 Release Preparation
 - [x] Release artifacts uploaded by CI.
