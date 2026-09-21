@@ -6,6 +6,7 @@ import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagStyle;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
+import net.minecraft.command.DefaultPermissions;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
@@ -40,15 +41,15 @@ public final class Fabric2111ChatRenderer {
             return message;
         }
 
-        if (!sender.getServer().getPlayerManager().isOperator(sender.getGameProfile())) {
-            return CompletableFuture.completedFuture(message);
+        if (!sender.getPermissions().hasPermission(DefaultPermissions.GAMEMASTERS)) {
+            return message;
         }
 
         Optional<Tag> active = tagService.activeTag(sender.getUuid())
                 .filter(Tag::enabled)
                 .filter(Tag::chatEnabled);
         if (active.isEmpty()) {
-            return CompletableFuture.completedFuture(message);
+            return message;
         }
 
         return renderFormat(
