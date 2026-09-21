@@ -147,14 +147,25 @@ public final class NameTagFabric {
 
             root.then(CommandManager.literal("role")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
-                            .suggests((context, builder) -> suggestTags(context, builder, service, configuration, "role"))
+                            .suggests((context, builder) ->
+                                    suggestTags(context, builder, service, configuration, "role"))
                             .then(CommandManager.argument("permission", StringArgumentType.word())
-                                    .suggests((context, builder) -> CommandSource.suggestMatching(List.of("clear"), builder))
-                                    .executes(context -> execute(context, service, messages, configuration, new String[]{
-                                            "role",
-                                            StringArgumentType.getString(context, "tag"),
-                                            StringArgumentType.getString(context, "permission")
-                                    }))));
+                                    .suggests((context, builder) ->
+                                            CommandSource.suggestMatching(List.of("clear"), builder))
+                                    .executes(context -> execute(
+                                            context,
+                                            service,
+                                            messages,
+                                            configuration,
+                                            new String[]{
+                                                    "role",
+                                                    StringArgumentType.getString(context, "tag"),
+                                                    StringArgumentType.getString(context, "permission")
+                                            }
+                                    ))
+                            )
+                    )
+            );
 
             dispatcher.register(root);
         });
