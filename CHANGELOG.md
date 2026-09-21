@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.0 — 2026-09-22
+- First stable NameTag-Core release for Minecraft 1.21.11 on Fabric Server and Paper Server.
+- Released under the MIT License.
+- Finalized the command-first 1.0 feature scope, persistence providers, contextual/layered resolution, effects, chat integration and release documentation.
+
 ## Unreleased
 - Completed common tab-completion for tag arguments of the effect and automatic-role commands, with regression coverage.
 - Clarified the two bounded resolution caches: 1024-entry legacy active-tag cache and 2048-entry contextual multi-tag cache.

@@ -4,7 +4,7 @@ A cross-platform, version-aware Minecraft NameTag framework designed to provide 
 
 ## Project Status
 
-**Phase:** Fabric/Paper 1.21.11 — core rendering, lifecycle, chat, persistence, layered/contextual resolution, GameTests and stability hardening implemented; core scope finalized, release preparation in progress  
+**Phase:** Fabric/Paper 1.21.11 — core rendering, lifecycle, chat, persistence, layered/contextual resolution, GameTests and stability hardening implemented; core scope finalized; stable 1.0.0 release baseline  
 **Target baseline:** Minecraft Java Edition **1.21.11**  
 **Platforms:** Fabric Server + Paper Server  
 **Primary goal:** Build the core once, isolate platform/version-specific code, and make future Minecraft version upgrades predictable and maintainable.
@@ -253,9 +253,9 @@ The architectural boundary is fixed: **core/API code must not be mixed with plat
 
 The project uses semantic project versioning independently from Minecraft versions.
 
-Current development version: `0.1.0-SNAPSHOT`.
+Current stable project version: `1.0.0`.
 
-The first stable release will use `1.0.0` only after the release version, licensing and tag steps are completed. Future Minecraft adapters are not prerequisites for that core release.
+The 1.0.0 release baseline targets Minecraft 1.21.11 on Fabric Server and Paper Server. Future Minecraft adapters remain separate versioned implementation tracks. Future Minecraft adapters are not prerequisites for that core release.
 
 A future Minecraft upgrade should normally add/update an adapter module rather than fork the entire codebase.
 
@@ -384,4 +384,4 @@ See [docs/BLUEPRINT.md](docs/BLUEPRINT.md).
 
 ## License
 
-A license has not yet been selected for the public stable release. This remains a release-administration decision and is separate from the NameTag-Core engineering baseline.
+NameTag-Core is released under the **MIT License**. See [LICENSE](LICENSE) for the complete license text.
