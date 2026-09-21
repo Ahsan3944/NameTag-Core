@@ -8,6 +8,7 @@ import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagEffect;
 import com.ultraop.nametag.core.model.TagStyle;
+import com.ultraop.nametag.core.model.TagPresentation;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
@@ -166,7 +167,7 @@ public final class Paper2111NameplateRenderer {
 
         if (nowNanos - state.lastFrameNanos >= settings.speedMs() * 1_000_000L) {
             GlitchFrame frame = glitchEngine.render(
-                    tag.displayName(),
+                    TagPresentation.displayText(tag),
                     settings,
                     state.frameIndex,
                     tag.id().value().hashCode()
@@ -198,7 +199,7 @@ public final class Paper2111NameplateRenderer {
         TagStyle style = tag.style();
         TagColor color = tag.color();
         Component result = Component.empty();
-        int[] codePoints = tag.displayName().codePoints().toArray();
+        int[] codePoints = TagPresentation.displayText(tag).codePoints().toArray();
         long seed = tag.id().value().hashCode();
 
         for (int index = 0; index < codePoints.length; index++) {

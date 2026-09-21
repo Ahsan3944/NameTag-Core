@@ -5,6 +5,7 @@ import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagStyle;
+import com.ultraop.nametag.core.model.TagPresentation;
 import io.papermc.paper.chat.ChatRenderer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
@@ -77,6 +78,10 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
 
             Component replacement = switch (match.placeholder()) {
                 case TAG_PLACEHOLDER -> styledTag(tag);
+                case "{tag_id}" -> Component.text(tag.id().value());
+                case "{tag_priority}" -> Component.text(String.valueOf(tag.priority()));
+                case "{tag_prefix}" -> Component.text(TagPresentation.prefix(tag));
+                case "{tag_suffix}" -> Component.text(TagPresentation.suffix(tag));
                 case PLAYER_PLACEHOLDER -> sourceDisplayName;
                 case MESSAGE_PLACEHOLDER -> message;
                 default -> Component.text(match.placeholder());
@@ -92,9 +97,17 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         int tag = format.indexOf(TAG_PLACEHOLDER, fromIndex);
         int player = format.indexOf(PLAYER_PLACEHOLDER, fromIndex);
         int message = format.indexOf(MESSAGE_PLACEHOLDER, fromIndex);
+        int tagId = format.indexOf("{tag_id}", fromIndex);
+        int tagPriority = format.indexOf("{tag_priority}", fromIndex);
+        int tagPrefix = format.indexOf("{tag_prefix}", fromIndex);
+        int tagSuffix = format.indexOf("{tag_suffix}", fromIndex);
 
         int start = Integer.MAX_VALUE;
         String placeholder = null;
+        if (tagId >= 0 && tagId < start) { start = tagId; placeholder = "{tag_id}"; }
+        if (tagPriority >= 0 && tagPriority < start) { start = tagPriority; placeholder = "{tag_priority}"; }
+        if (tagPrefix >= 0 && tagPrefix < start) { start = tagPrefix; placeholder = "{tag_prefix}"; }
+        if (tagSuffix >= 0 && tagSuffix < start) { start = tagSuffix; placeholder = "{tag_suffix}"; }
         if (tag >= 0 && tag < start) {
             start = tag;
             placeholder = TAG_PLACEHOLDER;
@@ -118,13 +131,13 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         TagColor color = tag.color();
         if (color instanceof TagColor.Preset) {
             return applyStyle(
-                    Component.text(tag.displayName()).color(presetColor(((TagColor.Preset) color).name())),
+                    Component.text(TagPresentation.displayText(tag)).color(presetColor(((TagColor.Preset) color).name())),
                     style
             );
         }
 
         Component result = Component.empty();
-        int[] codePoints = tag.displayName().codePoints().toArray();
+        int[] codePoints = TagPresentation.displayText(tag).codePoints().toArray();
         long seed = tag.id().value().hashCode();
         for (int index = 0; index < codePoints.length; index++) {
             Component glyph = Component.text(new String(Character.toChars(codePoints[index])));

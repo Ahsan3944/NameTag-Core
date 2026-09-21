@@ -54,6 +54,7 @@ This separation prevents Minecraft API changes from spreading through the entire
 - Source tag length is preserved while characters are selectively corrupted.
 - Configurable glitch intensity and animation speed.
 - Future effects can be added without changing the tag model.
+- Prefix/suffix presentation metadata is supported without coupling the core to platform text APIs.
 - Configurable effect speed/intensity where supported.
 
 ### Permissions
@@ -116,7 +117,7 @@ The message layer is also platform-neutral and currently provides default Englis
 
 ## Configuration
 
-The common configuration service provides an immutable typed runtime snapshot backed by `configuration.yml`. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the schema, defaults, validation rules and platform file locations. Installation is documented in [docs/INSTALLATION.md](docs/INSTALLATION.md), supported versions in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), and public contracts in [docs/API.md](docs/API.md). Chat placeholder and rendering rules are documented in [docs/CHAT.md](docs/CHAT.md). Paper player lifecycle behavior is documented in [docs/PAPER_PLAYER_LIFECYCLE.md](docs/PAPER_PLAYER_LIFECYCLE.md). Paper plugin integration coverage is documented in [docs/PAPER_INTEGRATION_TESTS.md](docs/PAPER_INTEGRATION_TESTS.md). Fabric chat behavior is documented in [docs/FABRIC_CHAT.md](docs/FABRIC_CHAT.md). Fabric player lifecycle behavior is documented in [docs/FABRIC_PLAYER_LIFECYCLE.md](docs/FABRIC_PLAYER_LIFECYCLE.md).
+The common configuration service provides an immutable typed runtime snapshot backed by `configuration.yml`. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the schema, defaults, validation rules and platform file locations. Installation is documented in [docs/INSTALLATION.md](docs/INSTALLATION.md), supported versions in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), and public contracts in [docs/API.md](docs/API.md). Chat placeholder and rendering rules are documented in [docs/CHAT.md](docs/CHAT.md). Supported chat placeholders include `{tag}`, `{tag_id}`, `{tag_priority}`, `{tag_prefix}`, `{tag_suffix}`, `{player}`, and `{message}`. Paper player lifecycle behavior is documented in [docs/PAPER_PLAYER_LIFECYCLE.md](docs/PAPER_PLAYER_LIFECYCLE.md). Paper plugin integration coverage is documented in [docs/PAPER_INTEGRATION_TESTS.md](docs/PAPER_INTEGRATION_TESTS.md). Fabric chat behavior is documented in [docs/FABRIC_CHAT.md](docs/FABRIC_CHAT.md). Fabric player lifecycle behavior is documented in [docs/FABRIC_PLAYER_LIFECYCLE.md](docs/FABRIC_PLAYER_LIFECYCLE.md).
 
 ## Caching
 

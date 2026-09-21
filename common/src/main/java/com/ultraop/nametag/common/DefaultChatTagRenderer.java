@@ -3,6 +3,7 @@ package com.ultraop.nametag.common;
 import com.ultraop.nametag.api.ChatTagRenderer;
 import com.ultraop.nametag.api.ConfigurationService;
 import com.ultraop.nametag.core.model.Tag;
+import com.ultraop.nametag.core.model.TagPresentation;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -30,7 +31,11 @@ public final class DefaultChatTagRenderer implements ChatTagRenderer {
 
         String format = configuration.current().chatFormat();
         return format
-                .replace("{tag}", activeTag.displayName())
+                .replace("{tag}", TagPresentation.displayText(activeTag))
+                .replace("{tag_id}", activeTag.id().value())
+                .replace("{tag_priority}", String.valueOf(activeTag.priority()))
+                .replace("{tag_prefix}", TagPresentation.prefix(activeTag))
+                .replace("{tag_suffix}", TagPresentation.suffix(activeTag))
                 .replace("{player}", playerName)
                 .replace("{message}", message);
     }

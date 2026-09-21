@@ -7,6 +7,7 @@ import com.ultraop.nametag.core.model.GlitchSettings;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagStyle;
+import com.ultraop.nametag.core.model.TagPresentation;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.scoreboard.ServerScoreboard;
 import net.minecraft.scoreboard.Team;
@@ -140,7 +141,7 @@ public final class Fabric2111NameplateRenderer {
 
         if (nowNanos - state.lastFrameNanos >= settings.speedMs() * 1_000_000L) {
             GlitchFrame frame = glitchEngine.render(
-                    tag.displayName(),
+                    TagPresentation.displayText(tag),
                     settings,
                     state.frameIndex,
                     tag.id().value().hashCode()
@@ -171,7 +172,7 @@ public final class Fabric2111NameplateRenderer {
         TagStyle style = tag.style();
         TagColor color = tag.color();
         MutableText result = Text.empty();
-        int[] codePoints = tag.displayName().codePoints().toArray();
+        int[] codePoints = TagPresentation.displayText(tag).codePoints().toArray();
         long seed = tag.id().value().hashCode();
 
         for (int index = 0; index < codePoints.length; index++) {

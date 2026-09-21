@@ -26,17 +26,17 @@ class Paper2111ChatRendererTest {
                 0,
                 true,
                 true,
-                Map.of()
+                Map.of("prefix", "<", "suffix", ">")
         );
 
         Component result = Paper2111ChatRenderer.renderFormat(
-                "[{tag}] {player}: {message}",
+                "[{tag}] {tag_id}/{tag_priority} {tag_prefix}{player}{tag_suffix}: {message}",
                 tag,
                 Component.text("UltraOP"),
                 Component.text("Hello!")
         );
 
-        assertEquals("[OWNER] UltraOP: Hello!", plain(result));
+        assertEquals("[<OWNER>/owner/0 <UltraOP>: Hello!", plain(result));
 
         Component styledTag = Paper2111ChatRenderer.styledTag(tag);
         Component firstGlyph = styledTag.children().get(0);

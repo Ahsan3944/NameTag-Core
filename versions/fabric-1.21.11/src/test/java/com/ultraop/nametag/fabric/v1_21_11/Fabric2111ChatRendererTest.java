@@ -25,17 +25,17 @@ class Fabric2111ChatRendererTest {
                 0,
                 true,
                 true,
-                Map.of()
+                Map.of("prefix", "<", "suffix", ">", "unused", "x")
         );
 
         Text result = Fabric2111ChatRenderer.renderFormat(
-                "[{tag}] {player}: {message}",
+                "[{tag}] {tag_id}/{tag_priority} {tag_prefix}{player}{tag_suffix}: {message}",
                 tag,
                 Text.literal("UltraOP"),
                 Text.literal("Hello!")
         );
 
-        assertEquals("[OWNER] UltraOP: Hello!", result.getString());
+        assertEquals("[<OWNER>/owner/0 <UltraOP>: Hello!", result.getString());
         assertNotNull(result.getSiblings());
         assertEquals(6, result.getSiblings().size());
 

@@ -146,7 +146,8 @@ For each new version:
 
 Potential future additions:
 - Multiple active/layered tags.
-- Prefix/suffix.
+- [x] Prefix/suffix.
+- [x] Chat placeholders (tag ID, priority, prefix, suffix).
 - Temporary tags.
 - Expiration.
 - Automatic role tags.
