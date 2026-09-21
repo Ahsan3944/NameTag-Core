@@ -18,3 +18,4 @@
 - Added a concurrent EffectRegistry with duplicate-ID validation and immutable snapshots.
 - Added a 50,000-entry bounded-cache stress regression test to guard against unbounded active-tag cache growth.
 - CI now publishes the verified module JARs as a retained build artifact after a successful build.
+- Added the official Gradle 9.2.1 Wrapper and distribution SHA-256 verification for reproducible CI/local builds.
