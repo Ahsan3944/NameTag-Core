@@ -36,4 +36,11 @@ sourceSets.named("gametest") {
 }
 
 
+tasks.named("compileGametestJava") {
+    doFirst {
+        logger.lifecycle("GAMETEST_COMPILE_CLASSPATH=" + sourceSets.gametest.compileClasspath.files.collect { it.name }.sort().join(","))
+        logger.lifecycle("MAIN_RUNTIME_CLASSPATH=" + sourceSets.main.runtimeClasspath.files.collect { it.name }.sort().join(","))
+    }
+}
+
 tasks.withType(JavaCompile).configureEach { options.release = 21 }
