@@ -416,4 +416,35 @@ final class DefaultNameTagCommandHandlerTest {
     }
 
 
+
+    @Test
+    void effectAndRoleSuggestionsExposeTagIdsBeforeTheirValues() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(),
+                new InMemoryPlayerAssignmentRepository()
+        );
+        service.create(new Tag(
+                new TagId("owner"), "OWNER", new TagColor.Preset("white"),
+                TagStyle.plain(), TagEffect.none(), 100, true, true, Map.of()
+        ));
+        service.create(new Tag(
+                new TagId("vip"), "VIP", new TagColor.Preset("white"),
+                TagStyle.plain(), TagEffect.none(), 50, true, true, Map.of()
+        ));
+
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+        RecordingSource source = new RecordingSource();
+
+        assertEquals(List.of("owner", "vip"),
+                handler.suggest(new CommandContext(source, new String[]{"effect", ""})));
+        assertEquals(List.of("vip"),
+                handler.suggest(new CommandContext(source, new String[]{"effect", "v"})));
+        assertEquals(List.of("owner", "vip"),
+                handler.suggest(new CommandContext(source, new String[]{"role", ""})));
+        assertEquals(List.of("vip"),
+                handler.suggest(new CommandContext(source, new String[]{"role", "v"})));
+    }
+
 }
