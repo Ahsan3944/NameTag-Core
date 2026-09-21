@@ -12,7 +12,7 @@
 - [x] Testing strategy defined.
 
 ## Phase 1 — Build Foundation
-- [ ] Gradle wrapper.
+- [x] Gradle wrapper.
 - [x] Root build.
 - [x] Multi-module configuration.
 - [x] Java/toolchain configuration.
