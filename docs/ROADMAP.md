@@ -116,11 +116,11 @@
 - [x] Reload test.
 - [x] Permission regression test.
 - [x] Cross-platform behavior comparison.
-- [ ] Performance test.
+- [x] Performance/stress regression coverage for bounded cache behavior.
 - [x] Documentation audit.
 
 ## Phase 11 — v1.0 Release
-- [ ] Release artifacts.
+- [x] Release artifacts published by CI.
 - [x] Compatibility matrix.
 - [x] Changelog.
 - [x] Installation instructions.
