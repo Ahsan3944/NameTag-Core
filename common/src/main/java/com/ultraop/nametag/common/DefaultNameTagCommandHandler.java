@@ -33,7 +33,7 @@ import java.nio.file.Path;
 
 public final class DefaultNameTagCommandHandler implements NameTagCommandHandler {
     private static final List<String> SUBCOMMANDS =
-            List.of("create", "list", "give", "set", "remove", "clear", "delete", "glitch", "effect", "role", "reload", "export", "import");
+            List.of("create", "list", "give", "set", "remove", "clear", "delete", "glitch", "effect", "role", "scope", "reload", "export", "import");
 
     private final TagService tagService;
     private final PlayerResolver playerResolver;
@@ -126,6 +126,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 case "glitch" -> glitch(context.source(), args);
                 case "effect" -> effect(context.source(), args);
                 case "role" -> role(context.source(), args);
+                case "scope" -> scope(context.source(), args);
                 case "export" -> exportTags(context.source(), args);
                 case "import" -> importTags(context.source(), args);
                 default -> sendUsage(context.source());
@@ -162,6 +163,10 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             return tagNames(args[2]);
         }
 
+        if (args.length == 2 && "scope".equals(subcommand)) {
+            return tagNames(args[1]);
+        }
+
         if (args.length == 2 && ("export".equals(subcommand) || "import".equals(subcommand))) {
             String prefix = args[1].toLowerCase(Locale.ROOT);
             return List.of("tags.yml").stream().filter(value -> value.startsWith(prefix)).toList();
@@ -176,6 +181,10 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         if (args.length == 3 && "effect".equals(subcommand)) {
             String prefix = args[2].toLowerCase(Locale.ROOT);
             return List.of("none", "rainbow", "pulse", "wave").stream().filter(value -> value.startsWith(prefix)).toList();
+        }
+        if (args.length >= 3 && "scope".equals(subcommand)) {
+            String prefix = args[2].toLowerCase(Locale.ROOT);
+            return List.of("clear", "world", "region").stream().filter(value -> value.startsWith(prefix)).toList();
         }
         if (args.length == 3 && "role".equals(subcommand)) {
             String prefix = args[2].toLowerCase(Locale.ROOT);
@@ -345,6 +354,55 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 "permission", updated.metadata().getOrDefault("auto-permission", "none"))));
     }
 
+    private void scope(CommandSource source, String[] args) {
+        if (args.length == 3 && args[2].contains(" ")) {
+            String[] split = args[2].trim().split("\\s+");
+            String[] expanded = new String[2 + split.length];
+            expanded[0] = args[0];
+            expanded[1] = args[1];
+            System.arraycopy(split, 0, expanded, 2, split.length);
+            args = expanded;
+        }
+        if (args.length < 3) {
+            throw new IllegalArgumentException("Usage: /nametag scope <tag> clear|world <world>|region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>");
+        }
+        TagId id = new TagId(args[1].toLowerCase(Locale.ROOT));
+        Tag current = tagService.find(id).orElseThrow(() ->
+                new IllegalArgumentException(messages.format("error.tag.not_found", Map.of("tag", id.value()))));
+        Map<String, String> metadata = new java.util.LinkedHashMap<>(current.metadata());
+        metadata.keySet().removeIf(key -> key.equals("world") || key.equals("region")
+                || key.startsWith("region."));
+        switch (args[2].toLowerCase(Locale.ROOT)) {
+            case "clear" -> {
+                if (args.length != 3) throw new IllegalArgumentException("Usage: /nametag scope <tag> clear");
+            }
+            case "world" -> {
+                if (args.length != 4 || args[3].isBlank()) throw new IllegalArgumentException("Usage: /nametag scope <tag> world <world>");
+                metadata.put("world", args[3]);
+            }
+            case "region" -> {
+                if (args.length != 10) throw new IllegalArgumentException(
+                        "Usage: /nametag scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>");
+                metadata.put("region", args[3]);
+                metadata.put("world", args[4]);
+                String[] keys = {"region.minX", "region.minY", "region.minZ", "region.maxX", "region.maxY", "region.maxZ"};
+                for (int i = 0; i < keys.length; i++) {
+                    try {
+                        Integer.parseInt(args[5 + i]);
+                    } catch (NumberFormatException exception) {
+                        throw new IllegalArgumentException("Region coordinate must be an integer: " + args[5 + i]);
+                    }
+                    metadata.put(keys[i], args[5 + i]);
+                }
+            }
+            default -> throw new IllegalArgumentException("Unknown scope. Use clear, world or region.");
+        }
+        Tag updated = new Tag(current.id(), current.displayName(), current.color(), current.style(), current.effect(),
+                current.priority(), current.enabled(), current.chatEnabled(), metadata);
+        tagService.update(updated);
+        source.sendMessage("Scope updated for " + updated.id().value() + ".");
+    }
+
     private void exportTags(CommandSource source, String[] args) {
         if (args.length != 2) throw new IllegalArgumentException("Usage: /nametag export <file>");
         Path file = packPath(args[1]);
@@ -408,7 +466,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             case "delete" -> "nametag.delete";
             case "give", "set" -> "nametag.give";
             case "remove", "clear" -> "nametag.remove";
-            case "glitch", "effect", "role" -> "nametag.edit";
+            case "glitch", "effect", "role", "scope" -> "nametag.edit";
             case "reload" -> "nametag.reload";
             case "export", "import" -> "nametag.admin";
             default -> null;

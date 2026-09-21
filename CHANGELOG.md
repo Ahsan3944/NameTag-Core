@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased
+- Layered/world/region tag resolution with deterministic multi-tag rendering and persistent metadata-defined scopes.
+- Added `{tags}` chat placeholder while preserving existing single-tag placeholders.
+- Added `/nametag scope` command and regression coverage for contextual resolution.
+
+
+## Unreleased
 
 - Added configurable YAML, SQLite, MySQL, MariaDB, and PostgreSQL persistence through JDBC.
 - Added versioned database schema initialization, transactional repository writes, and one-time YAML-to-database migration.

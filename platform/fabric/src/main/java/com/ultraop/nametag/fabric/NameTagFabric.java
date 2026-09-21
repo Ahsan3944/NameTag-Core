@@ -158,6 +158,17 @@ public final class NameTagFabric {
                                             StringArgumentType.getString(context, "effect")
                                     })))));
 
+            root.then(CommandManager.literal("scope")
+                    .then(CommandManager.argument("tag", StringArgumentType.word())
+                            .suggests((context, builder) ->
+                                    suggestTags(context, builder, service, permissions, configuration, "scope"))
+                            .then(CommandManager.argument("settings", StringArgumentType.greedyString())
+                                    .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
+                                            "scope",
+                                            StringArgumentType.getString(context, "tag"),
+                                            StringArgumentType.getString(context, "settings")
+                                    })))));
+ 
             root.then(CommandManager.literal("role")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
                             .suggests((context, builder) ->

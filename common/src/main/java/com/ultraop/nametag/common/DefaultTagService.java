@@ -29,6 +29,7 @@ public final class DefaultTagService implements TagService {
 
     private final PlayerAssignmentRepository assignments;
     private final ActiveTagCache activeTagCache;
+    private final ContextualTagCache contextualTagCache = new ContextualTagCache();
     private final TagEventBus events;
     private final Clock clock;
     private final PermissionService permissions;
@@ -96,6 +97,8 @@ public final class DefaultTagService implements TagService {
             throw new IllegalArgumentException("Tag already exists: " + tag.id().value());
         }
         tags.save(tag);
+        activeTagCache.clear();
+        contextualTagCache.clear();
         events.publish(new TagEvent.Created(tag));
         return tag;
     }
@@ -108,6 +111,7 @@ public final class DefaultTagService implements TagService {
         tags.save(tag);
         // Any tag update can change priority/enabled resolution for players using other tags.
         activeTagCache.clear();
+        contextualTagCache.clear();
         events.publish(new TagEvent.Updated(previous, tag));
         return tag;
     }
@@ -119,6 +123,7 @@ public final class DefaultTagService implements TagService {
 
         tags.delete(id);
         activeTagCache.invalidateTag(id);
+        contextualTagCache.invalidateTag(id.value());
 
         List<TagEvent.AssignmentChanged> assignmentEvents = new ArrayList<>();
 
@@ -142,6 +147,7 @@ public final class DefaultTagService implements TagService {
                 assignments.save(updated);
             }
             activeTagCache.invalidatePlayer(current.playerUuid());
+            contextualTagCache.invalidatePlayer(current.playerUuid());
             assignmentEvents.add(new TagEvent.AssignmentChanged(
                     current.playerUuid(), current, updated));
         }
@@ -190,6 +196,7 @@ public final class DefaultTagService implements TagService {
         TagValidator.validate(updated);
         assignments.save(updated);
         activeTagCache.invalidatePlayer(playerUuid);
+        contextualTagCache.invalidatePlayer(playerUuid);
         if (!updated.equals(current)) {
             events.publish(new TagEvent.AssignmentChanged(playerUuid, current, updated));
         }
@@ -222,6 +229,7 @@ public final class DefaultTagService implements TagService {
         TagValidator.validate(updated);
         assignments.save(updated);
         activeTagCache.invalidatePlayer(playerUuid);
+        contextualTagCache.invalidatePlayer(playerUuid);
         if (!updated.equals(current)) {
             events.publish(new TagEvent.AssignmentChanged(playerUuid, current, updated));
         }
@@ -249,6 +257,7 @@ public final class DefaultTagService implements TagService {
         }
 
         activeTagCache.invalidatePlayer(playerUuid);
+        contextualTagCache.invalidatePlayer(playerUuid);
         if (!updated.equals(current)) {
             events.publish(new TagEvent.AssignmentChanged(playerUuid, current, updated));
         }
@@ -260,9 +269,95 @@ public final class DefaultTagService implements TagService {
         Optional<PlayerAssignment> current = assignments.find(playerUuid);
         assignments.delete(playerUuid);
         activeTagCache.invalidatePlayer(playerUuid);
+        contextualTagCache.invalidatePlayer(playerUuid);
         current.ifPresent(previous ->
                 events.publish(new TagEvent.AssignmentChanged(
                         playerUuid, previous, new PlayerAssignment(playerUuid, List.of(), null))));
+    }
+
+    @Override
+    public List<Tag> activeTags(UUID playerUuid, com.ultraop.nametag.api.TagResolutionContext context) {
+        Objects.requireNonNull(context, "context");
+        List<Tag> cached = contextualTagCache.find(playerUuid, context);
+        if (cached != null) return cached;
+
+        Optional<PlayerAssignment> stored = assignments.find(playerUuid);
+        List<Tag> resolved;
+        if (stored.isPresent()) {
+            PlayerAssignment assignment = removeExpired(playerUuid, stored.get());
+            resolved = resolveActiveTags(assignment, context);
+            if (resolved.isEmpty()) {
+                resolved = automaticRoleTags(playerUuid, context);
+            }
+        } else {
+            resolved = automaticRoleTags(playerUuid, context);
+        }
+
+        contextualTagCache.put(playerUuid, context, resolved);
+        return resolved;
+    }
+
+    private List<Tag> resolveActiveTags(PlayerAssignment assignment, com.ultraop.nametag.api.TagResolutionContext context) {
+        long now = clock.millis();
+        List<Tag> candidates = assignment.assignedTagIds().stream()
+                .filter(tagId -> !assignment.isExpired(tagId, now))
+                .map(tags::find)
+                .flatMap(Optional::stream)
+                .filter(Tag::enabled)
+                .filter(tag -> matchesContext(tag, context))
+                .sorted(Comparator.comparingInt(Tag::priority).reversed()
+                        .thenComparing(tag -> tag.id().value()))
+                .toList();
+
+        if (candidates.isEmpty()) return List.of();
+        if (assignment.activeTagId() == null) return candidates;
+
+        Optional<Tag> explicit = candidates.stream()
+                .filter(tag -> tag.id().equals(assignment.activeTagId()))
+                .findFirst();
+        if (explicit.isEmpty()) return candidates;
+
+        ArrayList<Tag> ordered = new ArrayList<>();
+        ordered.add(explicit.get());
+        candidates.stream()
+                .filter(tag -> !tag.id().equals(explicit.get().id()))
+                .forEach(ordered::add);
+        return List.copyOf(ordered);
+    }
+
+    private List<Tag> automaticRoleTags(UUID playerUuid, com.ultraop.nametag.api.TagResolutionContext context) {
+        if (permissions == null) return List.of();
+        return tags.findAll().stream()
+                .filter(Tag::enabled)
+                .filter(tag -> tag.metadata().get("auto-permission") != null)
+                .filter(tag -> permissions.has(playerUuid, tag.metadata().get("auto-permission")))
+                .filter(tag -> matchesContext(tag, context))
+                .sorted(Comparator.comparingInt(Tag::priority).reversed()
+                        .thenComparing(tag -> tag.id().value(), Comparator.reverseOrder()))
+                .toList();
+    }
+
+    private static boolean matchesContext(Tag tag, com.ultraop.nametag.api.TagResolutionContext context) {
+        Map<String, String> metadata = tag.metadata();
+        String world = metadata.get("world");
+        if (world != null && !world.equals(context.world())) return false;
+
+        String region = metadata.get("region");
+        if (region == null) return true;
+
+        try {
+            int minX = Integer.parseInt(metadata.get("region.minX"));
+            int maxX = Integer.parseInt(metadata.get("region.maxX"));
+            int minY = Integer.parseInt(metadata.get("region.minY"));
+            int maxY = Integer.parseInt(metadata.get("region.maxY"));
+            int minZ = Integer.parseInt(metadata.get("region.minZ"));
+            int maxZ = Integer.parseInt(metadata.get("region.maxZ"));
+            return context.x() >= Math.min(minX, maxX) && context.x() <= Math.max(minX, maxX)
+                    && context.y() >= Math.min(minY, maxY) && context.y() <= Math.max(minY, maxY)
+                    && context.z() >= Math.min(minZ, maxZ) && context.z() <= Math.max(minZ, maxZ);
+        } catch (NumberFormatException | NullPointerException ignored) {
+            return false;
+        }
     }
 
     @Override
@@ -312,6 +407,7 @@ public final class DefaultTagService implements TagService {
         if (remaining.isEmpty()) assignments.delete(playerUuid);
         else assignments.save(updated);
         activeTagCache.invalidatePlayer(playerUuid);
+        contextualTagCache.invalidatePlayer(playerUuid);
         events.publish(new TagEvent.AssignmentChanged(playerUuid, assignment, updated));
         return updated;
     }

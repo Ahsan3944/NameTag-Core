@@ -73,7 +73,18 @@ Planned nodes include:
 
 OP access will be the default administrative fallback where the platform supports it.
 
-### Commands
+### Contextual and layered tags
+
+Tags can now be resolved against the player's current world and block position. Multiple matching assigned or automatic-role tags are rendered in deterministic order: the explicit active tag first, followed by remaining matching tags by priority and tag ID.
+
+Scope a tag with:
+- `/nametag scope <tag> clear`
+- `/nametag scope <tag> world <world>`
+- `/nametag scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>`
+
+Region scopes are metadata-defined cuboids and are persistent because tag metadata is persisted by every storage provider. The `{tags}` chat placeholder renders all resolved chat-enabled layers; existing `{tag}` and tag-specific placeholders remain backward-compatible and use the first resolved layer.
+
+## Commands
 
 The current command namespace is:
 

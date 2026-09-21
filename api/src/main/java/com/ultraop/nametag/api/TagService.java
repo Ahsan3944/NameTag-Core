@@ -9,6 +9,7 @@ import com.ultraop.nametag.core.model.TagId;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 public interface TagService {
@@ -39,6 +40,15 @@ public interface TagService {
     PlayerAssignment remove(UUID playerUuid, TagId tagId);
     void clear(UUID playerUuid);
     Optional<Tag> activeTag(UUID playerUuid);
+
+    /**
+     * Resolves all simultaneously visible tags for the supplied player context.
+     * The first tag is the explicit active tag when one exists; remaining tags are
+     * ordered deterministically by priority and id.
+     */
+    default List<Tag> activeTags(UUID playerUuid, TagResolutionContext context) {
+        return activeTag(playerUuid).map(List::of).orElseGet(List::of);
+    }
 
     /** Applies or replaces an effect while preserving all other tag properties. */
     default Tag setEffect(TagId tagId, TagEffect effect) {

@@ -1,6 +1,7 @@
 package com.ultraop.nametag.paper.v1_21_11;
 
 import com.ultraop.nametag.api.ConfigurationService;
+import com.ultraop.nametag.api.TagResolutionContext;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
@@ -14,6 +15,7 @@ import org.bukkit.entity.Player;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.List;
 
 /**
  * Paper 1.21.11 chat renderer.
@@ -42,24 +44,31 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
             return defaultChat(sourceDisplayName, message);
         }
 
-        Optional<Tag> active = tagService.activeTag(source.getUniqueId())
-                .filter(Tag::enabled)
-                .filter(Tag::chatEnabled);
-        if (active.isEmpty()) {
-            return defaultChat(sourceDisplayName, message);
-        }
-
-        return renderFormat(
-                configuration.current().chatFormat(),
-                active.get(),
-                sourceDisplayName,
-                message
+        TagResolutionContext context = new TagResolutionContext(
+                source.getWorld().getKey().asString(),
+                source.getLocation().getBlockX(),
+                source.getLocation().getBlockY(),
+                source.getLocation().getBlockZ()
         );
+        List<Tag> active = tagService.activeTags(source.getUniqueId(), context).stream()
+                .filter(Tag::enabled).filter(Tag::chatEnabled).toList();
+        if (active.isEmpty()) return defaultChat(sourceDisplayName, message);
+
+        return renderFormat(configuration.current().chatFormat(), active, sourceDisplayName, message);
     }
 
     static Component renderFormat(
             String format,
             Tag tag,
+            Component sourceDisplayName,
+            Component message
+    ) {
+        return renderFormat(format, List.of(tag), sourceDisplayName, message);
+    }
+
+    static Component renderFormat(
+            String format,
+            List<Tag> tags,
             Component sourceDisplayName,
             Component message
     ) {
@@ -78,14 +87,15 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
             }
 
             Component replacement = switch (match.placeholder()) {
-                case TAG_PLACEHOLDER -> styledTag(tag);
-                case "{tag_id}" -> Component.text(tag.id().value());
-                case "{tag_priority}" -> Component.text(String.valueOf(tag.priority()));
-                case "{tag_prefix}" -> Component.text(TagPresentation.prefix(tag));
-                case "{tag_suffix}" -> Component.text(TagPresentation.suffix(tag));
+                case TAG_PLACEHOLDER -> styledTag(tags.get(0));
+                case "{tags}" -> styledTags(tags);
+                case "{tag_id}" -> Component.text(tags.get(0).id().value());
+                case "{tag_priority}" -> Component.text(String.valueOf(tags.get(0).priority()));
+                case "{tag_prefix}" -> Component.text(TagPresentation.prefix(tags.get(0)));
+                case "{tag_suffix}" -> Component.text(TagPresentation.suffix(tags.get(0)));
                 case PLAYER_PLACEHOLDER -> sourceDisplayName;
                 case MESSAGE_PLACEHOLDER -> message;
-                default -> Component.text(metadataValue(tag, match.placeholder()));
+                default -> Component.text(metadataValue(tags.get(0), match.placeholder()));
             };
             result = result.append(replacement);
             cursor = match.end();
@@ -105,6 +115,7 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
 
     private static PlaceholderMatch nextPlaceholder(String format, int fromIndex) {
         int tag = format.indexOf(TAG_PLACEHOLDER, fromIndex);
+        int tags = format.indexOf("{tags}", fromIndex);
         int player = format.indexOf(PLAYER_PLACEHOLDER, fromIndex);
         int message = format.indexOf(MESSAGE_PLACEHOLDER, fromIndex);
         int tagId = format.indexOf("{tag_id}", fromIndex);
@@ -125,6 +136,7 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         }
         // {tag_id}, {tag_priority}, {tag_prefix}, and {tag_suffix} all begin with {tag}.
         // Resolve the longer placeholders first so the generic {tag} token cannot consume them.
+        if (tags >= 0 && tags < start) { start = tags; placeholder = "{tags}"; }
         if (tag >= 0 && tag < start) {
             start = tag;
             placeholder = TAG_PLACEHOLDER;
@@ -141,6 +153,15 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         return placeholder == null
                 ? null
                 : new PlaceholderMatch(start, start + placeholder.length(), placeholder);
+    }
+
+    static Component styledTags(List<Tag> tags) {
+        Component result = Component.empty();
+        for (int index = 0; index < tags.size(); index++) {
+            if (index > 0) result = result.append(Component.text(" "));
+            result = result.append(styledTag(tags.get(index)));
+        }
+        return result;
     }
 
     static Component styledTag(Tag tag) {

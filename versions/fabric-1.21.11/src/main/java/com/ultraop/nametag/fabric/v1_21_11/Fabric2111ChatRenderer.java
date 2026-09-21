@@ -1,11 +1,12 @@
 package com.ultraop.nametag.fabric.v1_21_11;
 
 import com.ultraop.nametag.api.ConfigurationService;
+import com.ultraop.nametag.api.TagResolutionContext;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
-import com.ultraop.nametag.core.model.TagStyle;
 import com.ultraop.nametag.core.model.TagPresentation;
+import com.ultraop.nametag.core.model.TagStyle;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.minecraft.command.DefaultPermissions;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -14,8 +15,8 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 
+import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public final class Fabric2111ChatRenderer {
     private static final String TAG_PLACEHOLDER = "{tag}";
@@ -39,58 +40,63 @@ public final class Fabric2111ChatRenderer {
     }
 
     private Text decorate(ServerPlayerEntity sender, Text message) {
-        if (sender == null || !configuration.current().chatEnabled()) {
-            return message;
-        }
+        if (sender == null || !configuration.current().chatEnabled()) return message;
+        if (!sender.getPermissions().hasPermission(DefaultPermissions.GAMEMASTERS)) return message;
 
-        if (!sender.getPermissions().hasPermission(DefaultPermissions.GAMEMASTERS)) {
-            return message;
-        }
-
-        Optional<Tag> active = tagService.activeTag(sender.getUuid())
-                .filter(Tag::enabled)
-                .filter(Tag::chatEnabled);
-        if (active.isEmpty()) {
-            return message;
-        }
+        TagResolutionContext context = new TagResolutionContext(
+                sender.getEntityWorld().getRegistryKey().getValue().toString(),
+                sender.getBlockPos().getX(), sender.getBlockPos().getY(), sender.getBlockPos().getZ()
+        );
+        List<Tag> active = tagService.activeTags(sender.getUuid(), context).stream()
+                .filter(Tag::enabled).filter(Tag::chatEnabled).toList();
+        if (active.isEmpty()) return message;
 
         return renderFormat(
                 configuration.current().chatFormat(),
-                active.get(),
+                active,
                 Text.literal(sender.getName().getString()),
                 message
         );
     }
 
     static Text renderFormat(String format, Tag tag, Text playerName, Text message) {
+        return renderFormat(format, List.of(tag), playerName, message);
+    }
+
+    static Text renderFormat(String format, List<Tag> tags, Text playerName, Text message) {
         MutableText result = Text.empty();
         int cursor = 0;
-
         while (cursor < format.length()) {
             PlaceholderMatch match = nextPlaceholder(format, cursor);
             if (match == null) {
                 result.append(Text.literal(format.substring(cursor)));
                 break;
             }
-
-            if (match.start() > cursor) {
-                result.append(Text.literal(format.substring(cursor, match.start())));
-            }
+            if (match.start() > cursor) result.append(Text.literal(format.substring(cursor, match.start())));
 
             Text replacement = switch (match.placeholder()) {
-                case TAG_PLACEHOLDER -> styledTag(tag);
-                case "{tag_id}" -> Text.literal(tag.id().value());
-                case "{tag_priority}" -> Text.literal(String.valueOf(tag.priority()));
-                case "{tag_prefix}" -> Text.literal(TagPresentation.prefix(tag));
-                case "{tag_suffix}" -> Text.literal(TagPresentation.suffix(tag));
+                case TAG_PLACEHOLDER -> styledTag(tags.get(0));
+                case "{tags}" -> styledTags(tags);
+                case "{tag_id}" -> Text.literal(tags.get(0).id().value());
+                case "{tag_priority}" -> Text.literal(String.valueOf(tags.get(0).priority()));
+                case "{tag_prefix}" -> Text.literal(TagPresentation.prefix(tags.get(0)));
+                case "{tag_suffix}" -> Text.literal(TagPresentation.suffix(tags.get(0)));
                 case PLAYER_PLACEHOLDER -> playerName;
                 case MESSAGE_PLACEHOLDER -> message;
-                default -> Text.literal(metadataValue(tag, match.placeholder()));
+                default -> Text.literal(metadataValue(tags.get(0), match.placeholder()));
             };
             result.append(replacement);
             cursor = match.end();
         }
+        return result;
+    }
 
+    static Text styledTags(List<Tag> tags) {
+        MutableText result = Text.empty();
+        for (int index = 0; index < tags.size(); index++) {
+            if (index > 0) result.append(Text.literal(" "));
+            result.append(styledTag(tags.get(index)));
+        }
         return result;
     }
 
@@ -98,12 +104,10 @@ public final class Fabric2111ChatRenderer {
         TagStyle style = tag.style();
         TagColor color = tag.color();
         if (color instanceof TagColor.Preset) {
-            MutableText component = Text.literal(tag.displayName());
+            MutableText component = Text.literal(TagPresentation.displayText(tag));
             component.setStyle(applyStyle(component.getStyle(), style));
             TextColor presetColor = presetColor(((TagColor.Preset) color).name());
-            if (presetColor != null) {
-                component.setStyle(component.getStyle().withColor(presetColor));
-            }
+            if (presetColor != null) component.setStyle(component.getStyle().withColor(presetColor));
             return component;
         }
 
@@ -114,9 +118,7 @@ public final class Fabric2111ChatRenderer {
             MutableText glyph = Text.literal(new String(Character.toChars(codePoints[index])));
             Style glyphStyle = applyStyle(Style.EMPTY, style);
             Integer rgb = TagColor.resolve(color, index, codePoints.length, seed);
-            if (rgb != null) {
-                glyphStyle = glyphStyle.withColor(rgb);
-            }
+            if (rgb != null) glyphStyle = glyphStyle.withColor(rgb);
             glyph.setStyle(glyphStyle);
             result.append(glyph);
         }
@@ -146,11 +148,8 @@ public final class Fabric2111ChatRenderer {
     }
 
     private static Style applyStyle(Style style, TagStyle tagStyle) {
-        return style
-                .withBold(tagStyle.bold())
-                .withItalic(tagStyle.italic())
-                .withUnderline(tagStyle.underlined())
-                .withStrikethrough(tagStyle.strikethrough())
+        return style.withBold(tagStyle.bold()).withItalic(tagStyle.italic())
+                .withUnderline(tagStyle.underlined()).withStrikethrough(tagStyle.strikethrough())
                 .withObfuscated(tagStyle.obfuscated());
     }
 
@@ -165,6 +164,7 @@ public final class Fabric2111ChatRenderer {
 
     private static PlaceholderMatch nextPlaceholder(String format, int fromIndex) {
         int tag = format.indexOf(TAG_PLACEHOLDER, fromIndex);
+        int tags = format.indexOf("{tags}", fromIndex);
         int player = format.indexOf(PLAYER_PLACEHOLDER, fromIndex);
         int message = format.indexOf(MESSAGE_PLACEHOLDER, fromIndex);
         int tagId = format.indexOf("{tag_id}", fromIndex);
@@ -172,7 +172,6 @@ public final class Fabric2111ChatRenderer {
         int tagPrefix = format.indexOf("{tag_prefix}", fromIndex);
         int tagSuffix = format.indexOf("{tag_suffix}", fromIndex);
         int tagMeta = format.indexOf(TAG_META_PREFIX, fromIndex);
-
         int start = Integer.MAX_VALUE;
         String placeholder = null;
         if (tagId >= 0 && tagId < start) { start = tagId; placeholder = "{tag_id}"; }
@@ -183,26 +182,12 @@ public final class Fabric2111ChatRenderer {
             int end = format.indexOf("}", tagMeta + TAG_META_PREFIX.length());
             if (end >= 0) { start = tagMeta; placeholder = format.substring(tagMeta, end + 1); }
         }
-        // {tag_id}, {tag_priority}, {tag_prefix}, and {tag_suffix} all begin with {tag}.
-        // Resolve the longer placeholders first so the generic {tag} token cannot consume them.
-        if (tag >= 0 && tag < start) {
-            start = tag;
-            placeholder = TAG_PLACEHOLDER;
-        }
-        if (player >= 0 && player < start) {
-            start = player;
-            placeholder = PLAYER_PLACEHOLDER;
-        }
-        if (message >= 0 && message < start) {
-            start = message;
-            placeholder = MESSAGE_PLACEHOLDER;
-        }
-
-        return placeholder == null
-                ? null
-                : new PlaceholderMatch(start, start + placeholder.length(), placeholder);
+        if (tags >= 0 && tags < start) { start = tags; placeholder = "{tags}"; }
+        if (tag >= 0 && tag < start) { start = tag; placeholder = TAG_PLACEHOLDER; }
+        if (player >= 0 && player < start) { start = player; placeholder = PLAYER_PLACEHOLDER; }
+        if (message >= 0 && message < start) { start = message; placeholder = MESSAGE_PLACEHOLDER; }
+        return placeholder == null ? null : new PlaceholderMatch(start, start + placeholder.length(), placeholder);
     }
 
-    private record PlaceholderMatch(int start, int end, String placeholder) {
-    }
+    private record PlaceholderMatch(int start, int end, String placeholder) {}
 }

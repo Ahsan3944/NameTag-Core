@@ -1,6 +1,7 @@
 package com.ultraop.nametag.common;
 
 import com.ultraop.nametag.core.model.Tag;
+import com.ultraop.nametag.api.TagResolutionContext;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.api.PermissionService;
 import com.ultraop.nametag.core.model.TagEffect;
@@ -257,6 +258,68 @@ class DefaultTagServiceTest {
         );
 
         assertEquals("OWNER", restarted.activeTag(player).orElseThrow().displayName());
+    }
+
+    @Test
+    void activeTagsOrdersExplicitActiveFirstAndIncludesOtherAssignments() {
+        DefaultTagService service = newService();
+        UUID player = UUID.randomUUID();
+        service.create(tag("owner", "OWNER", 10, true));
+        service.create(tag("vip", "VIP", 50, true));
+        service.assign(player, new TagId("owner"));
+        service.assign(player, new TagId("vip"));
+        service.setActive(player, new TagId("owner"));
+
+        List<Tag> resolved = service.activeTags(player, new TagResolutionContext("world", 0, 64, 0));
+        assertEquals(List.of(new TagId("owner"), new TagId("vip")),
+                resolved.stream().map(Tag::id).toList());
+    }
+
+    @Test
+    void activeTagsRespectWorldAndRegionScopes() {
+        DefaultTagService service = newService();
+        UUID player = UUID.randomUUID();
+        service.create(new Tag(new TagId("global"), "GLOBAL", new TagColor.Preset("white"), TagStyle.plain(),
+                TagEffect.none(), 1, true, true, Map.of()));
+        service.create(new Tag(new TagId("world"), "WORLD", new TagColor.Preset("green"), TagStyle.plain(),
+                TagEffect.none(), 20, true, true, Map.of("world", "world_nether")));
+        service.create(new Tag(new TagId("spawn"), "SPAWN", new TagColor.Preset("gold"), TagStyle.plain(),
+                TagEffect.none(), 30, true, true, Map.of(
+                        "world", "world_nether", "region", "spawn",
+                        "region.minX", "-10", "region.minY", "0", "region.minZ", "-10",
+                        "region.maxX", "10", "region.maxY", "100", "region.maxZ", "10"
+                )));
+        service.assign(player, new TagId("global"));
+        service.assign(player, new TagId("world"));
+        service.assign(player, new TagId("spawn"));
+        service.setActive(player, new TagId("spawn"));
+
+        List<Tag> inside = service.activeTags(player, new TagResolutionContext("world_nether", 0, 64, 0));
+        assertEquals(List.of("spawn", "world", "global"), inside.stream().map(tag -> tag.id().value()).toList());
+
+        List<Tag> outside = service.activeTags(player, new TagResolutionContext("world_nether", 100, 64, 100));
+        assertEquals(List.of("world", "global"), outside.stream().map(tag -> tag.id().value()).toList());
+
+        List<Tag> otherWorld = service.activeTags(player, new TagResolutionContext("world", 0, 64, 0));
+        assertEquals(List.of("global"), otherWorld.stream().map(tag -> tag.id().value()).toList());
+    }
+
+    @Test
+    void automaticRolesCanLayerAndRespectContext() {
+        UUID player = UUID.randomUUID();
+        PermissionService permissions = (uuid, permission) -> player.equals(uuid) &&
+                (permission.equals("group.vip") || permission.equals("group.staff"));
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository(), permissions);
+        service.create(new Tag(new TagId("vip"), "VIP", new TagColor.Preset("red"), TagStyle.plain(),
+                TagEffect.none(), 10, true, true, Map.of("auto-permission", "group.vip")));
+        service.create(new Tag(new TagId("staff"), "STAFF", new TagColor.Preset("blue"), TagStyle.plain(),
+                TagEffect.none(), 20, true, true, Map.of("auto-permission", "group.staff", "world", "staff_world")));
+
+        assertEquals(List.of("vip"), service.activeTags(player, new TagResolutionContext("world", 0, 64, 0))
+                .stream().map(tag -> tag.id().value()).toList());
+        assertEquals(List.of("staff", "vip"), service.activeTags(player, new TagResolutionContext("staff_world", 0, 64, 0))
+                .stream().map(tag -> tag.id().value()).toList());
     }
 
     private static DefaultTagService newService() {
