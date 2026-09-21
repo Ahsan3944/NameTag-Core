@@ -10,8 +10,8 @@ import com.ultraop.nametag.common.FileTagAuditLogger;
 import com.ultraop.nametag.common.DefaultMessageService;
 import com.ultraop.nametag.common.DefaultNameTagCommandHandler;
 import com.ultraop.nametag.common.DefaultTagService;
-import com.ultraop.nametag.common.YamlPlayerAssignmentRepository;
-import com.ultraop.nametag.common.YamlTagRepository;
+import com.ultraop.nametag.common.StorageConfiguration;
+import com.ultraop.nametag.common.StorageFactory;
 import com.ultraop.nametag.paper.v1_21_11.Paper2111Adapter;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -32,10 +32,14 @@ public class NameTagPaperPlugin extends JavaPlugin implements CommandExecutor, T
     public void onEnable() {
         java.nio.file.Path dataDirectory = getDataFolder().toPath();
         configurationService = new DefaultConfigurationService(dataDirectory.resolve("configuration.yml"));
+        StorageConfiguration storageConfiguration = StorageConfiguration.loadOrCreate(
+                dataDirectory.resolve("storage.yml"), dataDirectory);
+        StorageFactory.StorageRepositories storage = StorageFactory.open(
+                dataDirectory, storageConfiguration);
         PermissionService permissions = new PaperPermissionService();
         tagService = new DefaultTagService(
-                new YamlTagRepository(dataDirectory.resolve("tags.yml")),
-                new YamlPlayerAssignmentRepository(dataDirectory.resolve("assignments.yml")),
+                storage.tags(),
+                storage.assignments(),
                 permissions
         );
         auditLogger = FileTagAuditLogger.register(tagService.events(), dataDirectory.resolve("audit.log"));
