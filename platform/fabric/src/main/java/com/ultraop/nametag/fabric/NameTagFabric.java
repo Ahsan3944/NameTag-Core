@@ -141,12 +141,14 @@ public final class NameTagFabric {
 
             root.then(CommandManager.literal("export")
                     .then(CommandManager.argument("file", StringArgumentType.word())
+                            .suggests((context, builder) -> CommandSource.suggestMatching(List.of("tags.yml"), builder))
                             .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
                                     "export", StringArgumentType.getString(context, "file")
                             }))));
 
             root.then(CommandManager.literal("import")
                     .then(CommandManager.argument("file", StringArgumentType.word())
+                            .suggests((context, builder) -> CommandSource.suggestMatching(List.of("tags.yml"), builder))
                             .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
                                     "import", StringArgumentType.getString(context, "file")
                             }))));
@@ -182,6 +184,8 @@ public final class NameTagFabric {
                             .suggests((context, builder) ->
                                     suggestTags(context, builder, service, permissions, configuration, "scope"))
                             .then(CommandManager.argument("settings", StringArgumentType.greedyString())
+                                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                                            List.of("clear", "world", "region"), builder))
                                     .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
                                             "scope",
                                             StringArgumentType.getString(context, "tag"),
