@@ -35,7 +35,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     private static final List<String> SUBCOMMANDS =
             List.of("create", "edit", "list", "give", "set", "remove", "clear", "delete", "glitch", "effect", "role", "scope", "reload", "export", "import");
     private static final List<String> EDIT_PROPERTIES =
-            List.of("name", "color", "gradient", "style", "enabled", "chat");
+            List.of("name", "color", "gradient", "style", "priority", "enabled", "chat");
     private static final List<String> PRESET_COLORS = List.of(
             "black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
             "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
@@ -246,7 +246,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     private void edit(CommandSource source, String[] args) {
         if (args.length < 4) {
             throw new IllegalArgumentException(
-                    "Usage: /nametag edit <tag> <name|color|gradient|style|enabled|chat> <value>"
+                    "Usage: /nametag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value>"
             );
         }
 
@@ -261,11 +261,11 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         switch (property) {
             case "name" -> {
                 if (value.isBlank()) throw new IllegalArgumentException("Tag display name cannot be blank.");
-                updated = copyTag(current, value, current.color(), current.style(), current.enabled(), current.chatEnabled());
+                updated = copyTag(current, value, current.color(), current.style(), current.priority(), current.enabled(), current.chatEnabled());
             }
             case "color" -> {
                 TagColor color = parseColor(value);
-                updated = copyTag(current, current.displayName(), color, current.style(), current.enabled(), current.chatEnabled());
+                updated = copyTag(current, current.displayName(), color, current.style(), current.priority(), current.enabled(), current.chatEnabled());
             }
             case "gradient" -> {
                 String[] colors = value.split("\\s+");
@@ -277,6 +277,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                         current.displayName(),
                         new TagColor.Gradient(parseRgb(colors[0]), parseRgb(colors[1])),
                         current.style(),
+                        current.priority(),
                         current.enabled(),
                         current.chatEnabled()
                 );
@@ -286,6 +287,16 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     current.displayName(),
                     current.color(),
                     parseStyle(value),
+                    current.priority(),
+                    current.enabled(),
+                    current.chatEnabled()
+            );
+            case "priority" -> updated = copyTag(
+                    current,
+                    current.displayName(),
+                    current.color(),
+                    current.style(),
+                    parsePriority(value),
                     current.enabled(),
                     current.chatEnabled()
             );
@@ -294,6 +305,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     current.displayName(),
                     current.color(),
                     current.style(),
+                    current.priority(),
                     parseBoolean(value, "enabled"),
                     current.chatEnabled()
             );
@@ -306,7 +318,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     parseBoolean(value, "chat")
             );
             default -> throw new IllegalArgumentException(
-                    "Unknown edit property: " + property + ". Use name, color, gradient, style, enabled or chat."
+                    "Unknown edit property: " + property + ". Use name, color, gradient, style, priority, enabled or chat."
             );
         }
 
@@ -319,6 +331,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             String displayName,
             TagColor color,
             TagStyle style,
+            int priority,
             boolean enabled,
             boolean chatEnabled
     ) {
@@ -328,7 +341,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 color,
                 style,
                 current.effect(),
-                current.priority(),
+                priority,
                 enabled,
                 chatEnabled,
                 current.metadata()
@@ -368,6 +381,14 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     "Invalid style: " + value + ". Use plain, bold, italic or bold_italic."
             );
         };
+    }
+
+    private static int parsePriority(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException exception) {
+            throw new IllegalArgumentException("Invalid priority: " + value + ". Use an integer.");
+        }
     }
 
     private static boolean parseBoolean(String value, String property) {
@@ -612,8 +633,10 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                         "color", describeColor(tag.color()),
                         "style", describeStyle(tag.style()),
                         "enabled", Boolean.toString(tag.enabled()),
-                        "chat", Boolean.toString(tag.chatEnabled()),
-                        "effect", tag.effect().id()
+                        "chat",
+                        "priority", Boolean.toString(tag.chatEnabled()),
+                        "effect", tag.effect().id(),
+                        "priority", Integer.toString(tag.priority())
                 )
         )));
     }
