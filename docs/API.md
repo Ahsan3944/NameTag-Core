@@ -38,8 +38,11 @@ Implemented command families:
 - `clear`
 - `delete`
 - `glitch`
+- `effect`
 - `reload`
 - `role`
+- `export`
+- `import`
 
 ## Automatic role tags
 
