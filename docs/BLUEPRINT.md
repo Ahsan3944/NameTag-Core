@@ -65,19 +65,8 @@ The same contextual multi-tag resolution rules are used by nameplate and chat re
 - Clear validation and error messages.
 - Reload without duplicating listeners or corrupting data.
 
-### GUI
-Future editor using the same API/core services:
-- Tag browser.
-- Create/edit.
-- Color picker.
-- RGB.
-- Gradient.
-- Formatting.
-- Effect editor.
-- Preview.
-- Save/cancel.
-
-GUI must never contain independent business logic or write storage directly.
+### Command-first management
+All server administration is performed through `/nametag` commands. There is no GUI or web-management layer in the core scope. Commands call the common service layer, which validates and persists changes through the configured storage provider.
 
 ## 3. Commands
 
@@ -87,7 +76,13 @@ Primary namespace:
 
 Initial contract:
 ```
-/nametag create
+/nametag create <tag> <displayName>
+/nametag edit <tag> name <displayName>
+/nametag edit <tag> color <preset|random|#RRGGBB>
+/nametag edit <tag> gradient <startHex> <endHex>
+/nametag edit <tag> style <plain|bold|italic|bold_italic>
+/nametag edit <tag> enabled <true|false>
+/nametag edit <tag> chat <true|false>
 /nametag list
 /nametag give <player> <tag>
 /nametag set <player> <tag>
@@ -107,7 +102,7 @@ Tab completion is required for subcommands, players, tags and valid options.
 ## 4. Architecture
 
 ```
-External integrations / GUI
+Command layer
           |
          API
           |
@@ -341,7 +336,6 @@ Security:
 - Validate command input.
 - Prevent path traversal.
 - Re-check server-side permissions.
-- Never trust client GUI state.
 - UUID-based records.
 
 ## 15. Performance
@@ -439,7 +433,7 @@ Every new Minecraft adapter must pass the same core behavior suite.
 
 ## 21. Common Command and Message Contracts
 
-The common command path is platform-neutral. Platform adapters provide native implementations of:
+The command path is the primary management surface and is platform-neutral. Platform adapters provide native implementations of:
 
 - `CommandSource`: sender identity, permissions and message delivery.
 - `PlayerResolver`: online-player lookup without exposing platform classes to common code.

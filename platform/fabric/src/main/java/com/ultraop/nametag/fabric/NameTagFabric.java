@@ -77,6 +77,24 @@ public final class NameTagFabric {
                                             StringArgumentType.getString(context, "displayName")
                                     })))));
 
+            root.then(CommandManager.literal("edit")
+                    .then(CommandManager.argument("tag", StringArgumentType.word())
+                            .suggests((context, builder) ->
+                                    suggestTags(context, builder, service, permissions, configuration, "edit"))
+                            .then(CommandManager.argument("property", StringArgumentType.word())
+                                    .suggests((context, builder) ->
+                                            CommandSource.suggestMatching(
+                                                    List.of("name", "color", "gradient", "style", "enabled", "chat"),
+                                                    builder
+                                            ))
+                                    .then(CommandManager.argument("value", StringArgumentType.greedyString())
+                                            .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
+                                                    "edit",
+                                                    StringArgumentType.getString(context, "tag"),
+                                                    StringArgumentType.getString(context, "property"),
+                                                    StringArgumentType.getString(context, "value")
+                                            }))))));
+
             root.then(CommandManager.literal("delete")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
                             .suggests((context, builder) ->

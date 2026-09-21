@@ -14,6 +14,7 @@ import com.ultraop.nametag.core.model.TagId;
 import com.ultraop.nametag.core.model.TagStyle;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -196,6 +197,7 @@ final class DefaultNameTagCommandHandlerTest {
     private static final class RecordingSource implements CommandSource {
         private boolean allowed = true;
         private String lastMessage;
+        private final List<String> messages = new ArrayList<>();
 
         @Override
         public String name() {
@@ -215,6 +217,7 @@ final class DefaultNameTagCommandHandlerTest {
         @Override
         public void sendMessage(String message) {
             lastMessage = message;
+            messages.add(message);
         }
     }
 
@@ -281,6 +284,109 @@ final class DefaultNameTagCommandHandlerTest {
         handler.execute(new CommandContext(source, new String[]{"reload"}));
 
         assertEquals("You do not have permission to edit NameTags.", source.lastMessage);
+    }
+
+    @Test
+    void editCommandUpdatesNameColorAndStyleThroughCommonContract() {
+        InMemoryTagRepository tags = new InMemoryTagRepository();
+        DefaultTagService service = new DefaultTagService(tags, new InMemoryPlayerAssignmentRepository());
+        service.create(new Tag(
+                new TagId("owner"), "OWNER", new TagColor.Preset("white"),
+                TagStyle.plain(), TagEffect.none(), 0, true, true, Map.of()
+        ));
+
+        RecordingSource source = new RecordingSource();
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{"edit", "owner", "name", "SUPER", "OWNER"}));
+        handler.execute(new CommandContext(source, new String[]{"edit", "owner", "color", "#12ABEF"}));
+        handler.execute(new CommandContext(source, new String[]{"edit", "owner", "style", "bold_italic"}));
+
+        Tag updated = service.find(new TagId("owner")).orElseThrow();
+        assertEquals("SUPER OWNER", updated.displayName());
+        assertEquals(new TagColor.Rgb(0x12, 0xAB, 0xEF), updated.color());
+        assertEquals(new TagStyle(true, true, false, false, false), updated.style());
+    }
+
+    @Test
+    void editCommandSupportsGradientAndVisibilityFlags() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        service.create(new Tag(
+                new TagId("vip"), "VIP", new TagColor.Preset("white"),
+                TagStyle.plain(), TagEffect.none(), 0, true, true, Map.of()
+        ));
+
+        RecordingSource source = new RecordingSource();
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{"edit", "vip", "gradient", "#FF0000", "#0000FF"}));
+        handler.execute(new CommandContext(source, new String[]{"edit", "vip", "enabled", "false"}));
+        handler.execute(new CommandContext(source, new String[]{"edit", "vip", "chat", "false"}));
+
+        Tag updated = service.find(new TagId("vip")).orElseThrow();
+        assertEquals(new TagColor.Gradient(
+                new TagColor.Rgb(255, 0, 0), new TagColor.Rgb(0, 0, 255)
+        ), updated.color());
+        assertFalse(updated.enabled());
+        assertFalse(updated.chatEnabled());
+    }
+
+    @Test
+    void listCommandReportsCountAndTagDetails() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        service.create(new Tag(
+                new TagId("vip"), "VIP", new TagColor.Preset("gold"),
+                new TagStyle(true, false, false, false, false), TagEffect.none(),
+                10, true, true, Map.of()
+        ));
+        service.create(new Tag(
+                new TagId("owner"), "OWNER", new TagColor.Preset("red"),
+                TagStyle.plain(), TagEffect.none(), 20, true, true, Map.of()
+        ));
+
+        RecordingSource source = new RecordingSource();
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{"list"}));
+
+        assertTrue(source.messages.contains("NameTags (2 total):"));
+        assertTrue(source.messages.stream().anyMatch(value ->
+                value.contains("owner -> OWNER") && value.contains("color=red") && value.contains("style=plain")));
+        assertTrue(source.messages.stream().anyMatch(value ->
+                value.contains("vip -> VIP") && value.contains("color=gold") && value.contains("style=bold")));
+    }
+
+    @Test
+    void editSuggestionsExposeCommandPropertiesAndValues() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        service.create(new Tag(
+                new TagId("owner"), "OWNER", new TagColor.Preset("white"),
+                TagStyle.plain(), TagEffect.none(), 0, true, true, Map.of()
+        ));
+
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+        RecordingSource source = new RecordingSource();
+
+        assertEquals(List.of("owner"),
+                handler.suggest(new CommandContext(source, new String[]{"edit", "ow"})));
+        assertEquals(List.of("name", "color", "gradient", "style", "enabled", "chat"),
+                handler.suggest(new CommandContext(source, new String[]{"edit", "owner", ""})));
+        assertEquals(List.of("bold", "bold_italic"),
+                handler.suggest(new CommandContext(source, new String[]{"edit", "owner", "style", "bold"})));
     }
 
 

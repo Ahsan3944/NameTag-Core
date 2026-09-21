@@ -91,7 +91,13 @@ The current command namespace is:
 `/nametag`
 
 Implemented commands:
-- `/nametag create`
+- `/nametag create <tag> <displayName>`
+- `/nametag edit <tag> name <displayName>`
+- `/nametag edit <tag> color <preset|random|#RRGGBB>`
+- `/nametag edit <tag> gradient <startHex> <endHex>`
+- `/nametag edit <tag> style <plain|bold|italic|bold_italic>`
+- `/nametag edit <tag> enabled <true|false>`
+- `/nametag edit <tag> chat <true|false>`
 - `/nametag list`
 - `/nametag give <player> <tag> [duration]`
 - `/nametag remove <player>`
@@ -114,16 +120,11 @@ Command behavior is implemented through the common command layer and exposed con
 
 Automatic role tags allow a tag to activate from a permission without storing a player assignment. Set the tag metadata key `auto-permission` to a permission node and use `/nametag role <tag> <permission|clear>` to manage it. Explicit assigned tags remain authoritative; automatic resolution is used when no usable explicit tag resolves. Matching enabled tags are ordered deterministically by priority and tag ID. Automatic results are not persisted, so permission changes are reflected on the next active-tag resolution.
 
-## GUI and Web Management
+## Command-First Management
 
-GUI/editor and Web Management are **not part of the NameTag-Core 1.21.11 server-core release scope**. They are optional future integrations.
+NameTag-Core is intentionally managed through the Minecraft command system. No GUI, browser panel, or web-management layer is part of the project scope.
 
-A GUI requires a client entrypoint, client-side screens/widgets, server-authoritative mutation packets, a versioned client/server networking contract, and client/server regression tests.
-
-Web management requires an authenticated HTTP boundary, explicit permission mapping, CSRF/session handling or an equivalent non-browser credential model, audit integration, lifecycle management, and a server-side mutation API.
-
-The stable management surface for the core release is the server-side command/API layer.
-
+The server command layer is the single operational management surface. Tag creation, editing, listing, deletion, assignment, styling, colors, scopes, role mappings, import/export and reload are performed with `/nametag` commands and persisted by the configured storage provider.
 ### Common Command Layer
 
 Command business rules are implemented once in the platform-neutral common module through a stable command contract. Fabric and Paper provide sender/player-resolution adapters rather than maintaining separate command logic.
@@ -253,7 +254,7 @@ The project uses semantic project versioning independently from Minecraft versio
 
 Current development version: `0.1.0-SNAPSHOT`.
 
-The first stable release will use `1.0.0` only after the release version, licensing and tag steps are completed. GUI/Web Management and future Minecraft adapters are not prerequisites for that core release.
+The first stable release will use `1.0.0` only after the release version, licensing and tag steps are completed. Future Minecraft adapters are not prerequisites for that core release.
 
 A future Minecraft upgrade should normally add/update an adapter module rather than fork the entire codebase.
 
@@ -355,7 +356,6 @@ The project is built in controlled milestones:
 11. Tests and regression checks.
 12. Core release packaging.
 13. Future version adapters.
-14. Optional GUI/Web integrations.
 
 No platform implementation should begin before the corresponding core contract is stable.
 

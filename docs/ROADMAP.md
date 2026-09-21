@@ -97,20 +97,15 @@
 - [x] Chat fallback integration.
 - [x] Performance safeguards.
 
-## Phase 9 — Optional GUI
-- [ ] Tag browser.
-- [ ] Create editor.
-- [ ] Edit editor.
-- [ ] Color selector.
-- [ ] RGB input.
-- [ ] Gradient editor.
-- [ ] Style controls.
-- [ ] Effect controls.
-- [ ] Preview.
-- [ ] Save/cancel.
-
-> GUI is an optional future client feature, not a NameTag-Core server release gate. A correct implementation requires a client entrypoint, client-side screens/widgets, server-authoritative mutations, a versioned client/server networking contract, and client/server regression tests.
-
+## Phase 9 — Command-First Management
+- [x] Command-only administration.
+- [x] Tag create/list/delete.
+- [x] Tag edit for display name.
+- [x] Preset/RGB/random/gradient color commands.
+- [x] Bold/italic/plain style commands.
+- [x] Enable/disable and chat-visibility commands.
+- [x] Fabric and Paper command integration.
+- [x] Command tab completion.
 ## Phase 10 — Stability
 - [x] Full unit test suite.
 - [x] Full integration suite.
@@ -132,7 +127,7 @@
 - [ ] Final release-version promotion.
 - [ ] Git tag.
 
-> Web management, GUI/editor work and future Minecraft-version adapters are not v1.0 core release blockers. They are separate future implementation tracks.
+> Future Minecraft-version adapters are separate implementation tracks and are not v1.0 release blockers.
 
 ## Phase 12 — Future Minecraft Versions
 For each new version:
@@ -153,8 +148,6 @@ These are intentionally separate from the 1.21.11 server-core baseline:
 - **Multiple active/layered tags:** [x] Implemented with contextual multi-tag resolution and deterministic renderer/chat composition on Paper and Fabric.
 - **Per-world tags:** [x] Implemented with world-aware resolution context and persistent tag metadata scopes.
 - **Per-region tags:** [x] Implemented as persistent metadata-defined cuboid regions, without a hard dependency on a region plugin.
-- **Web management:** future optional integration. It requires an authenticated HTTP boundary, permission mapping, CSRF/session handling or an equivalent non-browser credential model, audit integration, lifecycle management, and a server-side mutation API.
-- **GUI:** future optional client integration. It requires a client entrypoint, screens/widgets, server-authoritative mutation packets, protocol/version handling, and client/server tests.
 - **Future Minecraft versions:** each version requires a dedicated version adapter/mapping pass and regression run; it is not safe to bulk-change the existing 1.21.11 adapter.
 
 ## Backlog
