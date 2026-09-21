@@ -85,7 +85,7 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
                 case "{tag_suffix}" -> Component.text(TagPresentation.suffix(tag));
                 case PLAYER_PLACEHOLDER -> sourceDisplayName;
                 case MESSAGE_PLACEHOLDER -> message;
-                default -> Component.text(match.placeholder());
+                default -> Component.text(metadataValue(tag, match.placeholder()));
             };
             result = result.append(replacement);
             cursor = match.end();
