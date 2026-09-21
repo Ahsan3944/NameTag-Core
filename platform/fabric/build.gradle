@@ -41,6 +41,15 @@ afterEvaluate {
     configurations.named("gametestRuntimeClasspath") {
         extendsFrom(configurations.named("minecraftNamedRuntime").get())
     }
+
+    tasks.named("compileGametestJava", JavaCompile) {
+        doFirst {
+            def helperEntry = "net/minecraft/gametest/framework/GameTestHelper.class"
+            def helperJars = classpath.files.findAll { it.isFile() && it.name.endsWith(".jar") && zipTree(it).matching { include(helperEntry) }.files }
+            logger.lifecycle("SERVER_ONLY_GAMETEST_HELPER_JARS=" + helperJars.collect { it.name }.join("|"))
+            logger.lifecycle("SERVER_ONLY_MINECRAFT_CP=" + configurations.named("minecraftNamedCompile").get().files.collect { it.name }.findAll { it.toLowerCase().contains("minecraft") }.join("|"))
+        }
+    }
 }
 
 sourceSets.named("gametest") {
