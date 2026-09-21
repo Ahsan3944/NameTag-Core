@@ -44,6 +44,10 @@ final class ActiveTagCache {
         return Optional.of(values.get(playerUuid));
     }
 
+    synchronized Optional<Tag> get(UUID playerUuid) {
+        return values.get(playerUuid);
+    }
+
     synchronized void put(UUID playerUuid, Optional<Tag> tag) {
         values.put(playerUuid, tag);
     }
