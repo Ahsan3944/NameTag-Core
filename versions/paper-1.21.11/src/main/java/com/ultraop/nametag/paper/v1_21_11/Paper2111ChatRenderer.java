@@ -87,7 +87,8 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
             }
 
             Component replacement = switch (match.placeholder()) {
-                case TAG_PLACEHOLDER, "{tags}" -> styledTags(tags);
+                case TAG_PLACEHOLDER -> styledTag(tags.get(0));
+                case "{tags}" -> styledTags(tags);
                 case "{tag_id}" -> Component.text(tags.get(0).id().value());
                 case "{tag_priority}" -> Component.text(String.valueOf(tags.get(0).priority()));
                 case "{tag_prefix}" -> Component.text(TagPresentation.prefix(tags.get(0)));
