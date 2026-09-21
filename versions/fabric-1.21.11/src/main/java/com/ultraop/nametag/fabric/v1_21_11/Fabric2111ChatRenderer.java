@@ -14,7 +14,6 @@ import net.minecraft.text.TextColor;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 public final class Fabric2111ChatRenderer {
     private static final String TAG_PLACEHOLDER = "{tag}";
@@ -36,9 +35,9 @@ public final class Fabric2111ChatRenderer {
         );
     }
 
-    private CompletableFuture<Text> decorate(ServerPlayerEntity sender, Text message) {
+    private Text decorate(ServerPlayerEntity sender, Text message) {
         if (sender == null || !configuration.current().chatEnabled()) {
-            return CompletableFuture.completedFuture(message);
+            return message;
         }
 
         if (!sender.getServer().getPlayerManager().isOperator(sender.getGameProfile())) {
@@ -52,12 +51,12 @@ public final class Fabric2111ChatRenderer {
             return CompletableFuture.completedFuture(message);
         }
 
-        return CompletableFuture.completedFuture(renderFormat(
+        return renderFormat(
                 configuration.current().chatFormat(),
                 active.get(),
                 Text.literal(sender.getName().getString()),
                 message
-        ));
+        );
     }
 
     static Text renderFormat(String format, Tag tag, Text playerName, Text message) {
