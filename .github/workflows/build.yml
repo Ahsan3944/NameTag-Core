@@ -14,6 +14,8 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: gradle
+      - name: Set up Gradle Wrapper validation
+        uses: gradle/actions/setup-gradle@v4
       - name: Run build with Gradle Wrapper
         run: ./gradlew build --no-daemon
 
