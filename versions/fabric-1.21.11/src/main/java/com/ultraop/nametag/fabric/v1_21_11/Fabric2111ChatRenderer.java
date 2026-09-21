@@ -92,7 +92,10 @@ public final class Fabric2111ChatRenderer {
 
     static Text styledTags(List<Tag> tags) {
         MutableText result = Text.empty();
-        for (Tag tag : tags) result.append(styledTag(tag)).append(Text.literal(" "));
+        for (int index = 0; index < tags.size(); index++) {
+            if (index > 0) result.append(Text.literal(" "));
+            result.append(styledTag(tags.get(index)));
+        }
         return result;
     }
 
