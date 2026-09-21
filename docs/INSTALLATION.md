@@ -1,9 +1,18 @@
 # Installation
 
+## Build
+
+The repository includes a pinned Gradle Wrapper, so a system-wide Gradle installation is not required.
+
+Linux/macOS:
+`./gradlew build --no-daemon`
+
+Windows:
+`gradlew.bat build --no-daemon`
+
 ## Paper 1.21.11
 
-1. Build the project with the repository's CI-compatible Gradle command:
-   `gradle build --no-daemon`
+1. Build the project with the repository's Gradle Wrapper.
 2. Use the generated Paper platform artifact for the 1.21.11 server.
 3. Place the plugin JAR in the server's `plugins/` directory.
 4. Start Paper 1.21.11 with Java 21.
@@ -13,8 +22,7 @@
 
 ## Fabric 1.21.11
 
-1. Build the project with:
-   `gradle build --no-daemon`
+1. Build the project with the repository's Gradle Wrapper.
 2. Use the generated Fabric 1.21.11 platform artifact.
 3. Install it on a Fabric 1.21.11 dedicated server together with the required Fabric API dependency.
 4. Start the server with Java 21.
