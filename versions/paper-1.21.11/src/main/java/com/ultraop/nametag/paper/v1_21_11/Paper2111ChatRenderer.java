@@ -114,34 +114,36 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
     }
 
     static Component styledTag(Tag tag) {
-        Component component = Component.text(tag.displayName());
         TagStyle style = tag.style();
-        component = component
+        TagColor color = tag.color();
+        if (color instanceof TagColor.Preset) {
+            return applyStyle(
+                    Component.text(tag.displayName()).color(presetColor(((TagColor.Preset) color).name())),
+                    style
+            );
+        }
+
+        Component result = Component.empty();
+        int[] codePoints = tag.displayName().codePoints().toArray();
+        long seed = tag.id().value().hashCode();
+        for (int index = 0; index < codePoints.length; index++) {
+            Component glyph = Component.text(new String(Character.toChars(codePoints[index])));
+            Integer rgb = TagColor.resolve(color, index, codePoints.length, seed);
+            if (rgb != null) {
+                glyph = glyph.color(TextColor.color(rgb));
+            }
+            result = result.append(applyStyle(glyph, style));
+        }
+        return result;
+    }
+
+    private static Component applyStyle(Component component, TagStyle style) {
+        return component
                 .decoration(TextDecoration.BOLD, style.bold())
                 .decoration(TextDecoration.ITALIC, style.italic())
                 .decoration(TextDecoration.UNDERLINED, style.underlined())
                 .decoration(TextDecoration.STRIKETHROUGH, style.strikethrough())
                 .decoration(TextDecoration.OBFUSCATED, style.obfuscated());
-
-        TextColor color = colorOf(tag.color());
-        return color == null ? component : component.color(color);
-    }
-
-    private static TextColor colorOf(TagColor color) {
-        if (color instanceof TagColor.Rgb rgb) {
-            return TextColor.color(rgb.red(), rgb.green(), rgb.blue());
-        }
-        if (color instanceof TagColor.Preset preset) {
-            return presetColor(preset.name());
-        }
-        if (color instanceof TagColor.Gradient gradient) {
-            return TextColor.color(
-                    gradient.start().red(),
-                    gradient.start().green(),
-                    gradient.start().blue()
-            );
-        }
-        return null;
     }
 
     private static TextColor presetColor(String name) {
