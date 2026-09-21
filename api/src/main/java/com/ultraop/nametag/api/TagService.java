@@ -12,9 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface TagService {
-    default TagEventBus events() {
-        return new TagEventBus();
-    }
+    TagEventBus events();
 
     Tag create(Tag tag);
     Tag update(Tag tag);
