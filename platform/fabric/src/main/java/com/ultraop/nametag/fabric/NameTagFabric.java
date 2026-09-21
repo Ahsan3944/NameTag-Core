@@ -111,6 +111,15 @@ public final class NameTagFabric {
                                     context, service, messages, configuration, "clear"
                             ))));
 
+
+            root.then(CommandManager.literal("export")
+                    .then(CommandManager.argument("file", StringArgumentType.word())
+                            .executes(context -> execute(context, service, messages, configuration, new String[]{"export", StringArgumentType.getString(context, "file")}))));
+
+            root.then(CommandManager.literal("import")
+                    .then(CommandManager.argument("file", StringArgumentType.word())
+                            .executes(context -> execute(context, service, messages, configuration, new String[]{"import", StringArgumentType.getString(context, "file")}))));
+
             root.then(CommandManager.literal("glitch")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
                             .suggests((context, builder) ->
@@ -226,7 +235,8 @@ public final class NameTagFabric {
                 new FabricPlayerResolver(source.getServer()),
                 messages,
                 configuration,
-                configuration
+                configuration,
+                dataDirectory
         );
     }
 }

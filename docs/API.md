@@ -14,6 +14,7 @@ Core operations:
 - `assign(UUID, TagId)`
 - `assignUntil(UUID, TagId, Instant)`
 - `setActive(UUID, TagId)`
+- Tag-pack import/export through the common codec
 - `remove(UUID, TagId)`
 - `clear(UUID)`
 - `activeTag(UUID)`

@@ -28,16 +28,19 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public final class DefaultNameTagCommandHandler implements NameTagCommandHandler {
     private static final List<String> SUBCOMMANDS =
-            List.of("create", "list", "give", "set", "remove", "clear", "delete", "glitch", "reload");
+            List.of("create", "list", "give", "set", "remove", "clear", "delete", "glitch", "reload", "export", "import");
 
     private final TagService tagService;
     private final PlayerResolver playerResolver;
     private final MessageService messages;
     private final ConfigurationService configuration;
     private final ConfigurationReloadService reloadService;
+    private final Path dataDirectory;
 
     public DefaultNameTagCommandHandler(
             TagService tagService,
@@ -53,7 +56,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             MessageService messages,
             ConfigurationService configuration
     ) {
-        this(tagService, playerResolver, messages, configuration, null);
+        this(tagService, playerResolver, messages, configuration, null, null);
     }
 
     public DefaultNameTagCommandHandler(
@@ -109,6 +112,8 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 case "give", "set" -> assign(context.source(), args);
                 case "remove", "clear" -> clear(context.source(), args);
                 case "glitch" -> glitch(context.source(), args);
+                case "export" -> exportTags(context.source(), args);
+                case "import" -> importTags(context.source(), args);
                 default -> sendUsage(context.source());
             }
         } catch (IllegalArgumentException exception) {
@@ -141,6 +146,11 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         if (args.length == 3 && List.of("give", "set").contains(subcommand)) {
             return tagNames(args[2]);
+        }
+
+        if (args.length == 2 && ("export".equals(subcommand) || "import".equals(subcommand))) {
+            String prefix = args[1].toLowerCase(Locale.ROOT);
+            return List.of("tags.yml").stream().filter(value -> value.startsWith(prefix)).toList();
         }
 
         if (args.length == 3 && "glitch".equals(subcommand)) {
@@ -275,6 +285,30 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         ));
     }
 
+    private void exportTags(CommandSource source, String[] args) {
+        if (args.length != 2) throw new IllegalArgumentException("Usage: /nametag export <file>");
+        Path file = packPath(args[1]);
+        YamlTagPackCodec.exportTo(file, tagService.list());
+        source.sendMessage(messages.format("message.exported", Map.of("file", file.getFileName().toString(), "count", Integer.toString(tagService.list().size()))));
+    }
+
+    private void importTags(CommandSource source, String[] args) {
+        if (args.length != 2) throw new IllegalArgumentException("Usage: /nametag import <file>");
+        Path file = packPath(args[1]);
+        int count = YamlTagPackCodec.importInto(file, new TagRepositoryBackedTagService(tagService));
+        source.sendMessage(messages.format("message.imported", Map.of("file", file.getFileName().toString(), "count", Integer.toString(count))));
+    }
+
+    private Path packPath(String name) {
+        if (dataDirectory == null) throw new IllegalArgumentException("Tag pack storage is unavailable");
+        if (!name.matches("[A-Za-z0-9._-]+")) throw new IllegalArgumentException("Invalid tag pack filename");
+        Path directory = dataDirectory.resolve("packs").toAbsolutePath().normalize();
+        Path file = directory.resolve(name).normalize();
+        if (!file.getParent().equals(directory)) throw new IllegalArgumentException("Invalid tag pack filename");
+        if (!name.endsWith(".yml")) throw new IllegalArgumentException("Tag pack filename must end with .yml");
+        return file;
+    }
+
     private void reload(CommandSource source) {
         if (reloadService == null) {
             source.sendMessage(messages.message("error.reload.unavailable"));
@@ -316,6 +350,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             case "remove", "clear" -> "nametag.remove";
             case "glitch" -> "nametag.edit";
             case "reload" -> "nametag.reload";
+            case "export", "import" -> "nametag.admin";
             default -> null;
         };
     }

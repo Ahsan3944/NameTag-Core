@@ -30,4 +30,5 @@
 - Added per-tag temporary assignments with persistent expiration timestamps and duration-aware `/nametag give` support.
 - Added append-only domain audit logging for tag and assignment mutations.
 - Added dynamic `{tag_meta:key}` chat placeholder support across the common, Fabric, and Paper renderers.
+- Added safe YAML tag-pack import/export with sandboxed filenames.
 - Kept the GUI milestone explicitly deferred until the client entrypoint, server-authoritative networking contract, and version-specific client implementation can be delivered together.

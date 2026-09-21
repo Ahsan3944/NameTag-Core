@@ -41,7 +41,8 @@ public class NameTagPaperPlugin extends JavaPlugin implements CommandExecutor, T
                 new PaperPlayerResolver(),
                 new DefaultMessageService(),
                 configurationService,
-                configurationService
+                configurationService,
+                dataDirectory
         );
         adapter = new Paper2111Adapter(this, tagService, configurationService);
         adapter.start();

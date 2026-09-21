@@ -163,4 +163,4 @@ Potential future additions:
 - Per-region tags.
 - Web management.
 - [x] Audit logs.
-- Tag packs.
+- [x] Tag packs.
