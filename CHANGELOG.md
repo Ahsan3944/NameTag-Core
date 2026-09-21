@@ -41,4 +41,4 @@
 - Added a generic animated-effect contract with built-in Rainbow, Pulse and Wave nameplate effects.
 - Added `/nametag effect <tag> <none|rainbow|pulse|wave>` with validated animation cadence/intensity defaults.
 - Added deterministic core regression coverage and wired animated effects into Fabric/Paper 1.21.11 nameplate rendering.
-- Made management intentionally command-first: added `/nametag edit` for display name, preset/RGB/random/gradient colors, plain/bold/italic styles, enable/chat flags, and expanded `/nametag list` with total count and tag details. GUI/web management is outside the project scope.
+- Made management intentionally command-first: added `/nametag edit` for display name, priority, preset/RGB/random/gradient colors, plain/bold/italic styles, enable/chat flags, and expanded `/nametag list` with total count, priority and tag details. GUI/web management is outside the project scope.

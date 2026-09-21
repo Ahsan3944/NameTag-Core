@@ -311,6 +311,32 @@ final class DefaultNameTagCommandHandlerTest {
     }
 
     @Test
+    void editCommandUpdatesPriorityWithoutChangingOtherFields() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        service.create(new Tag(
+                new TagId("vip"), "VIP", new TagColor.Preset("gold"),
+                new TagStyle(true, false, false, false, false), TagEffect.none(),
+                5, true, true, Map.of("auto-permission", "group.vip")
+        ));
+
+        RecordingSource source = new RecordingSource();
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{"edit", "vip", "priority", "50"}));
+
+        Tag updated = service.find(new TagId("vip")).orElseThrow();
+        assertEquals(50, updated.priority());
+        assertEquals("VIP", updated.displayName());
+        assertEquals(new TagColor.Preset("gold"), updated.color());
+        assertEquals(new TagStyle(true, false, false, false, false), updated.style());
+        assertEquals("group.vip", updated.metadata().get("auto-permission"));
+    }
+
+    @Test
     void editCommandSupportsGradientAndVisibilityFlags() {
         DefaultTagService service = new DefaultTagService(
                 new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
@@ -383,7 +409,7 @@ final class DefaultNameTagCommandHandlerTest {
 
         assertEquals(List.of("owner"),
                 handler.suggest(new CommandContext(source, new String[]{"edit", "ow"})));
-        assertEquals(List.of("name", "color", "gradient", "style", "enabled", "chat"),
+        assertEquals(List.of("name", "color", "gradient", "style", "priority", "enabled", "chat"),
                 handler.suggest(new CommandContext(source, new String[]{"edit", "owner", ""})));
         assertEquals(List.of("bold", "bold_italic"),
                 handler.suggest(new CommandContext(source, new String[]{"edit", "owner", "style", "bold"})));

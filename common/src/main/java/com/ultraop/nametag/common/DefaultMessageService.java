@@ -41,7 +41,7 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("error.reload.failed", "Configuration reload failed: {reason}");
         defaults.put("message.reload_success", "Configuration reloaded successfully.");
         defaults.put("error.usage.create", "Usage: /nametag create <tag> <displayName>");
-        defaults.put("error.usage.edit", "Usage: /nametag edit <tag> <name|color|gradient|style|enabled|chat> <value>");
+        defaults.put("error.usage.edit", "Usage: /nametag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value>");
         defaults.put("error.usage.delete", "Usage: /nametag delete <tag>");
         defaults.put("error.usage.assign", "Usage: /nametag give <player> <tag> [duration]");
         defaults.put("message.assigned_temporary", "Assigned {tag} to {player} for {duration}");
