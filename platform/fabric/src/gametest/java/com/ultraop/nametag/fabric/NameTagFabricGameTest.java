@@ -77,7 +77,7 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
 
         net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents.JOIN.invoker().onJoin(player);
 
-        if (server.getScoreboard().getPlayersTeam(player.getName().getString()) == null) {
+        if (server.getScoreboard().getScoreHolderTeam(player.getName().getString()) == null) {
             renderer.stop(server);
             helper.fail("JOIN lifecycle did not restore the runtime nameplate team");
             return;
@@ -85,7 +85,7 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
 
         net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents.LEAVE.invoker().onLeave(player);
 
-        if (server.getScoreboard().getPlayersTeam(player.getName().getString()) != null) {
+        if (server.getScoreboard().getScoreHolderTeam(player.getName().getString()) != null) {
             renderer.stop(server);
             helper.fail("LEAVE lifecycle did not clear the runtime nameplate team");
             return;
