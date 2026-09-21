@@ -75,7 +75,8 @@ public final class Fabric2111ChatRenderer {
             if (match.start() > cursor) result.append(Text.literal(format.substring(cursor, match.start())));
 
             Text replacement = switch (match.placeholder()) {
-                case TAG_PLACEHOLDER, "{tags}" -> styledTags(tags);
+                case TAG_PLACEHOLDER -> styledTag(tags.get(0));
+                case "{tags}" -> styledTags(tags);
                 case "{tag_id}" -> Text.literal(tags.get(0).id().value());
                 case "{tag_priority}" -> Text.literal(String.valueOf(tags.get(0).priority()));
                 case "{tag_prefix}" -> Text.literal(TagPresentation.prefix(tags.get(0)));
