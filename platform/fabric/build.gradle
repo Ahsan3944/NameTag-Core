@@ -7,6 +7,7 @@ dependencies {
     mappings "net.fabricmc:yarn:1.21.11+build.6:v2"
     modImplementation "net.fabricmc:fabric-loader:0.18.1"
     modImplementation "net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11"
+    modImplementation "net.fabricmc.fabric-api:fabric-gametest-api-v1:3.1.27+4fc5413f3e"
     implementation project(':api')
     implementation project(':common')
     implementation project(path: ':versions:fabric-1.21.11', configuration: 'namedElements')
