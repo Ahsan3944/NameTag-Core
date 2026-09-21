@@ -41,7 +41,9 @@ class DefaultTagServiceCacheTest {
         service.clear(player);
 
         assertEquals(Optional.empty(), service.activeTag(player));
-        assertEquals(2, assignments.findCalls);
+        // clear() reads the current assignment before invalidating the cache; the subsequent
+        // activeTag() call must perform a fresh lookup rather than reuse the cleared entry.
+        assertEquals(3, assignments.findCalls);
     }
 
     @Test
