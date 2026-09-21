@@ -2,6 +2,12 @@ plugins {
     id 'net.fabricmc.fabric-loom-remap' version '1.14.10'
 }
 
+loom {
+    // NameTag-Core is server-side; use Loom's server/common Minecraft jar so
+    // server GameTests receive the dedicated-server GameTest framework classes.
+    serverOnlyMinecraftJar()
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:" + minecraft_version
     mappings "net.fabricmc:yarn:1.21.11+build.6:v2"
@@ -29,33 +35,11 @@ dependencies {
 
 afterEvaluate {
     configurations.named("gametestCompileClasspath") {
-        extendsFrom(configurations.named("minecraftNamedCompile").get())
+        extendsFrom(configurations.named("minecraftCommonNamedCompile").get())
     }
 
     configurations.named("gametestRuntimeClasspath") {
-        extendsFrom(configurations.named("minecraftNamedRuntime").get())
-    }
-
-    // Loom attaches the fully transformed/mapped Minecraft classpath to its
-    // main JavaCompile task. Reuse that exact classpath for the generated
-    // GameTest compiler instead of reconstructing Loom's internal classpath.
-    tasks.named("compileGametestJava", JavaCompile) {
-        def mainCompile = tasks.named("compileJava", JavaCompile).get()
-        dependsOn(mainCompile)
-        classpath = files(
-            mainCompile.classpath,
-            sourceSets.main.output,
-            sourceSets.gametest.compileClasspath
-        )
-
-        doFirst {
-            logger.lifecycle("GAMETEST_CP=" + classpath.files.collect { it.name }.findAll { it.toLowerCase().contains("minecraft") || it.toLowerCase().contains("fabric") || it.toLowerCase().contains("yarn") }.sort().join("|"))
-            logger.lifecycle("LOOM_NAMED_CP=" + configurations.findByName("minecraftNamedCompile")?.files?.collect { it.name }?.join("|"))
-            logger.lifecycle("LOOM_COMMON_NAMED_CP=" + configurations.findByName("minecraftCommonNamedCompile")?.files?.collect { it.name }?.join("|"))
-            def helperEntry = "net/minecraft/gametest/framework/GameTestHelper.class"
-            def helperJars = classpath.files.findAll { it.isFile() && it.name.endsWith(".jar") && zipTree(it).matching { include(helperEntry) }.files }
-            logger.lifecycle("GAMETEST_HELPER_JARS=" + helperJars.collect { it.name }.join("|"))
-        }
+        extendsFrom(configurations.named("minecraftCommonNamedRuntime").get())
     }
 }
 
