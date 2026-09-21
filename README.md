@@ -330,6 +330,20 @@ The project will be built in controlled milestones:
 
 No platform implementation should begin before the corresponding core contract is stable.
 
+## Build
+
+The repository uses the checked-in Gradle Wrapper so local development and CI use the same Gradle version.
+
+Linux/macOS:
+
+`./gradlew build`
+
+Windows:
+
+`gradlew.bat build`
+
+CI validates the official Gradle Wrapper JAR before running the build and verifies the Gradle 9.2.1 distribution checksum.
+
 ## Roadmap
 
 See [docs/ROADMAP.md](docs/ROADMAP.md).
