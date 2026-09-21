@@ -31,7 +31,9 @@ public final class Paper2111NameplateRenderer {
     private final Scoreboard scoreboard;
     private final GlitchEffectEngine glitchEngine = new GlitchEffectEngine();
     private final Map<String, Team> teams = new HashMap<>();
+    private final Set<String> ownedTeamNames = new HashSet<>();
     private final Map<UUID, String> playerTeams = new HashMap<>();
+    private final Map<String, Tag> staticVisualTags = new HashMap<>();
     private final Map<String, AnimationState> animations = new HashMap<>();
     private BukkitTask task;
 
@@ -59,6 +61,9 @@ public final class Paper2111NameplateRenderer {
         }
 
         for (Team team : new HashSet<>(teams.values())) {
+            if (!ownedTeamNames.contains(team.getName())) {
+                continue;
+            }
             try {
                 team.getEntries().forEach(team::removeEntry);
                 team.unregister();
@@ -67,6 +72,8 @@ public final class Paper2111NameplateRenderer {
         }
 
         teams.clear();
+        ownedTeamNames.clear();
+        staticVisualTags.clear();
         animations.clear();
         playerTeams.clear();
     }
@@ -107,11 +114,11 @@ public final class Paper2111NameplateRenderer {
         }
 
         String teamName = teamName(tag);
+        if (currentTeamName != null && !currentTeamName.equals(teamName)) {
+            removePlayerFromTeam(player, currentTeamName);
+        }
         Team team = teams.computeIfAbsent(teamName, ignored -> createTeam(teamName));
         if (!team.hasEntry(player.getName())) {
-            if (currentTeamName != null && !currentTeamName.equals(teamName)) {
-                removePlayerFromTeam(player, currentTeamName);
-            }
             team.addEntry(player.getName());
         }
         playerTeams.put(player.getUniqueId(), teamName);
@@ -126,11 +133,14 @@ public final class Paper2111NameplateRenderer {
         if (team != null) {
             team.removeEntry(player.getName());
             if (team.getEntries().isEmpty()) {
-                try {
-                    team.unregister();
-                } catch (IllegalStateException ignored) {
+                if (ownedTeamNames.remove(team.getName())) {
+                    try {
+                        team.unregister();
+                    } catch (IllegalStateException ignored) {
+                    }
                 }
                 teams.remove(teamName);
+                staticVisualTags.remove(teamName);
                 animations.remove(teamName);
             }
         }
@@ -139,7 +149,11 @@ public final class Paper2111NameplateRenderer {
 
     private void updateTeamVisual(Team team, Tag tag, long nowNanos) {
         if (!tag.effect().isGlitch()) {
-            team.prefix(buildStaticPrefix(tag));
+            Tag previous = staticVisualTags.get(team.getName());
+            if (!tag.equals(previous)) {
+                team.prefix(buildStaticPrefix(tag));
+                staticVisualTags.put(team.getName(), tag);
+            }
             animations.remove(team.getName());
             return;
         }
@@ -163,16 +177,21 @@ public final class Paper2111NameplateRenderer {
         }
     }
 
-    private Team createTeam(String name) {
-        Team existing = scoreboard.getTeam(name);
-        Team team = existing != null ? existing : scoreboard.registerNewTeam(name);
+    private Team createTeam(String baseName) {
+        String name = baseName;
+        int collision = 0;
+        while (scoreboard.getTeam(name) != null) {
+            collision++;
+            name = baseName + "_" + collision;
+        }
+        Team team = scoreboard.registerNewTeam(name);
         team.setAllowFriendlyFire(true);
+        ownedTeamNames.add(name);
         return team;
     }
 
     private static String teamName(Tag tag) {
-        long hash = Integer.toUnsignedLong(tag.id().value().hashCode());
-        return TEAM_PREFIX + Long.toUnsignedString(hash, 36);
+        return TEAM_PREFIX + tag.id().value();
     }
 
     static Component buildStaticPrefix(Tag tag) {
