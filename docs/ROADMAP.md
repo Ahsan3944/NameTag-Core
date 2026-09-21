@@ -81,7 +81,7 @@
 - [x] Nameplate rendering.
 - [x] Text styles.
 - [x] Effects.
-- [ ] Integration tests.
+- [x] Integration tests.
 
 ## Phase 8 — Glitch
 - [x] Glitch configuration model.
@@ -93,8 +93,8 @@
 - [x] Intensity validation.
 - [x] Speed validation.
 - [x] Core unit tests.
-- [ ] Platform-specific rendering tests.
-- [ ] Chat fallback integration.
+- [x] Platform-specific rendering tests.
+- [x] Chat fallback integration.
 - [ ] Performance safeguards.
 
 ## Phase 9 — GUI
@@ -111,13 +111,13 @@
 
 ## Phase 10 — Stability
 - [ ] Full unit test suite.
-- [ ] Full integration suite.
+- [x] Full integration suite.
 - [x] Restart persistence test.
 - [x] Reload test.
 - [ ] Permission regression test.
 - [ ] Cross-platform behavior comparison.
 - [ ] Performance test.
-- [ ] Documentation audit.
+- [x] Documentation audit.
 
 ## Phase 11 — v1.0 Release
 - [ ] Release artifacts.
