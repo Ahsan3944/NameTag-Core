@@ -249,16 +249,18 @@ public final class DefaultTagService implements TagService {
 
     @Override
     public Optional<Tag> activeTag(UUID playerUuid) {
+        Optional<Optional<Tag>> cached = activeTagCache.findCached(playerUuid);
+        if (cached.isPresent()) return cached.orElseThrow();
+
         Optional<PlayerAssignment> stored = assignments.find(playerUuid);
         if (stored.isEmpty()) {
             activeTagCache.put(playerUuid, Optional.empty());
             return Optional.empty();
         }
+
         PlayerAssignment assignment = removeExpired(playerUuid, stored.get());
         if (assignment.hasExpirations()) return resolveActiveTag(assignment);
 
-        Optional<Optional<Tag>> cached = activeTagCache.findCached(playerUuid);
-        if (cached.isPresent()) return cached.orElseThrow();
         Optional<Tag> resolved = resolveActiveTag(assignment);
         activeTagCache.put(playerUuid, resolved);
         return resolved;
