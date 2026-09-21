@@ -4,6 +4,10 @@
 
 ### Stability hardening
 
+- Added automatic role-tag resolution through the `auto-permission` tag metadata key, with deterministic priority resolution and explicit-assignment precedence.
+- Added `/nametag role <tag> <permission|clear>` command support across the common command layer and Fabric command tree.
+- Added optional Fabric LuckPerms API integration and Paper native permission bridging for automatic role checks.
+
 - Added deterministic RGB resolution for random and gradient tag colors.
 - Added per-glyph gradient/random rendering coverage for Fabric and Paper chat.
 - Added per-glyph gradient/random rendering for Fabric and Paper nameplates.

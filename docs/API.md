@@ -39,6 +39,11 @@ Implemented command families:
 - `delete`
 - `glitch`
 - `reload`
+- `role`
+
+## Automatic role tags
+
+`/nametag role <tag> <permission|clear>` manages the `auto-permission` metadata used by automatic role resolution. The common service keeps explicit assignments authoritative and falls back to the automatic role resolver only when no usable explicit tag is available.
 
 ## NameplateRenderer
 
@@ -59,6 +64,8 @@ The platform adapter translates the active tag into the native chat component ty
 The stable contract is:
 
 `boolean has(UUID playerUuid, String permission)`
+
+Automatic role resolution uses tag metadata key `auto-permission`. When a player has no usable explicit assigned tag, enabled tags with a matching permission are considered and the highest-priority match is selected; tag ID provides a deterministic tie-breaker. Automatic results are not persisted.
 
 The command layer uses permission nodes such as:
 

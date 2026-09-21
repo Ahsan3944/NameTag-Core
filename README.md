@@ -59,7 +59,7 @@ This separation prevents Minecraft API changes from spreading through the entire
 - Configurable effect speed/intensity where supported.
 
 ### Permissions
-Permission nodes will be platform-neutral in the core and mapped to the native permission system by each adapter.
+Permission nodes are platform-neutral in the core and mapped to the native permission system by each adapter. Automatic role tags use the `auto-permission` tag metadata key; when no usable explicit assignment resolves, the highest-priority enabled tag whose permission matches becomes active.
 
 Planned nodes include:
 - `nametag.use`
@@ -90,10 +90,15 @@ Planned commands:
 - `/nametag reload`
 - `/nametag glitch <tag> <white|colorful>`
 - `/nametag effect <tag> <none|rainbow|pulse|wave>`
+- `/nametag role <tag> <permission|clear>`
 
 Exact syntax may be finalized during implementation, but command behavior must remain consistent between Fabric and Paper.
 
-### GUI
+### Automatic Role Tags
+
+Automatic role tags allow a tag to activate from a permission without storing a player assignment. Set the tag metadata key `auto-permission` to a permission node and use `/nametag role <tag> <permission|clear>` to manage it. Explicit assigned tags remain authoritative; automatic resolution is used when no usable explicit tag resolves. Matching enabled tags are ordered by priority, with tag ID used as the deterministic tie-breaker. Automatic results are not persisted, so permission changes are reflected on the next active-tag resolution.
+
+## GUI
 
 A GUI/editor is planned, but it will not be allowed to contaminate the core domain layer.
 

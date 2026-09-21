@@ -150,11 +150,11 @@ Potential future additions:
 - [x] Chat placeholders (tag ID, priority, prefix, suffix).
 - [x] Temporary tag assignments.
 - [x] Per-tag expiration with persistent timestamps.
-- Automatic role tags.
+- [x] Automatic role tags.
 - [x] Rainbow animation.
 - [x] Pulse/wave effects.
 - [x] Dynamic tag metadata placeholders.
-- LuckPerms integration.
+- [x] LuckPerms integration.
 - SQLite.
 - MySQL/MariaDB.
 - PostgreSQL.
