@@ -9,6 +9,7 @@ import java.util.Objects;
 public final class Fabric2111Adapter {
     private final Fabric2111NameplateRenderer renderer;
     private final Fabric2111ChatRenderer chatRenderer;
+    private final Fabric2111PlayerLifecycleListener lifecycleListener;
 
     public Fabric2111Adapter(TagService tagService, ConfigurationService configuration) {
         Objects.requireNonNull(tagService, "tagService");
@@ -16,6 +17,8 @@ public final class Fabric2111Adapter {
         this.renderer = new Fabric2111NameplateRenderer(tagService);
         this.chatRenderer = new Fabric2111ChatRenderer(tagService, configuration);
         this.chatRenderer.register();
+        this.lifecycleListener = new Fabric2111PlayerLifecycleListener(renderer);
+        this.lifecycleListener.register();
     }
 
     public void stop(MinecraftServer server) {
