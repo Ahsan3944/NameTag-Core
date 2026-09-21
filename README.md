@@ -4,7 +4,7 @@ A cross-platform, version-aware Minecraft NameTag framework designed to provide 
 
 ## Project Status
 
-**Phase:** Fabric/Paper 1.21.11 — core rendering, lifecycle, chat, persistence, GameTests and stability hardening implemented; release preparation in progress  
+**Phase:** Fabric/Paper 1.21.11 — core rendering, lifecycle, chat, persistence, layered/contextual resolution, GameTests and stability hardening implemented; release preparation in progress  
 **Target baseline:** Minecraft Java Edition **1.21.11**  
 **Platforms:** Fabric Server + Paper Server  
 **Primary goal:** Build the core once, isolate platform/version-specific code, and make future Minecraft version upgrades predictable and maintainable.
@@ -27,7 +27,7 @@ This separation prevents Minecraft API changes from spreading through the entire
 ### NameTag management
 - Create, edit, delete and list tags.
 - Assign and remove tags from players.
-- One primary active tag in the first release, with the core designed to support multiple/layered tags later.
+- Multiple/layered active tags with deterministic ordering.
 - UUID-based player identity.
 - Tag priority support.
 - Temporary tag assignments with persistent per-tag expiration.
@@ -59,9 +59,9 @@ This separation prevents Minecraft API changes from spreading through the entire
 - Configurable effect speed/intensity where supported.
 
 ### Permissions
-Permission nodes are platform-neutral in the core and mapped to the native permission system by each adapter. Automatic role tags use the `auto-permission` tag metadata key; when no usable explicit assignment resolves, the highest-priority enabled tag whose permission matches becomes active.
+Permission nodes are platform-neutral in the core and mapped to the native permission system by each adapter. Automatic role tags use the `auto-permission` tag metadata key; when no usable explicit assignment resolves, enabled matching tags are resolved together in deterministic order.
 
-Planned nodes include:
+Supported nodes include:
 - `nametag.use`
 - `nametag.create`
 - `nametag.edit`
@@ -75,7 +75,7 @@ OP access will be the default administrative fallback where the platform support
 
 ### Contextual and layered tags
 
-Tags can now be resolved against the player's current world and block position. Multiple matching assigned or automatic-role tags are rendered in deterministic order: the explicit active tag first, followed by remaining matching tags by priority and tag ID.
+Tags are resolved against the player's current world and block position. Multiple matching assigned or automatic-role tags are rendered in deterministic order: the explicit active tag first, followed by remaining matching tags by priority and tag ID.
 
 Scope a tag with:
 - `/nametag scope <tag> clear`
@@ -90,7 +90,7 @@ The current command namespace is:
 
 `/nametag`
 
-Planned commands:
+Implemented commands:
 - `/nametag create`
 - `/nametag list`
 - `/nametag give <player> <tag> [duration]`
@@ -102,6 +102,9 @@ Planned commands:
 - `/nametag glitch <tag> <white|colorful>`
 - `/nametag effect <tag> <none|rainbow|pulse|wave>`
 - `/nametag role <tag> <permission|clear>`
+- `/nametag scope <tag> clear`
+- `/nametag scope <tag> world <world>`
+- `/nametag scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>`
 - `/nametag export <file>`
 - `/nametag import <file>`
 
@@ -109,25 +112,15 @@ Command behavior is implemented through the common command layer and exposed con
 
 ### Automatic Role Tags
 
-Automatic role tags allow a tag to activate from a permission without storing a player assignment. Set the tag metadata key `auto-permission` to a permission node and use `/nametag role <tag> <permission|clear>` to manage it. Explicit assigned tags remain authoritative; automatic resolution is used when no usable explicit tag resolves. Matching enabled tags are ordered by priority, with tag ID used as the deterministic tie-breaker. Automatic results are not persisted, so permission changes are reflected on the next active-tag resolution.
+Automatic role tags allow a tag to activate from a permission without storing a player assignment. Set the tag metadata key `auto-permission` to a permission node and use `/nametag role <tag> <permission|clear>` to manage it. Explicit assigned tags remain authoritative; automatic resolution is used when no usable explicit tag resolves. Matching enabled tags are ordered deterministically by priority and tag ID. Automatic results are not persisted, so permission changes are reflected on the next active-tag resolution.
 
 ## GUI
 
-A GUI/editor is planned, but it will not be allowed to contaminate the core domain layer.
+A GUI/editor remains deferred. A correct implementation requires a Fabric client entrypoint, client-side screens/widgets, server-authoritative mutation packets, a versioned client/server networking contract, and client/server regression tests. The server-side command/API path remains the stable management surface until that complete boundary can be implemented together.
 
-The editor will eventually expose:
-- Tag name.
-- Preset color.
-- RGB/hex color.
-- Gradient.
-- Random color.
-- Bold/italic/underline/strikethrough/obfuscated.
-- Effect selection.
-- Effect configuration.
-- Preview.
-- Save/cancel.
+## Web Management
 
-The first stable milestone prioritizes the API and command path before the GUI.
+Web management remains deferred. It requires an authenticated HTTP boundary, explicit permission mapping, CSRF/session handling or an equivalent non-browser credential model, audit integration, lifecycle management, and a server-side mutation API. A partial unauthenticated endpoint is intentionally not treated as a management implementation.
 
 ### Common Command Layer
 
@@ -137,26 +130,26 @@ The message layer is also platform-neutral and currently provides default Englis
 
 ## Configuration
 
-The common configuration service provides an immutable typed runtime snapshot backed by `configuration.yml`. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the schema, defaults, validation rules and platform file locations. Installation is documented in [docs/INSTALLATION.md](docs/INSTALLATION.md), supported versions in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), and public contracts in [docs/API.md](docs/API.md). Chat placeholder and rendering rules are documented in [docs/CHAT.md](docs/CHAT.md). Supported chat placeholders include `{tag}`, `{tag_id}`, `{tag_priority}`, `{tag_prefix}`, `{tag_suffix}`, `{tag_meta:key}`, `{player}`, and `{message}`. Paper player lifecycle behavior is documented in [docs/PAPER_PLAYER_LIFECYCLE.md](docs/PAPER_PLAYER_LIFECYCLE.md). Paper plugin integration coverage is documented in [docs/PAPER_INTEGRATION_TESTS.md](docs/PAPER_INTEGRATION_TESTS.md). Fabric chat behavior is documented in [docs/FABRIC_CHAT.md](docs/FABRIC_CHAT.md). Fabric player lifecycle behavior is documented in [docs/FABRIC_PLAYER_LIFECYCLE.md](docs/FABRIC_PLAYER_LIFECYCLE.md).
+The common configuration service provides an immutable typed runtime snapshot backed by `configuration.yml`. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the schema, defaults, validation rules and platform file locations. Installation is documented in [docs/INSTALLATION.md](docs/INSTALLATION.md), supported versions in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), and public contracts in [docs/API.md](docs/API.md). Chat placeholder and rendering rules are documented in [docs/CHAT.md](docs/CHAT.md). Supported chat placeholders include `{tag}`, `{tags}`, `{tag_id}`, `{tag_priority}`, `{tag_prefix}`, `{tag_suffix}`, `{tag_meta:key}`, `{player}`, and `{message}`. Paper player lifecycle behavior is documented in [docs/PAPER_PLAYER_LIFECYCLE.md](docs/PAPER_PLAYER_LIFECYCLE.md). Paper plugin integration coverage is documented in [docs/PAPER_INTEGRATION_TESTS.md](docs/PAPER_INTEGRATION_TESTS.md). Fabric chat behavior is documented in [docs/FABRIC_CHAT.md](docs/FABRIC_CHAT.md). Fabric player lifecycle behavior is documented in [docs/FABRIC_PLAYER_LIFECYCLE.md](docs/FABRIC_PLAYER_LIFECYCLE.md).
 
 ## Caching
 
-Active NameTag resolution uses a bounded LRU cache with mutation-aware invalidation. See [docs/CACHING.md](docs/CACHING.md) for the cache scope and safety rules.
+Active NameTag resolution uses bounded LRU caches with mutation-aware invalidation. See [docs/CACHING.md](docs/CACHING.md) for the cache scope and safety rules.
 
 ## API
 
-External mods/plugins should be able to interact with NameTag-Core through a stable API.
+External mods/plugins should interact with NameTag-Core through stable API contracts.
 
-Planned API capabilities:
+Implemented API capabilities include:
 - Create/read/update/delete tags.
 - Assign/remove tags.
-- Read active tag.
+- Read the legacy single active tag.
+- Resolve multiple active tags against a world/position context.
 - Query tag existence.
 - Access color/style/effect definitions.
 - Register custom effects through the EffectRegistry.
 - Register storage providers where supported.
 - Listen to tag/player lifecycle events through the domain event bus.
-
 
 ## Glitch NameTag
 
@@ -176,7 +169,7 @@ The command changes only the effect and keeps the tag's other properties intact.
 
 ## Chat Integration
 
-The active NameTag is also designed to appear in player chat like a server rank/prefix.
+The active NameTag layers can appear in player chat like server rank/prefix components.
 
 Example:
 
@@ -190,7 +183,9 @@ Chat integration includes:
 - `nametag.chat` permission.
 - Configurable tag/name/message placement.
 - Reuse of tag color and supported formatting.
-- The same active-tag/priority resolution used by the in-world nameplate.
+- The same contextual active-tag resolution used by the in-world nameplate.
+- `{tag}` backward-compatible first-layer rendering.
+- `{tags}` multi-layer rendering.
 - Platform-specific Fabric/Paper chat rendering adapters.
 - Graceful fallback when a specific visual effect cannot be safely represented in chat.
 
@@ -205,14 +200,14 @@ Conceptual dependency direction:
                          |
                     NameTag Core
              /-----------+-----------\\
-            /            |            \\
+            /            |            \\\
       Effects        Storage       Permissions
             \\            |            /
              \\-----------+-----------/
                          |
                 Platform Contracts
-                  /             \\
-                 /               \\
+                  /             \\\
+                 /               \\\
              Fabric             Paper
                 |                 |
         Version Adapter    Version Adapter
@@ -224,7 +219,7 @@ The core must never directly depend on Fabric-only or Paper-only classes. Domain
 
 ## Repository Structure
 
-The planned repository layout is:
+The repository layout is:
 
 ```
 NameTag-Core/
@@ -249,17 +244,15 @@ NameTag-Core/
     └── paper-1.21.11/
 ```
 
-The exact Gradle module names may be refined during implementation, but the architectural boundary is fixed: **core/API code must not be mixed with platform/version code**.
+The architectural boundary is fixed: **core/API code must not be mixed with platform/version code**.
 
 ## Versioning Strategy
 
 The project uses semantic project versioning independently from Minecraft versions.
 
-Example:
+Current development version: `0.1.0-SNAPSHOT`.
 
-- NameTag-Core `0.1.0` = architecture/development milestone.
-- NameTag-Core `1.0.0` = first stable release.
-- Minecraft target remains a separate compatibility dimension.
+The first stable release will use `1.0.0` only after the release gates are actually satisfied. Minecraft compatibility remains a separate dimension.
 
 A future Minecraft upgrade should normally add/update an adapter module rather than fork the entire codebase.
 
@@ -329,7 +322,7 @@ Initial target:
 | Paper | Server |
 | Java | 21 |
 
-Future versions are added only after the baseline passes build, startup, command, persistence, assignment, rendering and regression tests.
+Future versions are added only after a dedicated adapter passes build, startup, command, persistence, assignment, rendering and regression tests.
 
 ## Development Rules
 
@@ -346,7 +339,7 @@ Future versions are added only after the baseline passes build, startup, command
 
 ## Build Philosophy
 
-The project will be built in controlled milestones:
+The project is built in controlled milestones:
 
 1. Blueprint and architecture.
 2. Gradle multi-module foundation.
