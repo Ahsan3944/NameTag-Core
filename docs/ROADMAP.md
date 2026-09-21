@@ -126,8 +126,8 @@
 - [x] Configuration reference.
 - [x] API reference.
 - [x] Core feature scope finalized.
-- [ ] Final release-version promotion.
-- [ ] Git tag.
+- [x] Final release-version promotion to `1.0.0`.
+- [ ] Git tag `v1.0.0`.
 
 > Future Minecraft-version adapters are separate implementation tracks and are not v1.0 release blockers.
 
