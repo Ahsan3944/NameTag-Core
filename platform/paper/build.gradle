@@ -15,3 +15,10 @@ processResources {
         expand(project: project)
     }
 }
+
+tasks.withType(Test).configureEach {
+    testLogging {
+        exceptionFormat = 'full'
+        showStackTraces = true
+    }
+}
