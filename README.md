@@ -96,6 +96,7 @@ Implemented commands:
 - `/nametag edit <tag> color <preset|random|#RRGGBB>`
 - `/nametag edit <tag> gradient <startHex> <endHex>`
 - `/nametag edit <tag> style <plain|bold|italic|bold_italic>`
+- `/nametag edit <tag> priority <integer>`
 - `/nametag edit <tag> enabled <true|false>`
 - `/nametag edit <tag> chat <true|false>`
 - `/nametag list`
