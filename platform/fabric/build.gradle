@@ -8,6 +8,7 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:0.18.1"
     modImplementation "net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11"
     modImplementation "net.fabricmc.fabric-api:fabric-gametest-api-v1:3.1.27+4fc5413f3e"
+    gametestImplementation "net.fabricmc.fabric-api:fabric-gametest-api-v1:3.1.27+4fc5413f3e"
     implementation project(':api')
     implementation project(':common')
     implementation project(path: ':versions:fabric-1.21.11', configuration: 'namedElements')
@@ -21,6 +22,21 @@ fabricApi {
         enableClientGameTests = false
         eula = true
     }
+}
+
+sourceSets.named("gametest") {
+    compileClasspath += sourceSets.main.compileClasspath
+    compileClasspath += sourceSets.main.output
+    runtimeClasspath += sourceSets.main.runtimeClasspath
+    runtimeClasspath += sourceSets.main.output
+}
+
+configurations.named("gametestCompileClasspath") {
+    extendsFrom(configurations.named("compileClasspath"))
+}
+
+configurations.named("gametestRuntimeClasspath") {
+    extendsFrom(configurations.named("runtimeClasspath"))
 }
 
 tasks.withType(JavaCompile).configureEach { options.release = 21 }
