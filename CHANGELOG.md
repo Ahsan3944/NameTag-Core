@@ -21,3 +21,4 @@
 - Added the official Gradle 9.2.1 Wrapper and distribution SHA-256 verification for reproducible CI/local builds.
 - Added manual CI workflow dispatch and read-only repository permissions.
 - Updated installation instructions to use the checked-in Gradle Wrapper on Linux/macOS and Windows.
+- Added a repository-level `.editorconfig` formatting policy without introducing formatter-driven source churn.
