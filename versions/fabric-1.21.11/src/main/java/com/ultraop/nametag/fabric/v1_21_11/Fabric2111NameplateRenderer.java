@@ -52,7 +52,7 @@ public final class Fabric2111NameplateRenderer {
     }
 
     public void clearPlayer(ServerPlayerEntity player) {
-        ServerScoreboard scoreboard = player.getServer().getScoreboard();
+        ServerScoreboard scoreboard = player.getEntityWorld().getServer().getScoreboard();
         removePlayer(scoreboard, player, playerTeams.get(player.getUuid()));
     }
 
