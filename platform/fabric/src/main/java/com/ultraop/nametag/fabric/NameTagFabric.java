@@ -88,6 +88,7 @@ public final class NameTagFabric {
                                                     builder
                                             ))
                                     .then(CommandManager.argument("value", StringArgumentType.greedyString())
+                                            .suggests((context, builder) -> suggestEditValues(context, builder))
                                             .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
                                                     "edit",
                                                     StringArgumentType.getString(context, "tag"),
@@ -202,6 +203,30 @@ public final class NameTagFabric {
 
             dispatcher.register(root);
         });
+    }
+
+    private static java.util.concurrent.CompletableFuture<Suggestions> suggestEditValues(
+            CommandContext<ServerCommandSource> context,
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder
+    ) {
+        String property = StringArgumentType.getString(context, "property").toLowerCase(java.util.Locale.ROOT);
+        return switch (property) {
+            case "color" -> CommandSource.suggestMatching(
+                    List.of("black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
+                            "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
+                            "yellow", "white", "random"),
+                    builder
+            );
+            case "style" -> CommandSource.suggestMatching(
+                    List.of("plain", "bold", "italic", "bold_italic"),
+                    builder
+            );
+            case "enabled", "chat" -> CommandSource.suggestMatching(
+                    List.of("true", "false"),
+                    builder
+            );
+            default -> java.util.concurrent.CompletableFuture.completedFuture(Suggestions.empty());
+        };
     }
 
     private static int execute(
