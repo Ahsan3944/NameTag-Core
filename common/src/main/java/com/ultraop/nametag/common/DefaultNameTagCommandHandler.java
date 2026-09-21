@@ -314,6 +314,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     current.displayName(),
                     current.color(),
                     current.style(),
+                    current.priority(),
                     current.enabled(),
                     parseBoolean(value, "chat")
             );
@@ -633,10 +634,9 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                         "color", describeColor(tag.color()),
                         "style", describeStyle(tag.style()),
                         "enabled", Boolean.toString(tag.enabled()),
-                        "chat",
-                        "priority", Boolean.toString(tag.chatEnabled()),
-                        "effect", tag.effect().id(),
-                        "priority", Integer.toString(tag.priority())
+                        "chat", Boolean.toString(tag.chatEnabled()),
+                        "priority", Integer.toString(tag.priority()),
+                        "effect", tag.effect().id()
                 )
         )));
     }
