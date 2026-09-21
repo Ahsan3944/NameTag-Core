@@ -97,6 +97,8 @@ public final class DefaultTagService implements TagService {
             throw new IllegalArgumentException("Tag already exists: " + tag.id().value());
         }
         tags.save(tag);
+        activeTagCache.clear();
+        contextualTagCache.clear();
         events.publish(new TagEvent.Created(tag));
         return tag;
     }
@@ -255,6 +257,7 @@ public final class DefaultTagService implements TagService {
         }
 
         activeTagCache.invalidatePlayer(playerUuid);
+        contextualTagCache.invalidatePlayer(playerUuid);
         if (!updated.equals(current)) {
             events.publish(new TagEvent.AssignmentChanged(playerUuid, current, updated));
         }
