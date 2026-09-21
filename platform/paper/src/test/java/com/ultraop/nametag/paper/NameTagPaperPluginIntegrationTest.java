@@ -80,9 +80,10 @@ class NameTagPaperPluginIntegrationTest {
                 .getEntryTeam(player.getName()));
 
         assertTrue(player.reconnect());
-        server.getScheduler().performTicks(1);
         var rejoined = server.getPlayerExact("UltraOP");
+        assertNotNull(rejoined);
 
+        // Join lifecycle must restore the nameplate without waiting for the periodic renderer.
         assertNotNull(server.getScoreboardManager()
                 .getMainScoreboard()
                 .getEntryTeam(rejoined.getName()));
