@@ -30,7 +30,6 @@ dependencies {
 sourceSets.named("gametest") {
     compileClasspath += sourceSets.main.compileClasspath
     compileClasspath += sourceSets.main.output
-    compileClasspath += configurations.gametestMinecraft
     runtimeClasspath += sourceSets.main.runtimeClasspath
     runtimeClasspath += sourceSets.main.output
     runtimeClasspath += sourceSets.main.runtimeClasspath
