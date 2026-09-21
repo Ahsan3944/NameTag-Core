@@ -2,7 +2,6 @@ package com.ultraop.nametag.api;
 
 import com.ultraop.nametag.core.model.PlayerAssignment;
 import com.ultraop.nametag.core.model.Tag;
-import com.ultraop.nametag.core.model.TagId;
 
 import java.util.UUID;
 
