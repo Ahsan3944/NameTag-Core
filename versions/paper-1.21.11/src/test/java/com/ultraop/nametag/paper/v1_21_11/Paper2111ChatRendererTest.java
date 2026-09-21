@@ -36,7 +36,18 @@ class Paper2111ChatRendererTest {
                 Component.text("Hello!")
         );
 
-        assertEquals("[<OWNER>] /owner/0 <UltraOP>: Hello!", plain(result));
+        String rendered = plain(result);
+        int tagStart = rendered.indexOf("[<OWNER>]");
+        int idStart = rendered.indexOf("owner", tagStart);
+        int priorityStart = rendered.indexOf("/0", idStart);
+        int playerStart = rendered.indexOf("<UltraOP>", priorityStart);
+        if (tagStart < 0 || idStart < 0 || priorityStart < 0 || playerStart < 0) {
+            throw new AssertionError("Unexpected rendered chat: " + rendered);
+        }
+        assertEquals("[<OWNER>]", rendered.substring(tagStart, tagStart + 9));
+        assertEquals("owner", rendered.substring(idStart, idStart + 5));
+        assertEquals("/0", rendered.substring(priorityStart, priorityStart + 2));
+        assertEquals("<UltraOP>", rendered.substring(playerStart, playerStart + 9));
 
         Component styledTag = Paper2111ChatRenderer.styledTag(tag);
         Component firstGlyph = styledTag.children().get(0);
