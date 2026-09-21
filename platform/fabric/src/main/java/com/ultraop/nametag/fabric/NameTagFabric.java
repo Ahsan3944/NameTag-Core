@@ -82,7 +82,11 @@ public final class NameTagFabric {
                                             suggestTags(context, builder, service, configuration, "give"))
                                     .executes(context -> executeTarget(
                                             context, service, messages, configuration, false
-                                    )))));
+                                    ))
+                                    .then(CommandManager.argument("duration", StringArgumentType.word())
+                                            .executes(context -> executeTarget(
+                                                    context, service, messages, configuration, false
+                                            ))))));
 
             root.then(CommandManager.literal("set")
                     .then(CommandManager.argument("player", EntityArgumentType.player())
@@ -151,13 +155,11 @@ public final class NameTagFabric {
             ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
             String subcommand = setActive ? "set" : "give";
             String tag = StringArgumentType.getString(context, "tag");
-            return execute(
-                    context,
-                    service,
-                    messages,
-                    configuration,
-                    new String[]{subcommand, player.getName().getString(), tag}
-            );
+            boolean hasDuration = context.getNodes().stream().anyMatch(node -> node.getNode().getName().equals("duration"));
+            String[] args = hasDuration
+                    ? new String[]{subcommand, player.getName().getString(), tag, StringArgumentType.getString(context, "duration")}
+                    : new String[]{subcommand, player.getName().getString(), tag};
+            return execute(context, service, messages, configuration, args);
         } catch (CommandSyntaxException exception) {
             context.getSource().sendError(Text.literal(exception.getMessage()));
             return 0;

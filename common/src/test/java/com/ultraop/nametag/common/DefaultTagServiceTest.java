@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,6 +80,17 @@ class DefaultTagServiceTest {
         service.setActive(player, new TagId("owner"));
 
         assertEquals(new TagId("vip"), service.activeTag(player).orElseThrow().id());
+    }
+
+    @Test
+    void temporaryAssignmentExpiresAndFallsBack() {
+        Instant now=Instant.parse("2026-01-01T00:00:00Z");
+        DefaultTagService service=new DefaultTagService(new InMemoryTagRepository(),new InMemoryPlayerAssignmentRepository(),8,new com.ultraop.nametag.api.TagEventBus(),Clock.fixed(now.plusSeconds(61),ZoneOffset.UTC));
+        UUID player=UUID.randomUUID();
+        service.create(tag("member","MEMBER",10,true)); service.create(tag("vip","VIP",50,true));
+        service.assign(player,new TagId("member")); service.assignUntil(player,new TagId("vip"),now.plusSeconds(60));
+        service.setActive(player,new TagId("vip"));
+        assertEquals("MEMBER",service.activeTag(player).orElseThrow().displayName());
     }
 
     @Test

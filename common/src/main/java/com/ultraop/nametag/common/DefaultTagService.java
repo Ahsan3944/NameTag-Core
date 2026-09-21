@@ -10,10 +10,14 @@ import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagId;
 import com.ultraop.nametag.core.validation.TagValidator;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -25,9 +29,10 @@ public final class DefaultTagService implements TagService {
     private final PlayerAssignmentRepository assignments;
     private final ActiveTagCache activeTagCache;
     private final TagEventBus events;
+    private final Clock clock;
 
     public DefaultTagService(TagRepository tags, PlayerAssignmentRepository assignments) {
-        this(tags, assignments, DEFAULT_CACHE_CAPACITY, new TagEventBus());
+        this(tags, assignments, DEFAULT_CACHE_CAPACITY, new TagEventBus(), Clock.systemUTC());
     }
 
     DefaultTagService(
@@ -35,7 +40,7 @@ public final class DefaultTagService implements TagService {
             PlayerAssignmentRepository assignments,
             int cacheCapacity
     ) {
-        this(tags, assignments, cacheCapacity, new TagEventBus());
+        this(tags, assignments, cacheCapacity, new TagEventBus(), Clock.systemUTC());
     }
 
     public DefaultTagService(
@@ -44,10 +49,21 @@ public final class DefaultTagService implements TagService {
             int cacheCapacity,
             TagEventBus events
     ) {
+        this(tags, assignments, cacheCapacity, events, Clock.systemUTC());
+    }
+
+    DefaultTagService(
+            TagRepository tags,
+            PlayerAssignmentRepository assignments,
+            int cacheCapacity,
+            TagEventBus events,
+            Clock clock
+    ) {
         this.tags = Objects.requireNonNull(tags);
         this.assignments = Objects.requireNonNull(assignments);
         this.activeTagCache = new ActiveTagCache(cacheCapacity);
         this.events = Objects.requireNonNull(events);
+        this.clock = Objects.requireNonNull(clock);
     }
 
     @Override
@@ -97,7 +113,9 @@ public final class DefaultTagService implements TagService {
             remaining.remove(id);
 
             TagId active = Objects.equals(current.activeTagId(), id) ? null : current.activeTagId();
-            PlayerAssignment updated = new PlayerAssignment(current.playerUuid(), remaining, active);
+            Map<TagId, Long> expirations = new HashMap<>(current.expirationEpochMillis());
+            expirations.remove(id);
+            PlayerAssignment updated = new PlayerAssignment(current.playerUuid(), remaining, active, expirations);
             TagValidator.validate(updated);
 
             if (remaining.isEmpty()) {
@@ -129,17 +147,28 @@ public final class DefaultTagService implements TagService {
 
     @Override
     public PlayerAssignment assign(UUID playerUuid, TagId tagId) {
+        return assignUntil(playerUuid, tagId, null);
+    }
+
+    @Override
+    public PlayerAssignment assignUntil(UUID playerUuid, TagId tagId, Instant expiresAt) {
         Tag tag = tags.find(tagId).orElseThrow(() ->
                 new IllegalArgumentException("Tag not found: " + tagId.value()));
+        if (expiresAt != null && !expiresAt.isAfter(clock.instant())) {
+            throw new IllegalArgumentException("Expiration must be in the future");
+        }
 
         PlayerAssignment current = assignments.find(playerUuid)
                 .orElse(new PlayerAssignment(playerUuid, List.of(), null));
-
         ArrayList<TagId> ids = new ArrayList<>(current.assignedTagIds());
         if (!ids.contains(tag.id())) ids.add(tag.id());
 
+        Map<TagId, Long> expirations = new HashMap<>(current.expirationEpochMillis());
+        if (expiresAt == null) expirations.remove(tag.id());
+        else expirations.put(tag.id(), expiresAt.toEpochMilli());
+
         TagId active = current.activeTagId() != null ? current.activeTagId() : tag.id();
-        PlayerAssignment updated = new PlayerAssignment(playerUuid, ids, active);
+        PlayerAssignment updated = new PlayerAssignment(playerUuid, ids, active, expirations);
         TagValidator.validate(updated);
         assignments.save(updated);
         activeTagCache.invalidatePlayer(playerUuid);
@@ -162,11 +191,15 @@ public final class DefaultTagService implements TagService {
             throw new IllegalArgumentException(
                     "Tag is not assigned to player: " + tagId.value());
         }
+        if (current.isExpired(tagId, clock.millis())) {
+            throw new IllegalArgumentException("Tag assignment has expired: " + tagId.value());
+        }
 
         PlayerAssignment updated = new PlayerAssignment(
                 playerUuid,
                 current.assignedTagIds(),
-                tagId
+                tagId,
+                current.expirationEpochMillis()
         );
         TagValidator.validate(updated);
         assignments.save(updated);
@@ -186,7 +219,9 @@ public final class DefaultTagService implements TagService {
         ids.remove(tagId);
 
         TagId active = Objects.equals(current.activeTagId(), tagId) ? null : current.activeTagId();
-        PlayerAssignment updated = new PlayerAssignment(playerUuid, ids, active);
+        Map<TagId, Long> expirations = new HashMap<>(current.expirationEpochMillis());
+        expirations.remove(tagId);
+        PlayerAssignment updated = new PlayerAssignment(playerUuid, ids, active, expirations);
         TagValidator.validate(updated);
 
         if (ids.isEmpty()) {
@@ -214,31 +249,50 @@ public final class DefaultTagService implements TagService {
 
     @Override
     public Optional<Tag> activeTag(UUID playerUuid) {
-        Optional<Optional<Tag>> cached = activeTagCache.findCached(playerUuid);
-        if (cached.isPresent()) {
-            return cached.orElseThrow();
+        Optional<PlayerAssignment> stored = assignments.find(playerUuid);
+        if (stored.isEmpty()) {
+            activeTagCache.put(playerUuid, Optional.empty());
+            return Optional.empty();
         }
+        PlayerAssignment assignment = removeExpired(playerUuid, stored.get());
+        if (assignment.hasExpirations()) return resolveActiveTag(assignment);
 
-        Optional<Tag> resolved = assignments.find(playerUuid).flatMap(this::resolveActiveTag);
+        Optional<Optional<Tag>> cached = activeTagCache.findCached(playerUuid);
+        if (cached.isPresent()) return cached.orElseThrow();
+        Optional<Tag> resolved = resolveActiveTag(assignment);
         activeTagCache.put(playerUuid, resolved);
         return resolved;
     }
 
-    private Optional<Tag> resolveActiveTag(PlayerAssignment assignment) {
-        if (assignment.activeTagId() != null) {
-            Optional<Tag> explicit = tags.find(assignment.activeTagId())
-                    .filter(Tag::enabled);
-            if (explicit.isPresent()) {
-                return explicit;
-            }
-        }
+    private PlayerAssignment removeExpired(UUID playerUuid, PlayerAssignment assignment) {
+        long now = clock.millis();
+        List<TagId> remaining = assignment.assignedTagIds().stream()
+                .filter(tagId -> !assignment.isExpired(tagId, now))
+                .toList();
+        if (remaining.size() == assignment.assignedTagIds().size()) return assignment;
 
+        Map<TagId, Long> expirations = new HashMap<>();
+        for (Map.Entry<TagId, Long> entry : assignment.expirationEpochMillis().entrySet()) {
+            if (remaining.contains(entry.getKey()) && entry.getValue() > now) expirations.put(entry.getKey(), entry.getValue());
+        }
+        TagId active = remaining.contains(assignment.activeTagId()) ? assignment.activeTagId() : null;
+        PlayerAssignment updated = new PlayerAssignment(playerUuid, remaining, active, expirations);
+        if (remaining.isEmpty()) assignments.delete(playerUuid);
+        else assignments.save(updated);
+        activeTagCache.invalidatePlayer(playerUuid);
+        events.publish(new TagEvent.AssignmentChanged(playerUuid, assignment, updated));
+        return updated;
+    }
+
+    private Optional<Tag> resolveActiveTag(PlayerAssignment assignment) {
+        long now = clock.millis();
+        if (assignment.activeTagId() != null && !assignment.isExpired(assignment.activeTagId(), now)) {
+            Optional<Tag> explicit = tags.find(assignment.activeTagId()).filter(Tag::enabled);
+            if (explicit.isPresent()) return explicit;
+        }
         return assignment.assignedTagIds().stream()
-                .map(tags::find)
-                .flatMap(Optional::stream)
-                .filter(Tag::enabled)
-                .max(Comparator
-                        .comparingInt(Tag::priority)
-                        .thenComparing(tag -> tag.id().value(), Comparator.reverseOrder()));
+                .filter(tagId -> !assignment.isExpired(tagId, now))
+                .map(tags::find).flatMap(Optional::stream).filter(Tag::enabled)
+                .max(Comparator.comparingInt(Tag::priority).thenComparing(tag -> tag.id().value(), Comparator.reverseOrder()));
     }
 }

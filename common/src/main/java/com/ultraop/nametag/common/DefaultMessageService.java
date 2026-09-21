@@ -42,7 +42,8 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("message.reload_success", "Configuration reloaded successfully.");
         defaults.put("error.usage.create", "Usage: /nametag create <tag> <displayName>");
         defaults.put("error.usage.delete", "Usage: /nametag delete <tag>");
-        defaults.put("error.usage.assign", "Usage: /nametag give <player> <tag>");
+        defaults.put("error.usage.assign", "Usage: /nametag give <player> <tag> [duration]");
+        defaults.put("message.assigned_temporary", "Assigned {tag} to {player} for {duration}");
         defaults.put("error.usage.remove", "Usage: /nametag remove <player>");
         defaults.put("error.usage.glitch", "Usage: /nametag glitch <tag> <white|colorful>");
         defaults.put("error.player.offline", "Player must be online: {player}");

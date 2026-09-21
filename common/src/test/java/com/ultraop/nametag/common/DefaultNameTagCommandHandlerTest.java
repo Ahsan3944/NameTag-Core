@@ -98,6 +98,19 @@ final class DefaultNameTagCommandHandlerTest {
     }
 
     @Test
+    void giveAcceptsTemporaryDuration() {
+        InMemoryTagRepository tags=new InMemoryTagRepository();
+        InMemoryPlayerAssignmentRepository assignments=new InMemoryPlayerAssignmentRepository();
+        DefaultTagService service=new DefaultTagService(tags,assignments);
+        service.create(new Tag(new TagId("vip"),"VIP",new TagColor.Preset("white"),TagStyle.plain(),TagEffect.none(),10,true,true,Map.of()));
+        UUID playerUuid=UUID.randomUUID(); RecordingSource source=new RecordingSource();
+        DefaultNameTagCommandHandler handler=new DefaultNameTagCommandHandler(service,new SinglePlayerResolver(new OnlinePlayer(playerUuid,"UltraOP")),new DefaultMessageService());
+        handler.execute(new CommandContext(source,new String[]{"give","UltraOP","vip","30m"}));
+        assertTrue(assignments.find(playerUuid).orElseThrow().expirationEpochMillis().containsKey(new TagId("vip")));
+        assertEquals("Assigned vip to UltraOP for 30m",source.lastMessage);
+    }
+
+    @Test
     void commandHandlerUsesConfiguredTagDefaults() {
         InMemoryTagRepository tags = new InMemoryTagRepository();
         DefaultTagService service = new DefaultTagService(

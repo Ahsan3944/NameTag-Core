@@ -27,6 +27,11 @@ public interface TagService {
     PlayerAssignment assign(UUID playerUuid, TagId tagId);
 
     /**
+     * Assigns a tag until the supplied instant. The expiration is stored per tag.
+     */
+    PlayerAssignment assignUntil(UUID playerUuid, TagId tagId, java.time.Instant expiresAt);
+
+    /**
      * Makes an already-assigned tag the player's explicit active tag.
      */
     PlayerAssignment setActive(UUID playerUuid, TagId tagId);

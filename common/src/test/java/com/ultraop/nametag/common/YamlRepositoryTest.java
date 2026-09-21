@@ -28,7 +28,7 @@ class YamlRepositoryTest {
 
     @Test void assignmentRepositoryRoundTripsAssignments() {
         Path file=tempDir.resolve("assignments.yml"); UUID uuid=UUID.randomUUID();
-        PlayerAssignment a=new PlayerAssignment(uuid,List.of(new TagId("owner"),new TagId("vip")),new TagId("vip"));
+        PlayerAssignment a=new PlayerAssignment(uuid,List.of(new TagId("owner"),new TagId("vip")),new TagId("vip"),Map.of(new TagId("vip"),1900000000000L));
         new YamlPlayerAssignmentRepository(file).save(a);
         assertEquals(a,new YamlPlayerAssignmentRepository(file).find(uuid).orElseThrow());
     }

@@ -27,7 +27,16 @@ public final class YamlPlayerAssignmentRepository implements PlayerAssignmentRep
             if(rawIds instanceof List<?> list) for(Object id:list) ids.add(new TagId(String.valueOf(id)));
             else if(rawIds!=null) throw new IllegalArgumentException("assignedTagIds must be a list");
             Object rawActive=m.get("activeTagId"); TagId active=rawActive==null?null:new TagId(String.valueOf(rawActive));
-            PlayerAssignment a=new PlayerAssignment(uuid,ids,active); TagValidator.validate(a); values.put(uuid,a);
+            Map<TagId,Long> expirations=new LinkedHashMap<>();
+            Object rawExpirations=m.get("expirationEpochMillis");
+            if(rawExpirations instanceof Map<?,?> rawMap){
+                for(Map.Entry<?,?> entry:rawMap.entrySet()){
+                    Object value=entry.getValue();
+                    if(!(value instanceof Number number)) throw new IllegalArgumentException("expirationEpochMillis values must be numbers");
+                    expirations.put(new TagId(String.valueOf(entry.getKey())), number.longValue());
+                }
+            } else if(rawExpirations!=null) throw new IllegalArgumentException("expirationEpochMillis must be a map");
+            PlayerAssignment a=new PlayerAssignment(uuid,ids,active,expirations); TagValidator.validate(a); values.put(uuid,a);
         }
     }
 
@@ -38,6 +47,11 @@ public final class YamlPlayerAssignmentRepository implements PlayerAssignmentRep
             Map<String,Object> m=new LinkedHashMap<>();
             m.put("assignedTagIds",a.assignedTagIds().stream().map(TagId::value).toList());
             m.put("activeTagId",a.activeTagId()==null?null:a.activeTagId().value());
+            if(!a.expirationEpochMillis().isEmpty()){
+                Map<String,Long> expirations=new LinkedHashMap<>();
+                for(Map.Entry<TagId,Long> entry:a.expirationEpochMillis().entrySet()) expirations.put(entry.getKey().value(),entry.getValue());
+                m.put("expirationEpochMillis",expirations);
+            }
             assignments.put(a.playerUuid().toString(),m);
         }
         doc.put("assignments",assignments); store.save(doc);

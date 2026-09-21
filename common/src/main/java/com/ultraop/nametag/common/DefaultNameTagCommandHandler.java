@@ -19,6 +19,8 @@ import com.ultraop.nametag.core.model.TagEffect;
 import com.ultraop.nametag.core.model.TagId;
 import com.ultraop.nametag.core.model.TagStyle;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -188,7 +190,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     }
 
     private void assign(CommandSource source, String[] args) {
-        if (args.length != 3) {
+        if (args.length < 3 || args.length > 4) {
             throw new IllegalArgumentException(messages.message("error.usage.assign"));
         }
 
@@ -200,14 +202,35 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         TagId id = new TagId(args[2].toLowerCase(Locale.ROOT));
         if ("set".equalsIgnoreCase(args[0])) {
+            if (args.length != 3) throw new IllegalArgumentException(messages.message("error.usage.assign"));
             tagService.setActive(player.uuid(), id);
-        } else {
-            tagService.assign(player.uuid(), id);
+            source.sendMessage(messages.format("message.set_active", Map.of("tag", id.value(), "player", player.name())));
+            return;
         }
-        source.sendMessage(messages.format(
-                "set".equalsIgnoreCase(args[0]) ? "message.set_active" : "message.assigned",
-                Map.of("tag", id.value(), "player", player.name())
-        ));
+        if (args.length == 4) {
+            Duration duration = parseDuration(args[3]);
+            tagService.assignUntil(player.uuid(), id, Instant.now().plus(duration));
+            source.sendMessage(messages.format("message.assigned_temporary", Map.of("tag", id.value(), "player", player.name(), "duration", args[3])));
+            return;
+        }
+        tagService.assign(player.uuid(), id);
+        source.sendMessage(messages.format("message.assigned", Map.of("tag", id.value(), "player", player.name())));
+    }
+
+    private static Duration parseDuration(String input) {
+        java.util.regex.Matcher matcher=java.util.regex.Pattern.compile("(?i)(\\d+)([smhdw])").matcher(input==null?"":input);
+        long seconds=0; int end=0; boolean matched=false;
+        while(matcher.find()){
+            if(matcher.start()!=end) throw new IllegalArgumentException("Invalid duration: "+input);
+            matched=true;
+            long value;
+            try{value=Long.parseLong(matcher.group(1));}catch(NumberFormatException ex){throw new IllegalArgumentException("Invalid duration: "+input);}
+            long unit=switch(matcher.group(2).toLowerCase(Locale.ROOT)){case "s"->1L;case "m"->60L;case "h"->3600L;case "d"->86400L;case "w"->604800L;default->throw new IllegalArgumentException("Invalid duration: "+input);};
+            try{seconds=Math.addExact(seconds,Math.multiplyExact(value,unit));}catch(ArithmeticException ex){throw new IllegalArgumentException("Duration is too large: "+input);}
+            end=matcher.end();
+        }
+        if(!matched||end!=(input==null?0:input.length())||seconds<=0||seconds>Duration.ofDays(365).getSeconds()) throw new IllegalArgumentException("Invalid duration: "+input+" (maximum is 365d)");
+        return Duration.ofSeconds(seconds);
     }
 
     private void clear(CommandSource source, String[] args) {
