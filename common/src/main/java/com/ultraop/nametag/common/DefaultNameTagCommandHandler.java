@@ -33,7 +33,7 @@ import java.nio.file.Path;
 
 public final class DefaultNameTagCommandHandler implements NameTagCommandHandler {
     private static final List<String> SUBCOMMANDS =
-            List.of("create", "list", "give", "set", "remove", "clear", "delete", "glitch", "effect", "reload", "export", "import");
+            List.of("create", "list", "give", "set", "remove", "clear", "delete", "glitch", "effect", "role", "reload", "export", "import");
 
     private final TagService tagService;
     private final PlayerResolver playerResolver;
@@ -125,6 +125,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 case "remove", "clear" -> clear(context.source(), args);
                 case "glitch" -> glitch(context.source(), args);
                 case "effect" -> effect(context.source(), args);
+                case "role" -> role(context.source(), args);
                 case "export" -> exportTags(context.source(), args);
                 case "import" -> importTags(context.source(), args);
                 default -> sendUsage(context.source());
@@ -175,6 +176,10 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         if (args.length == 3 && "effect".equals(subcommand)) {
             String prefix = args[2].toLowerCase(Locale.ROOT);
             return List.of("none", "rainbow", "pulse", "wave").stream().filter(value -> value.startsWith(prefix)).toList();
+        }
+        if (args.length == 3 && "role".equals(subcommand)) {
+            String prefix = args[2].toLowerCase(Locale.ROOT);
+            return List.of("clear").stream().filter(value -> value.startsWith(prefix)).toList();
         }
 
         return List.of();
@@ -319,6 +324,27 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         source.sendMessage(messages.format("message.effect_set", Map.of("effect", updated.effect().id(), "tag", updated.id().value())));
     }
 
+    private void role(CommandSource source, String[] args) {
+        if (args.length != 3) throw new IllegalArgumentException(messages.message("error.usage.role"));
+        TagId id = new TagId(args[1].toLowerCase(Locale.ROOT));
+        Tag current = tagService.find(id).orElseThrow(() ->
+                new IllegalArgumentException(messages.format("error.tag.not_found", Map.of("tag", id.value()))));
+        Map<String, String> metadata = new java.util.LinkedHashMap<>(current.metadata());
+        if ("clear".equalsIgnoreCase(args[2])) {
+            metadata.remove("auto-permission");
+        } else {
+            String permission = args[2].trim();
+            if (!permission.matches("[A-Za-z0-9_.*:-]+")) throw new IllegalArgumentException("Invalid permission node: " + permission);
+            metadata.put("auto-permission", permission);
+        }
+        Tag updated = new Tag(current.id(), current.displayName(), current.color(), current.style(), current.effect(),
+                current.priority(), current.enabled(), current.chatEnabled(), metadata);
+        tagService.update(updated);
+        source.sendMessage(messages.format("message.role_set", Map.of(
+                "tag", updated.id().value(),
+                "permission", updated.metadata().getOrDefault("auto-permission", "none"))));
+    }
+
     private void exportTags(CommandSource source, String[] args) {
         if (args.length != 2) throw new IllegalArgumentException("Usage: /nametag export <file>");
         Path file = packPath(args[1]);
@@ -382,7 +408,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             case "delete" -> "nametag.delete";
             case "give", "set" -> "nametag.give";
             case "remove", "clear" -> "nametag.remove";
-            case "glitch", "effect" -> "nametag.edit";
+            case "glitch", "effect", "role" -> "nametag.edit";
             case "reload" -> "nametag.reload";
             case "export", "import" -> "nametag.admin";
             default -> null;

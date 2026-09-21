@@ -3,6 +3,7 @@ package com.ultraop.nametag.paper;
 import com.ultraop.nametag.api.CommandContext;
 import com.ultraop.nametag.api.ConfigurationService;
 import com.ultraop.nametag.api.NameTagCommandHandler;
+import com.ultraop.nametag.api.PermissionService;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.common.DefaultConfigurationService;
 import com.ultraop.nametag.common.FileTagAuditLogger;
@@ -31,9 +32,11 @@ public class NameTagPaperPlugin extends JavaPlugin implements CommandExecutor, T
     public void onEnable() {
         java.nio.file.Path dataDirectory = getDataFolder().toPath();
         configurationService = new DefaultConfigurationService(dataDirectory.resolve("configuration.yml"));
+        PermissionService permissions = new PaperPermissionService();
         tagService = new DefaultTagService(
                 new YamlTagRepository(dataDirectory.resolve("tags.yml")),
-                new YamlPlayerAssignmentRepository(dataDirectory.resolve("assignments.yml"))
+                new YamlPlayerAssignmentRepository(dataDirectory.resolve("assignments.yml")),
+                permissions
         );
         auditLogger = FileTagAuditLogger.register(tagService.events(), dataDirectory.resolve("audit.log"));
         commandHandler = new DefaultNameTagCommandHandler(

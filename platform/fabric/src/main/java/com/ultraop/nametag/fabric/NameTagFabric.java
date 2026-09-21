@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.ultraop.nametag.api.NameTagCommandHandler;
+import com.ultraop.nametag.api.PermissionService;
 import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.common.DefaultConfigurationService;
 import com.ultraop.nametag.common.FileTagAuditLogger;
@@ -35,9 +36,11 @@ public final class NameTagFabric {
         DefaultConfigurationService configuration = new DefaultConfigurationService(
                 dataDirectory.resolve("configuration.yml")
         );
+        PermissionService permissions = new FabricPermissionService();
         TagService service = new DefaultTagService(
                 new YamlTagRepository(dataDirectory.resolve("tags.yml")),
-                new YamlPlayerAssignmentRepository(dataDirectory.resolve("assignments.yml"))
+                new YamlPlayerAssignmentRepository(dataDirectory.resolve("assignments.yml")),
+                permissions
         );
 
         new Fabric2111Adapter(service, configuration);
