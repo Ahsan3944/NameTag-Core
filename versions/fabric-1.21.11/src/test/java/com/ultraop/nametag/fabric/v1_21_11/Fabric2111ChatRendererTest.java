@@ -35,7 +35,7 @@ class Fabric2111ChatRendererTest {
                 Text.literal("Hello!")
         );
 
-        assertEquals("[<OWNER>/owner/0 <UltraOP>: Hello!", result.getString());
+        assertEquals("[<OWNER>] /owner/0 <UltraOP>: Hello!", result.getString());
         assertNotNull(result.getSiblings());
         assertEquals(12, result.getSiblings().size());
 

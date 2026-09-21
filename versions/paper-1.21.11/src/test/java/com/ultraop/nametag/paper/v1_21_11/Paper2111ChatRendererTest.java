@@ -36,7 +36,7 @@ class Paper2111ChatRendererTest {
                 Component.text("Hello!")
         );
 
-        assertEquals("[<OWNER>/owner/0 <UltraOP>: Hello!", plain(result));
+        assertEquals("[<OWNER>] /owner/0 <UltraOP>: Hello!", plain(result));
 
         Component styledTag = Paper2111ChatRenderer.styledTag(tag);
         Component firstGlyph = styledTag.children().get(0);
