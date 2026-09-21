@@ -275,15 +275,29 @@ Player names must not be the primary identity key.
 
 ## Storage
 
-The first implementation will use a simple local, human-readable storage provider so the system can work without an external database.
+NameTag-Core supports a configurable persistence provider selected in `storage.yml`.
 
-Storage must be abstracted behind an interface so future providers can include:
-- YAML/JSON file storage.
+Supported providers:
+- YAML file storage (default).
 - SQLite.
-- MySQL/MariaDB.
+- MySQL.
+- MariaDB.
 - PostgreSQL.
 
-The core must not assume one storage implementation.
+The JDBC providers use the same repository contracts as YAML storage, create a versioned schema on first startup, use transactional replacement for writes, and can perform a one-time YAML-to-database migration when `migrateYaml: true`. The core does not depend on a specific database driver; platform packaging supplies the runtime JDBC drivers.
+
+The default `storage.yml` is:
+
+```yaml
+schemaVersion: 1
+type: yaml
+jdbcUrl: ""
+username: ""
+password: ""
+migrateYaml: true
+```
+
+For SQLite, leaving `jdbcUrl` blank uses `nametag.db` in the platform data directory. Remote providers require a JDBC URL and credentials as appropriate.
 
 ## Rendering
 
