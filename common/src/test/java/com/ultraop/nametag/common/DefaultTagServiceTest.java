@@ -2,6 +2,7 @@ package com.ultraop.nametag.common;
 
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
+import com.ultraop.nametag.api.PermissionService;
 import com.ultraop.nametag.core.model.TagEffect;
 import com.ultraop.nametag.core.model.TagId;
 import com.ultraop.nametag.core.model.TagStyle;
@@ -80,6 +81,80 @@ class DefaultTagServiceTest {
         service.setActive(player, new TagId("owner"));
 
         assertEquals(new TagId("vip"), service.activeTag(player).orElseThrow().id());
+    }
+
+    @Test
+    void automaticRoleUsesHighestPriorityMatchingTag() {
+        UUID player = UUID.randomUUID();
+        PermissionService permissions = (uuid, permission) -> player.equals(uuid) && permission.equals("group.vip");
+
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(),
+                new InMemoryPlayerAssignmentRepository(),
+                permissions
+        );
+        service.create(roleTag("member", "MEMBER", 10, "group.member"));
+        service.create(roleTag("vip", "VIP", 50, "group.vip"));
+
+        assertEquals(new TagId("vip"), service.activeTag(player).orElseThrow().id());
+    }
+
+    @Test
+    void automaticRoleUsesTagIdAsDeterministicTieBreaker() {
+        UUID player = UUID.randomUUID();
+        PermissionService permissions = (uuid, permission) -> player.equals(uuid) && permission.equals("group.staff");
+
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(),
+                new InMemoryPlayerAssignmentRepository(),
+                permissions
+        );
+        service.create(roleTag("alpha", "ALPHA", 50, "group.staff"));
+        service.create(roleTag("omega", "OMEGA", 50, "group.staff"));
+
+        assertEquals(new TagId("omega"), service.activeTag(player).orElseThrow().id());
+    }
+
+    @Test
+    void explicitAssignmentOverridesAutomaticRole() {
+        UUID player = UUID.randomUUID();
+        PermissionService permissions = (uuid, permission) -> player.equals(uuid) && permission.equals("group.vip");
+
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(),
+                new InMemoryPlayerAssignmentRepository(),
+                permissions
+        );
+        service.create(roleTag("vip", "VIP", 100, "group.vip"));
+        service.create(tag("custom", "CUSTOM", 1, true));
+
+        service.assign(player, new TagId("custom"));
+
+        assertEquals(new TagId("custom"), service.activeTag(player).orElseThrow().id());
+    }
+
+    @Test
+    void automaticRoleResolutionReflectsPermissionChangesWithoutPersistingAssignment() {
+        UUID player = UUID.randomUUID();
+        java.util.Set<String> granted = new java.util.HashSet<>();
+        PermissionService permissions = (uuid, permission) -> player.equals(uuid) && granted.contains(permission);
+
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(),
+                new InMemoryPlayerAssignmentRepository(),
+                permissions
+        );
+        service.create(roleTag("vip", "VIP", 50, "group.vip"));
+        service.create(roleTag("staff", "STAFF", 100, "group.staff"));
+
+        granted.add("group.vip");
+        assertEquals(new TagId("vip"), service.activeTag(player).orElseThrow().id());
+
+        granted.remove("group.vip");
+        granted.add("group.staff");
+        assertEquals(new TagId("staff"), service.activeTag(player).orElseThrow().id());
+
+        assertTrue(new InMemoryPlayerAssignmentRepository().find(player).isEmpty());
     }
 
     @Test
@@ -187,6 +262,20 @@ class DefaultTagServiceTest {
         return new DefaultTagService(
                 new InMemoryTagRepository(),
                 new InMemoryPlayerAssignmentRepository()
+        );
+    }
+
+    private static Tag roleTag(String id, String displayName, int priority, String permission) {
+        return new Tag(
+                new TagId(id),
+                displayName,
+                new TagColor.Preset("red"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                priority,
+                true,
+                true,
+                Map.of("auto-permission", permission)
         );
     }
 
