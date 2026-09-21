@@ -14,3 +14,5 @@
 - Added static nameplate visual caching so unchanged static tags are not rewritten to the scoreboard every server tick.
 - Kept animated glitch frames cadence-limited by the configured effect speed.
 - Added compatibility, installation and API reference documentation.
+- Added thread-safe domain events for tag and player-assignment mutations.
+- Added a concurrent EffectRegistry with duplicate-ID validation and immutable snapshots.
