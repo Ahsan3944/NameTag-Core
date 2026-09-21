@@ -97,7 +97,7 @@
 - [x] Chat fallback integration.
 - [x] Performance safeguards.
 
-## Phase 9 — GUI
+## Phase 9 — Optional GUI
 - [ ] Tag browser.
 - [ ] Create editor.
 - [ ] Edit editor.
@@ -109,7 +109,7 @@
 - [ ] Preview.
 - [ ] Save/cancel.
 
-> GUI remains intentionally deferred from the server-only 1.21.11 baseline. A correct implementation requires a client entrypoint, client-side screens/widgets, server-authoritative mutations, and a versioned client/server networking contract. Fabric's 1.21.11 API provides client screen and networking APIs, but introducing only part of this stack would create an incomplete and unsafe feature boundary.
+> GUI is an optional future client feature, not a NameTag-Core server release gate. A correct implementation requires a client entrypoint, client-side screens/widgets, server-authoritative mutations, a versioned client/server networking contract, and client/server regression tests.
 
 ## Phase 10 — Stability
 - [x] Full unit test suite.
@@ -122,14 +122,17 @@
 - [x] Documentation audit.
 
 ## Phase 11 — v1.0 Release Preparation
-- [x] Release artifacts published by CI.
+- [x] Release artifacts uploaded by CI.
 - [x] Compatibility matrix.
 - [x] Changelog.
 - [x] Installation instructions.
 - [x] Configuration reference.
 - [x] API reference.
+- [x] Core feature scope finalized.
 - [ ] Final release-version promotion.
 - [ ] Git tag.
+
+> Web management, GUI/editor work and future Minecraft-version adapters are not v1.0 core release blockers. They are separate future implementation tracks.
 
 ## Phase 12 — Future Minecraft Versions
 For each new version:
@@ -145,15 +148,14 @@ For each new version:
 
 ## Deferred feature gates
 
-The following items remain intentionally unimplemented and are tracked as separate implementation batches. The layered/world/region batch is complete.
+These are intentionally separate from the 1.21.11 server-core baseline:
 
 - **Multiple active/layered tags:** [x] Implemented with contextual multi-tag resolution and deterministic renderer/chat composition on Paper and Fabric.
 - **Per-world tags:** [x] Implemented with world-aware resolution context and persistent tag metadata scopes.
 - **Per-region tags:** [x] Implemented as persistent metadata-defined cuboid regions, without a hard dependency on a region plugin.
-- **Web management:** requires an authenticated HTTP boundary, permission mapping, CSRF/session handling, audit integration, lifecycle management, and a server-side mutation API. A standalone web endpoint without these controls is not an acceptable implementation.
-- **GUI:** requires a client entrypoint, screens/widgets, server-authoritative mutation packets, protocol/version handling, and client/server tests.
+- **Web management:** future optional integration. It requires an authenticated HTTP boundary, permission mapping, CSRF/session handling or an equivalent non-browser credential model, audit integration, lifecycle management, and a server-side mutation API.
+- **GUI:** future optional client integration. It requires a client entrypoint, screens/widgets, server-authoritative mutation packets, protocol/version handling, and client/server tests.
 - **Future Minecraft versions:** each version requires a dedicated version adapter/mapping pass and regression run; it is not safe to bulk-change the existing 1.21.11 adapter.
-- **v1.0 Git tag:** the repository is still versioned as `0.1.0-SNAPSHOT`; creating a stable release tag before the remaining feature gates are resolved would misrepresent the release state.
 
 ## Backlog
 

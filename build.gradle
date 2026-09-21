@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'com.ultraop.nametag'
-version = '0.1.0-SNAPSHOT'
+version = project.findProperty('project_version') ?: '0.1.0-SNAPSHOT'
 
 subprojects {
     apply plugin: 'java'
