@@ -47,37 +47,52 @@ public final class Fabric2111NameplateRenderer {
         animations.clear();
     }
 
+    public void refreshPlayer(ServerPlayerEntity player) {
+        renderPlayer(player.getServer(), player, System.nanoTime());
+    }
+
+    public void clearPlayer(ServerPlayerEntity player) {
+        ServerScoreboard scoreboard = player.getServer().getScoreboard();
+        removePlayer(scoreboard, player, playerTeams.get(player.getUuid()));
+    }
+
     private void tick(MinecraftServer server) {
-        ServerScoreboard scoreboard = server.getScoreboard();
         long now = System.nanoTime();
         Set<String> activeTeamNames = new HashSet<>();
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
-            String oldTeamName = playerTeams.get(player.getUuid());
-            Tag tag = tagService.activeTag(player.getUuid()).filter(Tag::enabled).orElse(null);
-
-            if (tag == null) {
-                removePlayer(scoreboard, player, oldTeamName);
-                continue;
+            renderPlayer(server, player, now);
+            String teamName = playerTeams.get(player.getUuid());
+            if (teamName != null) {
+                activeTeamNames.add(teamName);
             }
-
-            String teamName = teamName(tag);
-            activeTeamNames.add(teamName);
-            Team team = teams.computeIfAbsent(teamName, ignored -> createTeam(scoreboard, teamName));
-
-            if (oldTeamName != null && !oldTeamName.equals(teamName)) {
-                removePlayer(scoreboard, player, oldTeamName);
-            }
-            scoreboard.addScoreHolderToTeam(player.getName().getString(), team);
-            playerTeams.put(player.getUuid(), teamName);
-
-            updateTeamVisual(team, tag, now);
         }
 
         playerTeams.entrySet().removeIf(entry ->
                 server.getPlayerManager().getPlayer(entry.getKey()) == null
         );
         animations.entrySet().removeIf(entry -> !activeTeamNames.contains(entry.getKey()));
+    }
+
+    private void renderPlayer(MinecraftServer server, ServerPlayerEntity player, long nowNanos) {
+        ServerScoreboard scoreboard = server.getScoreboard();
+        String oldTeamName = playerTeams.get(player.getUuid());
+        Tag tag = tagService.activeTag(player.getUuid()).filter(Tag::enabled).orElse(null);
+
+        if (tag == null) {
+            removePlayer(scoreboard, player, oldTeamName);
+            return;
+        }
+
+        String teamName = teamName(tag);
+        Team team = teams.computeIfAbsent(teamName, ignored -> createTeam(scoreboard, teamName));
+
+        if (oldTeamName != null && !oldTeamName.equals(teamName)) {
+            removePlayer(scoreboard, player, oldTeamName);
+        }
+        scoreboard.addScoreHolderToTeam(player.getName().getString(), team);
+        playerTeams.put(player.getUuid(), teamName);
+        updateTeamVisual(team, tag, nowNanos);
     }
 
     private void removePlayer(ServerScoreboard scoreboard, ServerPlayerEntity player, String teamName) {
