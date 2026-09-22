@@ -46,14 +46,22 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             "advanced", List.of("role", "scope"),
             "admin", List.of("reload", "export", "import")
     );
-    private static final List<String> EDIT_PROPERTIES =
-            List.of("name", "color", "gradient", "style", "priority", "enabled", "chat");
+    private static final List<String> CREATE_OPTIONS = List.of(
+            "name", "item", "color", "gradient", "style", "effect", "glitch",
+            "priority", "enabled", "chat", "item-mode", "item-speed"
+    );
+    private static final List<String> EDIT_PROPERTIES = CREATE_OPTIONS;
     private static final List<String> PRESET_COLORS = List.of(
             "black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
             "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
             "yellow", "white", "random"
     );
-    private static final List<String> STYLE_VALUES = List.of("plain", "bold", "italic", "bold_italic");
+    private static final List<String> STYLE_VALUES = List.of(
+            "plain", "bold", "italic", "underlined", "strikethrough", "obfuscated",
+            "bold_italic", "bold_underlined", "italic_underlined"
+    );
+    private static final List<String> EFFECT_VALUES = List.of("none", "rainbow", "pulse", "wave");
+    private static final List<String> GLITCH_VALUES = List.of("none", "white", "colorful");
 
     private final TagService tagService;
     private final PlayerResolver playerResolver;
@@ -202,15 +210,9 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             return tagNames(args[1]);
         }
 
-        if (args.length == 2 && "create".equals(subcommand)) {
-            return List.of("name", "item").stream()
-                    .filter(value -> value.startsWith(args[1].toLowerCase(Locale.ROOT)))
-                    .toList();
-        }
-
-        if (args.length >= 3 && "create".equals(subcommand)) {
+        if (args.length >= 2 && "create".equals(subcommand)) {
             String last = args[args.length - 1].toLowerCase(Locale.ROOT);
-            String previous = args[args.length - 2].toLowerCase(Locale.ROOT);
+            String previous = args.length >= 2 ? args[args.length - 2].toLowerCase(Locale.ROOT) : "";
             if ("item".equals(previous)) {
                 return context.source().itemNames().stream()
                         .map(DefaultNameTagCommandHandler::normalizeItemId)
@@ -218,15 +220,16 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                         .sorted()
                         .toList();
             }
-            if ("name".equals(previous)) {
-                return List.of();
-            }
-            if ("item".equals(last) || "name".equals(last)) {
-                return List.of(last);
-            }
-            return List.of("name", "item").stream()
-                    .filter(value -> value.startsWith(last))
-                    .toList();
+            if ("color".equals(previous)) return PRESET_COLORS.stream().filter(value -> value.startsWith(last)).toList();
+            if ("style".equals(previous)) return STYLE_VALUES.stream().filter(value -> value.startsWith(last)).toList();
+            if ("effect".equals(previous)) return EFFECT_VALUES.stream().filter(value -> value.startsWith(last)).toList();
+            if ("glitch".equals(previous)) return GLITCH_VALUES.stream().filter(value -> value.startsWith(last)).toList();
+            if ("item-mode".equals(previous)) return ITEM_MODES.stream().filter(value -> value.startsWith(last)).toList();
+            if ("item-speed".equals(previous)) return ITEM_SPEEDS.stream().filter(value -> value.startsWith(last)).toList();
+            if ("priority".equals(previous)) return List.of("0", "10", "25", "50", "100", "1000").stream().filter(value -> value.startsWith(last)).toList();
+            if ("enabled".equals(previous) || "chat".equals(previous)) return List.of("true", "false").stream().filter(value -> value.startsWith(last)).toList();
+            if ("name".equals(previous)) return List.of();
+            return CREATE_OPTIONS.stream().filter(value -> value.startsWith(last)).toList();
         }
 
         if (args.length == 2 && List.of("give", "set", "remove", "clear").contains(subcommand)) {
@@ -272,6 +275,16 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             }
             if ("enabled".equals(property) || "chat".equals(property)) {
                 return List.of("true", "false").stream().filter(value -> value.startsWith(prefix)).toList();
+            }
+            if ("effect".equals(property)) return EFFECT_VALUES.stream().filter(value -> value.startsWith(prefix)).toList();
+            if ("glitch".equals(property)) return GLITCH_VALUES.stream().filter(value -> value.startsWith(prefix)).toList();
+            if ("item-mode".equals(property)) return ITEM_MODES.stream().filter(value -> value.startsWith(prefix)).toList();
+            if ("item-speed".equals(property)) return ITEM_SPEEDS.stream().filter(value -> value.startsWith(prefix)).toList();
+            if ("item".equals(property)) {
+                List<String> values = new java.util.ArrayList<>();
+                values.add("clear");
+                values.addAll(context.source().itemNames().stream().map(DefaultNameTagCommandHandler::normalizeItemId).sorted().toList());
+                return values.stream().filter(value -> value.startsWith(prefix)).toList();
             }
         }
 
@@ -371,12 +384,12 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         Tag tag = new Tag(
                 id,
                 options.displayName(),
-                new TagColor.Preset("white"),
-                TagStyle.plain(),
-                TagEffect.none(),
-                configuration.current().defaultTagPriority(),
-                configuration.current().defaultTagEnabled(),
-                configuration.current().defaultTagChatEnabled(),
+                options.color(),
+                options.style(),
+                options.effect(),
+                options.priority(),
+                options.enabled(),
+                options.chatEnabled(),
                 options.metadata()
         );
         tagService.create(tag);
@@ -384,167 +397,162 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     }
 
     private CreateTagOptions parseCreateTagOptions(CommandSource source, String[] args) {
-        // Backward-compatible form:
-        // Backward-compatible /nametag tag create <tag> <displayName>
-        if (!"name".equalsIgnoreCase(args[2]) && !"item".equalsIgnoreCase(args[2])) {
-            String displayName = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-            if ("none".equalsIgnoreCase(displayName) || "clear".equalsIgnoreCase(displayName)) {
-                displayName = "";
-            }
-            return new CreateTagOptions(displayName, Map.of());
+        if (args.length >= 3 && !isCreateOption(args[2])) {
+            String displayName = String.join(" ", Arrays.copyOfRange(args, 2, args.length)).trim();
+            if ("none".equalsIgnoreCase(displayName) || "clear".equalsIgnoreCase(displayName)) displayName = "";
+            return new CreateTagOptions(displayName, new TagColor.Preset("white"), TagStyle.plain(), TagEffect.none(),
+                    configuration.current().defaultTagPriority(), configuration.current().defaultTagEnabled(),
+                    configuration.current().defaultTagChatEnabled(), Map.of());
         }
 
         String displayName = "";
-        Map<String, String> metadata = new java.util.LinkedHashMap<>();
-        int index = 2;
-        while (index < args.length) {
-            String option = args[index].toLowerCase(Locale.ROOT);
-            if ("name".equals(option)) {
-                index++;
-                int valueStart = index;
-                while (index < args.length && !"name".equalsIgnoreCase(args[index]) && !"item".equalsIgnoreCase(args[index])) {
-                    index++;
-                }
-                if (valueStart == index) {
-                    throw new IllegalArgumentException("Usage: /nametag tag create <tag> name <displayName> [item <item>]");
-                }
-                displayName = String.join(" ", Arrays.copyOfRange(args, valueStart, index)).trim();
-                if ("none".equalsIgnoreCase(displayName) || "clear".equalsIgnoreCase(displayName)) {
-                    displayName = "";
-                }
-                continue;
-            }
-            if ("item".equals(option)) {
-                if (index + 1 >= args.length || "name".equalsIgnoreCase(args[index + 1]) || "item".equalsIgnoreCase(args[index + 1])) {
-                    throw new IllegalArgumentException("Usage: /nametag tag create <tag> item <item> [name <displayName>]");
-                }
-                String item = normalizeItemId(args[index + 1]);
-                if (!contextItemNames(source).contains(item)) {
-                    throw new IllegalArgumentException("Unknown Minecraft item: " + item);
-                }
-                metadata.put(TagItemSettings.ITEM_KEY, item);
-                metadata.put(TagItemSettings.MODE_KEY, "static");
-                metadata.put(TagItemSettings.SPEED_KEY, "5");
-                index += 2;
-                continue;
-            }
-            throw new IllegalArgumentException("Unknown create option: " + args[index] + ". Use name or item.");
-        }
+        TagColor color = new TagColor.Preset("white");
+        TagStyle style = TagStyle.plain();
+        TagEffect effect = TagEffect.none();
+        int priority = configuration.current().defaultTagPriority();
+        boolean enabled = configuration.current().defaultTagEnabled();
+        boolean chatEnabled = configuration.current().defaultTagChatEnabled();
+        Map<String,String> metadata = new java.util.LinkedHashMap<>();
 
-        if (displayName.isBlank() && !metadata.containsKey(TagItemSettings.ITEM_KEY)) {
-            throw new IllegalArgumentException("A NameTag needs a name or an item. Use: /nametag tag create <tag> name <displayName> or item <item>");
+        int index=2;
+        while(index<args.length){
+            String option=args[index].toLowerCase(Locale.ROOT);
+            switch(option){
+                case "name" -> {
+                    index++;
+                    int start=index;
+                    while(index<args.length && !isCreateOption(args[index])) index++;
+                    if(start==index) throw new IllegalArgumentException("Missing value for create option: name");
+                    displayName=String.join(" ",Arrays.copyOfRange(args,start,index)).trim();
+                    if("none".equalsIgnoreCase(displayName)||"clear".equalsIgnoreCase(displayName)) displayName="";
+                }
+                case "item" -> {
+                    if(index+1>=args.length || isCreateOption(args[index+1])) throw new IllegalArgumentException("Missing value for create option: item");
+                    String item=normalizeItemId(args[index+1]);
+                    if(!contextItemNames(source).contains(item)) throw new IllegalArgumentException("Unknown Minecraft item: "+item);
+                    metadata.put(TagItemSettings.ITEM_KEY,item);
+                    metadata.putIfAbsent(TagItemSettings.MODE_KEY,"static");
+                    metadata.putIfAbsent(TagItemSettings.SPEED_KEY,"5");
+                    index+=2;
+                }
+                case "color" -> { requireValue(args,index,option); color=parseColor(args[index+1]); index+=2; }
+                case "gradient" -> {
+                    if(index+2>=args.length) throw new IllegalArgumentException("Usage: gradient <startHex> <endHex>");
+                    color=new TagColor.Gradient(parseRgb(args[index+1]),parseRgb(args[index+2])); index+=3;
+                }
+                case "style" -> { requireValue(args,index,option); style=parseStyle(args[index+1]); index+=2; }
+                case "effect" -> { requireValue(args,index,option); effect=parseEffect(args[index+1]); index+=2; }
+                case "glitch" -> {
+                    requireValue(args,index,option);
+                    String value=args[index+1].toLowerCase(Locale.ROOT);
+                    if("none".equals(value)){ if(effect.isGlitch()) effect=TagEffect.none(); }
+                    else effect=TagEffect.glitch(GlitchMode.from(value));
+                    index+=2;
+                }
+                case "priority" -> { requireValue(args,index,option); priority=parsePriority(args[index+1]); index+=2; }
+                case "enabled" -> { requireValue(args,index,option); enabled=parseBoolean(args[index+1],option); index+=2; }
+                case "chat" -> { requireValue(args,index,option); chatEnabled=parseBoolean(args[index+1],option); index+=2; }
+                case "item-mode" -> {
+                    requireValue(args,index,option);
+                    String mode=args[index+1].toLowerCase(Locale.ROOT);
+                    if(!ITEM_MODES.contains(mode)) throw new IllegalArgumentException("Invalid item mode: "+mode);
+                    if(!metadata.containsKey(TagItemSettings.ITEM_KEY)) throw new IllegalArgumentException("Set item before item-mode.");
+                    metadata.put(TagItemSettings.MODE_KEY,mode); index+=2;
+                }
+                case "item-speed" -> {
+                    requireValue(args,index,option);
+                    int speed=parseItemSpeed(args[index+1]);
+                    if(!metadata.containsKey(TagItemSettings.ITEM_KEY)) throw new IllegalArgumentException("Set item before item-speed.");
+                    metadata.put(TagItemSettings.SPEED_KEY,Integer.toString(speed)); index+=2;
+                }
+                default -> throw new IllegalArgumentException("Unknown create option: "+args[index]);
+            }
         }
-        return new CreateTagOptions(displayName, Map.copyOf(metadata));
+        if(displayName.isBlank() && !metadata.containsKey(TagItemSettings.ITEM_KEY))
+            throw new IllegalArgumentException("A NameTag needs a name or an item. Use name <displayName> or item <item>.");
+        return new CreateTagOptions(displayName,color,style,effect,priority,enabled,chatEnabled,Map.copyOf(metadata));
     }
 
-    private record CreateTagOptions(String displayName, Map<String, String> metadata) {}
+    private static boolean isCreateOption(String value) {
+        return CREATE_OPTIONS.contains(value.toLowerCase(Locale.ROOT));
+    }
+
+    private static void requireValue(String[] args,int index,String option) {
+        if(index+1>=args.length || isCreateOption(args[index+1]))
+            throw new IllegalArgumentException("Missing value for create option: "+option);
+    }
+
+    private record CreateTagOptions(
+            String displayName, TagColor color, TagStyle style, TagEffect effect,
+            int priority, boolean enabled, boolean chatEnabled, Map<String,String> metadata
+    ) {}
 
     private void edit(CommandSource source, String[] args) {
-        if (args.length < 4) {
-            throw new IllegalArgumentException(
-                    "Usage: /nametag tag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value> (name may be none)"
-            );
-        }
-
-        TagId id = new TagId(args[1].toLowerCase(Locale.ROOT));
-        Tag current = tagService.find(id).orElseThrow(() ->
-                new IllegalArgumentException(messages.format("error.tag.not_found", Map.of("tag", id.value()))));
-
-        String property = args[2].toLowerCase(Locale.ROOT);
-        String value = String.join(" ", Arrays.copyOfRange(args, 3, args.length)).trim();
+        if(args.length<4) throw new IllegalArgumentException("Usage: /nametag tag edit <tag> <property> <value>");
+        TagId id=new TagId(args[1].toLowerCase(Locale.ROOT));
+        Tag current=tagService.find(id).orElseThrow(() -> new IllegalArgumentException(
+                messages.format("error.tag.not_found",Map.of("tag",id.value()))));
+        String property=args[2].toLowerCase(Locale.ROOT);
+        String value=String.join(" ",Arrays.copyOfRange(args,3,args.length)).trim();
+        String first=args[3];
         Tag updated;
-
-        switch (property) {
+        switch(property){
             case "name" -> {
-                if ("none".equalsIgnoreCase(value) || "clear".equalsIgnoreCase(value)) {
-                    value = "";
+                if("none".equalsIgnoreCase(value)||"clear".equalsIgnoreCase(value)) value="";
+                updated=copyTag(current,value,current.color(),current.style(),current.effect(),current.priority(),current.enabled(),current.chatEnabled(),current.metadata());
+            }
+            case "item" -> {
+                Map<String,String> metadata=new java.util.LinkedHashMap<>(current.metadata());
+                if("clear".equalsIgnoreCase(first)||"none".equalsIgnoreCase(first)){
+                    metadata.remove(TagItemSettings.ITEM_KEY); metadata.remove(TagItemSettings.MODE_KEY); metadata.remove(TagItemSettings.SPEED_KEY);
+                } else {
+                    String item=normalizeItemId(first);
+                    if(!contextItemNames(source).contains(item)) throw new IllegalArgumentException("Unknown Minecraft item: "+item);
+                    metadata.put(TagItemSettings.ITEM_KEY,item); metadata.putIfAbsent(TagItemSettings.MODE_KEY,"static"); metadata.putIfAbsent(TagItemSettings.SPEED_KEY,"5");
                 }
-                updated = copyTag(current, value, current.color(), current.style(), current.priority(), current.enabled(), current.chatEnabled());
+                updated=copyTag(current,current.displayName(),current.color(),current.style(),current.effect(),current.priority(),current.enabled(),current.chatEnabled(),metadata);
             }
-            case "color" -> {
-                TagColor color = parseColor(value);
-                updated = copyTag(current, current.displayName(), color, current.style(), current.priority(), current.enabled(), current.chatEnabled());
-            }
+            case "color" -> updated=copyTag(current,current.displayName(),parseColor(value),current.style(),current.effect(),current.priority(),current.enabled(),current.chatEnabled(),current.metadata());
             case "gradient" -> {
-                String[] colors = value.split("\\s+");
-                if (colors.length != 2) {
-                    throw new IllegalArgumentException("Usage: /nametag edit <tag> gradient <startHex> <endHex>");
-                }
-                updated = copyTag(
-                        current,
-                        current.displayName(),
-                        new TagColor.Gradient(parseRgb(colors[0]), parseRgb(colors[1])),
-                        current.style(),
-                        current.priority(),
-                        current.enabled(),
-                        current.chatEnabled()
-                );
+                String[] colors=value.split("\\s+");
+                if(colors.length!=2) throw new IllegalArgumentException("Usage: /nametag tag edit <tag> gradient <startHex> <endHex>");
+                updated=copyTag(current,current.displayName(),new TagColor.Gradient(parseRgb(colors[0]),parseRgb(colors[1])),current.style(),current.effect(),current.priority(),current.enabled(),current.chatEnabled(),current.metadata());
             }
-            case "style" -> updated = copyTag(
-                    current,
-                    current.displayName(),
-                    current.color(),
-                    parseStyle(value),
-                    current.priority(),
-                    current.enabled(),
-                    current.chatEnabled()
-            );
-            case "priority" -> updated = copyTag(
-                    current,
-                    current.displayName(),
-                    current.color(),
-                    current.style(),
-                    parsePriority(value),
-                    current.enabled(),
-                    current.chatEnabled()
-            );
-            case "enabled" -> updated = copyTag(
-                    current,
-                    current.displayName(),
-                    current.color(),
-                    current.style(),
-                    current.priority(),
-                    parseBoolean(value, "enabled"),
-                    current.chatEnabled()
-            );
-            case "chat" -> updated = copyTag(
-                    current,
-                    current.displayName(),
-                    current.color(),
-                    current.style(),
-                    current.priority(),
-                    current.enabled(),
-                    parseBoolean(value, "chat")
-            );
-            default -> throw new IllegalArgumentException(
-                    "Unknown edit property: " + property + ". Use name, color, gradient, style, priority, enabled or chat."
-            );
+            case "style" -> updated=copyTag(current,current.displayName(),current.color(),parseStyle(value),current.effect(),current.priority(),current.enabled(),current.chatEnabled(),current.metadata());
+            case "effect" -> updated=copyTag(current,current.displayName(),current.color(),current.style(),parseEffect(first),current.priority(),current.enabled(),current.chatEnabled(),current.metadata());
+            case "glitch" -> {
+                TagEffect effect="none".equalsIgnoreCase(first) ? (current.effect().isGlitch()?TagEffect.none():current.effect()) : TagEffect.glitch(GlitchMode.from(first));
+                updated=copyTag(current,current.displayName(),current.color(),current.style(),effect,current.priority(),current.enabled(),current.chatEnabled(),current.metadata());
+            }
+            case "priority" -> updated=copyTag(current,current.displayName(),current.color(),current.style(),current.effect(),parsePriority(first),current.enabled(),current.chatEnabled(),current.metadata());
+            case "enabled" -> updated=copyTag(current,current.displayName(),current.color(),current.style(),current.effect(),current.priority(),parseBoolean(first,"enabled"),current.chatEnabled(),current.metadata());
+            case "chat" -> updated=copyTag(current,current.displayName(),current.color(),current.style(),current.effect(),current.priority(),current.enabled(),parseBoolean(first,"chat"),current.metadata());
+            case "item-mode" -> {
+                String mode=first.toLowerCase(Locale.ROOT);
+                if(!ITEM_MODES.contains(mode)) throw new IllegalArgumentException("Invalid item mode: "+mode);
+                Map<String,String> metadata=new java.util.LinkedHashMap<>(current.metadata());
+                if(!metadata.containsKey(TagItemSettings.ITEM_KEY)) throw new IllegalArgumentException("Set an item first.");
+                metadata.put(TagItemSettings.MODE_KEY,mode);
+                updated=copyTag(current,current.displayName(),current.color(),current.style(),current.effect(),current.priority(),current.enabled(),current.chatEnabled(),metadata);
+            }
+            case "item-speed" -> {
+                int speed=parseItemSpeed(first);
+                Map<String,String> metadata=new java.util.LinkedHashMap<>(current.metadata());
+                if(!metadata.containsKey(TagItemSettings.ITEM_KEY)) throw new IllegalArgumentException("Set an item first.");
+                metadata.put(TagItemSettings.SPEED_KEY,Integer.toString(speed));
+                updated=copyTag(current,current.displayName(),current.color(),current.style(),current.effect(),current.priority(),current.enabled(),current.chatEnabled(),metadata);
+            }
+            default -> throw new IllegalArgumentException("Unknown edit property: "+property);
         }
-
         tagService.update(updated);
-        source.sendMessage("Updated NameTag: " + updated.id().value() + " (" + property + ").");
+        source.sendMessage("Updated NameTag: "+updated.id().value()+" ("+property+").");
     }
 
     private static Tag copyTag(
-            Tag current,
-            String displayName,
-            TagColor color,
-            TagStyle style,
-            int priority,
-            boolean enabled,
-            boolean chatEnabled
+            Tag current, String displayName, TagColor color, TagStyle style, TagEffect effect,
+            int priority, boolean enabled, boolean chatEnabled, Map<String,String> metadata
     ) {
-        return new Tag(
-                current.id(),
-                displayName,
-                color,
-                style,
-                current.effect(),
-                priority,
-                enabled,
-                chatEnabled,
-                current.metadata()
-        );
+        return new Tag(current.id(),displayName,color,style,effect,priority,enabled,chatEnabled,metadata);
     }
 
     private static TagColor parseColor(String value) {
@@ -571,14 +579,29 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     }
 
     private static TagStyle parseStyle(String value) {
-        return switch (value.toLowerCase(Locale.ROOT)) {
-            case "plain", "normal", "none" -> TagStyle.plain();
-            case "bold" -> new TagStyle(true, false, false, false, false);
-            case "italic" -> new TagStyle(false, true, false, false, false);
-            case "bold_italic", "bold-italic" -> new TagStyle(true, true, false, false, false);
-            default -> throw new IllegalArgumentException(
-                    "Invalid style: " + value + ". Use plain, bold, italic or bold_italic."
-            );
+        String normalized=value.toLowerCase(Locale.ROOT).replace('-','_').replace('+','_');
+        if("plain".equals(normalized)||"normal".equals(normalized)||"none".equals(normalized)) return TagStyle.plain();
+        boolean bold=false,italic=false,underlined=false,strikethrough=false,obfuscated=false;
+        for(String part:normalized.split("_")){
+            switch(part){
+                case "bold" -> bold=true;
+                case "italic" -> italic=true;
+                case "underlined","underline" -> underlined=true;
+                case "strikethrough","strike" -> strikethrough=true;
+                case "obfuscated","obfuscate" -> obfuscated=true;
+                default -> throw new IllegalArgumentException("Invalid style: "+value+". Use plain or combine bold, italic, underlined, strikethrough and obfuscated with '+'.");
+            }
+        }
+        return new TagStyle(bold,italic,underlined,strikethrough,obfuscated);
+    }
+
+    private static TagEffect parseEffect(String value) {
+        return switch(value.toLowerCase(Locale.ROOT)){
+            case "none" -> TagEffect.none();
+            case "rainbow" -> TagEffect.rainbow();
+            case "pulse" -> TagEffect.pulse();
+            case "wave" -> TagEffect.wave();
+            default -> throw new IllegalArgumentException("Invalid effect: "+value+". Use none, rainbow, pulse or wave.");
         };
     }
 
@@ -758,7 +781,12 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         }
         String topic = args[1].toLowerCase(Locale.ROOT);
         switch (topic) {
-            case "tag" -> { source.sendMessage("/nametag tag create <tag> name <displayName> [item <item>]"); source.sendMessage("/nametag tag create <tag> item <item> [name <displayName>]"); source.sendMessage("/nametag tag edit <tag> name|color|gradient|style|priority|enabled|chat <value>"); source.sendMessage("/nametag tag list"); source.sendMessage("/nametag tag delete <tag>"); }
+            case "tag" -> {
+                source.sendMessage("/nametag tag create <tag> [name <displayName>] [item <item>] [color <color>] [gradient <startHex> <endHex>] [style <style>] [effect <effect>] [glitch <white|colorful>] [priority <number>] [enabled <true|false>] [chat <true|false>] [item-mode <static|rotate>] [item-speed <1-10>]");
+                source.sendMessage("/nametag tag edit <tag> <name|item|color|gradient|style|effect|glitch|priority|enabled|chat|item-mode|item-speed> <value>");
+                source.sendMessage("/nametag tag list");
+                source.sendMessage("/nametag tag delete <tag>");
+            }
             case "player" -> { source.sendMessage("/nametag player give <player> <tag> [duration]"); source.sendMessage("/nametag player set <player> <tag>"); source.sendMessage("/nametag player remove <player>"); source.sendMessage("/nametag player clear <player>"); source.sendMessage("Duration units: s, m, h, d, w; maximum 365d."); }
             case "display" -> { source.sendMessage("/nametag display glitch <tag> <white|colorful>"); source.sendMessage("/nametag display effect <tag> <none|rainbow|pulse|wave>"); source.sendMessage("/nametag display item <tag> set <item>"); source.sendMessage("/nametag display item <tag> mode <static|rotate>"); source.sendMessage("/nametag display item <tag> speed <1-10>"); source.sendMessage("/nametag display item <tag> clear"); source.sendMessage("Chat order: item icon, tag/rank (if present), player name, message."); source.sendMessage("Use /nametag tag edit <tag> name none for icon-only."); }
             case "advanced" -> { source.sendMessage("/nametag advanced role <tag> <permission|clear>"); source.sendMessage("/nametag advanced scope <tag> clear"); source.sendMessage("/nametag advanced scope <tag> world <world>"); source.sendMessage("/nametag advanced scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>"); }
