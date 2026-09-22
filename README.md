@@ -67,7 +67,7 @@ Supported nodes include:
 - `nametag.create`
 - `nametag.edit`
 - `nametag.delete`
-- `nametag.give`
+- `nametag.set`
 - `nametag.remove`
 - `nametag.reload`
 - `nametag.admin`
@@ -94,7 +94,7 @@ The current command namespace is:
 Commands are grouped into focused namespaces so the first tab-completion level stays small and predictable:
 
 - `/nametag tag ...` — create, edit, list and delete tags.
-- `/nametag player ...` — give, set, remove and clear player assignments.
+- `/nametag player ...` — set, remove and clear player assignments.
 - `/nametag display ...` — glitch, visual effects and item-based name icons.
 - `/nametag advanced ...` — role mappings and scopes.
 - `/nametag admin ...` — reload and import/export.
@@ -103,12 +103,11 @@ Commands are grouped into focused namespaces so the first tab-completion level s
 
 Implemented commands:
 
-- `/nametag tag create <tag> <group> ...`
-  - `name <displayName>`
-  - `item <item> [mode <static|rotate>] [speed <1-10>]`
-  - `appearance color|gradient|style|effect|glitch ...`
-  - `behavior priority|enabled|chat ...`
-  - The create tree is grouped intentionally so TAB first shows groups, then their sub-options and finally the valid values/item IDs.
+`/nametag tag create <tag> <name|item|name+item>`
+  - `name <displayName>` → style → color → normal|glitch → effect value.
+  - `item <item>` → spin <true|false> → speed when spin is true.
+  - `name+item <item> <displayName>` → style → color → normal|glitch → effect value.
+  - TAB is sequential: each stage exposes only the next valid choices and item IDs are registry-backed/validated.
   - Legacy `/nametag tag create <tag> <displayName>` remains supported.
 - `/nametag tag edit <tag> name <displayName|none>`
 - `/nametag tag edit <tag> color <preset|random|#RRGGBB>`
@@ -119,12 +118,12 @@ Implemented commands:
 - `/nametag tag edit <tag> chat <true|false>`
 - `/nametag tag list`
 - `/nametag tag delete <tag>`
-- `/nametag player give <player> <tag> [duration]` — adds/grants a tag; with no active tag it becomes active automatically.
-- `/nametag player set <player> <tag>` — makes the tag active and now also assigns it when it is not already assigned.
+- `/nametag player set <player> <tag> [duration]` — directly assigns and activates the tag.
+- `/nametag player give` has been removed to keep one unambiguous assignment command.
 - `/nametag player remove <player>`
 - `/nametag player clear <player>`
 - `/nametag display glitch <tag> <white|colorful>`
-- `/nametag display effect <tag> <none|rainbow|pulse|wave>`
+- `/nametag display effect <tag> <none|rainbow|pulse|wave|neon|breath|blink|rgb>`
 - `/nametag display item <tag> set <item>`
 - `/nametag display item <tag> mode <static|rotate>`
 - `/nametag display item <tag> speed <1-10>`

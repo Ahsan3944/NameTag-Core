@@ -19,6 +19,10 @@ public final class AnimatedEffectEngine {
                 case TagEffect.RAINBOW_ID -> rainbowColor(index, length, frameIndex, settings.intensity());
                 case TagEffect.PULSE_ID -> pulseColor(safeBase(baseColorResolver.apply(index)), frameIndex, settings.intensity());
                 case TagEffect.WAVE_ID -> waveColor(safeBase(baseColorResolver.apply(index)), index, frameIndex, settings.intensity());
+                case TagEffect.NEON_ID -> neonColor(safeBase(baseColorResolver.apply(index)), index, frameIndex, settings.intensity());
+                case TagEffect.BREATH_ID -> breathColor(safeBase(baseColorResolver.apply(index)), frameIndex, settings.intensity());
+                case TagEffect.BLINK_ID -> blinkColor(safeBase(baseColorResolver.apply(index)), frameIndex, settings.intensity());
+                case TagEffect.RGB_ID -> rgbColor(index, length, frameIndex, settings.intensity());
                 default -> throw new IllegalArgumentException("Unsupported animated effect: " + settings.effectId());
             };
             rendered.append(character);
@@ -39,6 +43,23 @@ public final class AnimatedEffectEngine {
         double amplitude = 0.75 * intensity / 100.0;
         double phase = frameIndex * 0.35 - index * 0.80;
         return scaleRgb(base, 1.0 - amplitude * (0.5 + 0.5 * Math.sin(phase)));
+    }
+    private static int neonColor(int base, int index, long frameIndex, int intensity) {
+        double pulse = 0.55 + 0.45 * Math.sin(frameIndex * 0.24 - index * 0.35);
+        return blendRgb(base, 0xFFFFFF, (intensity / 100.0) * pulse * 0.75);
+    }
+    private static int breathColor(int base, long frameIndex, int intensity) {
+        double pulse = 0.5 + 0.5 * Math.sin(frameIndex * 0.08);
+        return scaleRgb(base, 0.55 + (0.45 * (1.0 - intensity / 100.0) + 0.45 * intensity / 100.0 * pulse));
+    }
+    private static int blinkColor(int base, long frameIndex, int intensity) {
+        boolean visible = (frameIndex % 20) < Math.max(1, Math.round(20.0 * (1.0 - intensity / 100.0 * 0.8)));
+        return visible ? base : scaleRgb(base, 0.05);
+    }
+    private static int rgbColor(int index, int length, long frameIndex, int intensity) {
+        double position = length <= 1 ? 0.0 : (double) index / (length - 1);
+        double hue = (frameIndex * 0.08 + position * 0.45) % 1.0;
+        return blendRgb(0xFFFFFF, hsvToRgb(hue, 1.0, 1.0), intensity / 100.0);
     }
     private static int blendRgb(int from, int to, double amount) {
         int r=(int)Math.round(((from>>>16)&255)+(((to>>>16)&255)-((from>>>16)&255))*amount);

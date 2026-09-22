@@ -111,10 +111,12 @@
 - [x] Icon-only tag support.
 - [x] Direct tag creation with name/item options and item autocomplete.
 - [x] Consolidated `/nametag info` command; standalone `/nametag version` removed.
-- [x] Direct create-time configuration for item, color, gradient, style, effect, glitch, priority, enabled, chat and item animation settings.
-- [x] Grouped create/edit command tree: primary group -> sub-option -> final value/item registry.
+- [x] Guided create-time wizard: name, item or name+item; sequential style/color/effect choices; item spin true/false with speed only when enabled.
+- [x] Guided create wizard: `name`, `item`, `name+item` top-level branches.
+- [x] Sequential style → color → effect → normal/glitch → effect-mode suggestions.
+- [x] Registry-backed item autocomplete with identifier validation and spin/speed selection.
 - [x] Registry-backed item autocomplete at create-time, including icon-only tags.
-- [x] `/nametag player set` can activate and assign an unassigned tag; `give` remains the additive/grant operation.
+- [x] `/nametag player set` is the single direct assignment/activation command; `give` removed.
 - [x] Item-first chat composition with exact-once player-name rendering.
 ## Phase 10 — Stability
 - [x] Full unit test suite.

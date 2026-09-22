@@ -40,7 +40,7 @@ class NameTagPaperPluginIntegrationTest {
 
         assertTrue(server.dispatchCommand(
                 server.getConsoleSender(),
-                "nametag give UltraOP owner"
+                "nametag player set UltraOP owner"
         ));
 
         server.getScheduler().performTicks(1);
@@ -64,7 +64,7 @@ class NameTagPaperPluginIntegrationTest {
 
         assertTrue(server.dispatchCommand(
                 server.getConsoleSender(),
-                "nametag give UltraOP owner"
+                "nametag player set UltraOP owner"
         ));
 
         server.getScheduler().performTicks(1);
