@@ -155,17 +155,68 @@ public final class NameTagFabric {
                                             StringArgumentType.getString(context, "tag"),
                                             StringArgumentType.getString(context, "permission")
                                     })))));
-            advanced.then(CommandManager.literal("scope")
+            var scope = CommandManager.literal("scope")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
                             .suggests((context, builder) -> suggestTags(context, builder, service, permissions, configuration, "scope"))
-                            .then(CommandManager.argument("settings", StringArgumentType.greedyString())
-                                    .suggests((context, builder) -> CommandSource.suggestMatching(
-                                            List.of("clear", "world", "region"), builder))
+                            .then(CommandManager.literal("clear")
                                     .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
                                             "advanced", "scope",
                                             StringArgumentType.getString(context, "tag"),
-                                            StringArgumentType.getString(context, "settings")
-                                    })))));
+                                            "clear"
+                                    })))
+                            .then(CommandManager.literal("world")
+                                    .then(CommandManager.argument("world", StringArgumentType.word())
+                                            .suggests((context, builder) -> CommandSource.suggestMatching(
+                                                    context.getSource().getWorldKeys().stream()
+                                                            .map(key -> key.getValue().toString())
+                                                            .toList(),
+                                                    builder))
+                                            .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
+                                                    "advanced", "scope",
+                                                    StringArgumentType.getString(context, "tag"),
+                                                    "world",
+                                                    StringArgumentType.getString(context, "world")
+                                            }))))
+                            .then(CommandManager.literal("region")
+                                    .then(CommandManager.argument("name", StringArgumentType.word())
+                                            .then(CommandManager.argument("world", StringArgumentType.word())
+                                                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                                                            context.getSource().getWorldKeys().stream()
+                                                                    .map(key -> key.getValue().toString())
+                                                                    .toList(),
+                                                            builder))
+                                                    .then(CommandManager.argument("minX", StringArgumentType.word())
+                                                            .suggests((context, builder) -> CommandSource.suggestMatching(
+                                                                    List.of("0", "-100", "100"), builder))
+                                                            .then(CommandManager.argument("minY", StringArgumentType.word())
+                                                                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                                                                            List.of("0", "60", "-60"), builder))
+                                                                    .then(CommandManager.argument("minZ", StringArgumentType.word())
+                                                                            .suggests((context, builder) -> CommandSource.suggestMatching(
+                                                                                    List.of("0", "-100", "100"), builder))
+                                                                            .then(CommandManager.argument("maxX", StringArgumentType.word())
+                                                                                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                                                                                            List.of("0", "100", "1000"), builder))
+                                                                                    .then(CommandManager.argument("maxY", StringArgumentType.word())
+                                                                                            .suggests((context, builder) -> CommandSource.suggestMatching(
+                                                                                                    List.of("60", "100", "320"), builder))
+                                                                                            .then(CommandManager.argument("maxZ", StringArgumentType.word())
+                                                                                                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                                                                                                            List.of("0", "100", "1000"), builder))
+                                                                                                    .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
+                                                                                                            "advanced", "scope",
+                                                                                                            StringArgumentType.getString(context, "tag"),
+                                                                                                            "region",
+                                                                                                            StringArgumentType.getString(context, "name"),
+                                                                                                            StringArgumentType.getString(context, "world"),
+                                                                                                            StringArgumentType.getString(context, "minX"),
+                                                                                                            StringArgumentType.getString(context, "minY"),
+                                                                                                            StringArgumentType.getString(context, "minZ"),
+                                                                                                            StringArgumentType.getString(context, "maxX"),
+                                                                                                            StringArgumentType.getString(context, "maxY"),
+                                                                                                            StringArgumentType.getString(context, "maxZ")
+                                                                                                    }))))))))));
+            advanced.then(scope);
             root.then(advanced);
 
             var admin = CommandManager.literal("admin");
