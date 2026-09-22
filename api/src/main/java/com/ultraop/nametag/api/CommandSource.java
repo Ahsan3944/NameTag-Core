@@ -17,4 +17,8 @@ public interface CommandSource {
     default Collection<String> worldNames() {
         return List.of();
     }
+
+    default Collection<String> itemNames() {
+        return List.of();
+    }
 }
