@@ -13,7 +13,7 @@
 - Added item-first chat composition for Fabric and Paper 1.21.11 using native Minecraft atlas sprite object components.
 - Added independent text/icon modes: text-only, icon-only, and icon + rank.
 - Added `{item}` chat placeholder with automatic insertion for legacy formats that omit it.
-- Fixed Fabric content-phase chat decoration so the player name is rendered exactly once.
+- Reworked Fabric tagged chat rendering so the player name is rendered exactly once in the final composed line.
 - Added regression coverage for duplicate player names, item-before-rank ordering, icon-only tags, legacy placeholder injection and Paper sprite identity.
 - Synchronized the master blueprint, README, chat documentation and roadmap with the grouped v0.2 command surface.
 - Completed common tab-completion for tag arguments of the effect and automatic-role commands, with regression coverage.
