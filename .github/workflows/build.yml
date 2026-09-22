@@ -71,8 +71,20 @@ jobs:
           unzip -p "$fabric_jar" fabric.mod.json > dist/fabric/fabric.mod.json
           grep -q '"id": "nametag-core"' dist/fabric/fabric.mod.json
           grep -q '"minecraft": "~1.21.11"' dist/fabric/fabric.mod.json
-          unzip -l "$fabric_jar" | grep -q 'com/ultraop/nametag/fabric/NameTagFabricEntrypoint.class'
-          unzip -l "$fabric_jar" | grep -q 'org/yaml/snakeyaml/constructor/BaseConstructor.class'
+
+          # Materialize the archive entry list once so validation remains
+          # safe under "set -o pipefail".
+          unzip -Z1 "$fabric_jar" > /tmp/fabric-entries.txt
+          grep -q 'com/ultraop/nametag/fabric/NameTagFabricEntrypoint.class' /tmp/fabric-entries.txt
+
+          # Loom packages external libraries as nested JARs under
+          # META-INF/jars. Verify the nested SnakeYAML JAR and the
+          # runtime class it contains.
+          snakeyaml_nested="$(awk 'index($0, "META-INF/jars/") == 1 && tolower($0) ~ /snakeyaml.*\.jar$/ { print; exit }' /tmp/fabric-entries.txt)"
+          test -n "$snakeyaml_nested"
+          unzip -p "$fabric_jar" "$snakeyaml_nested" > /tmp/snakeyaml.jar
+          jar tf /tmp/snakeyaml.jar > /tmp/snakeyaml-contents.txt
+          grep -q 'org/yaml/snakeyaml/constructor/BaseConstructor.class' /tmp/snakeyaml-contents.txt
 
           unzip -p "$paper_jar" plugin.yml > dist/paper/plugin.yml
 
