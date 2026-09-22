@@ -366,46 +366,90 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
     private static List<String> groupedTagSuggestions(CommandContext context) {
         String[] values = context.args();
-        if (values.length < 3 || !"create".equalsIgnoreCase(values[1])) return null;
-        if (values.length == 3) {
-            return prefix(List.of("name", "item", "name+item"), values[2]);
-        }
+        if (values.length < 3) return null;
 
-        String flow = values[2].toLowerCase(Locale.ROOT);
-        if ("item".equals(flow)) {
-            if (values.length == 4) {
-                return context.source().itemNames().stream()
-                        .map(DefaultNameTagCommandHandler::normalizeItemId)
-                        .filter(v -> v.startsWith(values[3].toLowerCase(Locale.ROOT)))
-                        .sorted().toList();
+        String command = values[1].toLowerCase(Locale.ROOT);
+        if ("create".equals(command)) {
+            if (values.length == 3) return prefix(List.of("name", "item", "name+item"), values[2]);
+            String flow = values[2].toLowerCase(Locale.ROOT);
+            if ("item".equals(flow)) {
+                if (values.length == 4) {
+                    return context.source().itemNames().stream()
+                            .map(DefaultNameTagCommandHandler::normalizeItemId)
+                            .filter(v -> v.startsWith(values[3].toLowerCase(Locale.ROOT)))
+                            .sorted().toList();
+                }
+                if (values.length == 5) return prefix(List.of("spin"), values[4]);
+                if (values.length == 6 && "spin".equalsIgnoreCase(values[4])) return prefix(List.of("true", "false"), values[5]);
+                if (values.length == 7 && "spin".equalsIgnoreCase(values[4]) && "true".equalsIgnoreCase(values[5])) {
+                    return prefix(ITEM_SPEEDS, values[6]);
+                }
+                return List.of();
             }
-            if (values.length == 5) return prefix(List.of("spin"), values[4]);
-            if (values.length == 6 && "spin".equalsIgnoreCase(values[4])) {
-                return prefix(List.of("true", "false"), values[5]);
+            if ("name".equals(flow)) {
+                if (values.length == 4) return List.of();
+                return createWizardValueSuggestions(values, 4);
             }
-            if (values.length == 7 && "spin".equalsIgnoreCase(values[4]) && "true".equalsIgnoreCase(values[5])) {
-                return prefix(ITEM_SPEEDS, values[6]);
+            if ("name+item".equals(flow)) {
+                if (values.length == 4) {
+                    return context.source().itemNames().stream()
+                            .map(DefaultNameTagCommandHandler::normalizeItemId)
+                            .filter(v -> v.startsWith(values[3].toLowerCase(Locale.ROOT)))
+                            .sorted().toList();
+                }
+                if (values.length == 5) return List.of();
+                return createWizardValueSuggestions(values, 5);
             }
             return List.of();
         }
 
-        if ("name".equals(flow)) {
-            if (values.length == 4) return List.of();
-            return createWizardValueSuggestions(values, 4);
-        }
-
-        if ("name+item".equals(flow)) {
-            if (values.length == 4) {
-                return context.source().itemNames().stream()
-                        .map(DefaultNameTagCommandHandler::normalizeItemId)
-                        .filter(v -> v.startsWith(values[3].toLowerCase(Locale.ROOT)))
-                        .sorted().toList();
+        if ("edit".equals(command)) {
+            if (values.length == 3) {
+                return prefix(List.of("name", "item", "style", "color", "gradient", "effect", "advanced"), values[2]);
             }
-            if (values.length == 5) return List.of();
-            return createWizardValueSuggestions(values, 5);
+            if (values.length < 4) return List.of();
+            String property = values[3].toLowerCase(Locale.ROOT);
+            String prefix = values[values.length - 1];
+
+            if ("item".equals(property)) {
+                if (values.length == 5) {
+                    List<String> items = new java.util.ArrayList<>();
+                    items.add("clear");
+                    items.addAll(context.source().itemNames().stream()
+                            .map(DefaultNameTagCommandHandler::normalizeItemId).sorted().toList());
+                    return prefix(items, prefix);
+                }
+                if (values.length == 6 && "spin".equalsIgnoreCase(values[4])) {
+                    return prefix(List.of("true", "false"), prefix);
+                }
+                if (values.length == 7 && "spin".equalsIgnoreCase(values[4]) && "true".equalsIgnoreCase(values[5])) {
+                    return prefix(ITEM_SPEEDS, prefix);
+                }
+                return List.of();
+            }
+            if ("style".equals(property)) {
+                return values.length == 5 ? prefix(STYLE_VALUES.stream().map(v -> "plain".equals(v) ? "normal" : v).toList(), prefix) : List.of();
+            }
+            if ("color".equals(property)) return values.length == 5 ? prefix(PRESET_COLORS, prefix) : List.of();
+            if ("gradient".equals(property)) return List.of();
+            if ("effect".equals(property)) {
+                if (values.length == 5) return prefix(List.of("normal", "glitch"), prefix);
+                if (values.length == 6 && "normal".equalsIgnoreCase(values[4])) {
+                    return prefix(List.of("regular", "neon", "breath", "blink", "rgb", "rainbow", "pulse", "wave"), prefix);
+                }
+                if (values.length == 6 && "glitch".equalsIgnoreCase(values[4])) {
+                    return prefix(List.of("white", "colorful"), prefix);
+                }
+                return List.of();
+            }
+            if ("advanced".equals(property)) {
+                if (values.length == 5) return prefix(List.of("priority", "enabled", "chat"), prefix);
+                if (values.length == 6 && "priority".equalsIgnoreCase(values[4])) return prefix(List.of("0","10","25","50","100","1000"), prefix);
+                if (values.length == 6 && ("enabled".equalsIgnoreCase(values[4]) || "chat".equalsIgnoreCase(values[4]))) return prefix(List.of("true","false"), prefix);
+            }
         }
 
-        return List.of();
+        return null;
     }
 
     private static List<String> createWizardValueSuggestions(String[] values, int styleIndex) {
