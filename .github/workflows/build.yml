@@ -72,7 +72,15 @@ jobs:
           grep -q '"id": "nametag-core"' dist/fabric/fabric.mod.json
           grep -q '"minecraft": "~1.21.11"' dist/fabric/fabric.mod.json
           unzip -l "$fabric_jar" | grep -q 'com/ultraop/nametag/fabric/NameTagFabricEntrypoint.class'
-          unzip -l "$fabric_jar" | grep -q 'org/yaml/snakeyaml/constructor/BaseConstructor.class'
+
+          # Loom's include configuration packages external libraries as
+          # nested JARs under META-INF/jars rather than flattening their
+          # classes into the parent mod JAR. Verify both the nested
+          # SnakeYAML JAR and the runtime class inside it.
+          snakeyaml_nested="$(unzip -Z1 "$fabric_jar" | awk '/^META-INF\\/jars\\/.*[Ss]nake[Yy]aml.*\\.jar$/ { print; exit }')"
+          test -n "$snakeyaml_nested"
+          unzip -p "$fabric_jar" "$snakeyaml_nested" > /tmp/snakeyaml.jar
+          jar tf /tmp/snakeyaml.jar | grep -q 'org/yaml/snakeyaml/constructor/BaseConstructor.class'
 
           unzip -p "$paper_jar" plugin.yml > dist/paper/plugin.yml
 
