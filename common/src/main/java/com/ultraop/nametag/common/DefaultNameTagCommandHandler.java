@@ -620,6 +620,19 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 if (index < args.length) {
                     normalized.add("item-mode");
                     normalized.add(Boolean.parseBoolean(args[index++]) ? "rotate" : "static");
+                    if (index < args.length) {
+                        if ("speed".equalsIgnoreCase(args[index])) index++;
+                        if (index < args.length) {
+                            normalized.add("item-speed");
+                            normalized.add(args[index++]);
+                        }
+                    }
+                }
+            } else if ("advanced".equals(token)) {
+                index++;
+                if (index < args.length) {
+                    normalized.add(args[index++]);
+                    if (index < args.length) normalized.add(args[index++]);
                 }
             } else {
                 normalized.add(token);
