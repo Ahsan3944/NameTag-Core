@@ -109,6 +109,8 @@
 - [x] Command tab completion.
 - [x] Item-based name-tag display commands.
 - [x] Icon-only tag support.
+- [x] Direct tag creation with name/item options and item autocomplete.
+- [x] Consolidated `/nametag info` command; standalone `/nametag version` removed.
 - [x] Item-first chat composition with exact-once player-name rendering.
 ## Phase 10 — Stability
 - [x] Full unit test suite.
@@ -121,6 +123,7 @@
 - [x] Documentation audit.
 - [x] Cache behavior documented separately for the 1024-entry legacy active-tag cache and 2048-entry contextual multi-tag cache.
 - [x] Chat regression coverage for duplicate player names, legacy item-placeholder injection, item-before-rank ordering and icon-only tags.
+- [x] Fabric full-line tagged chat rendering with rank/item before player name.
 
 ## Phase 11 — v1.0 Release Preparation
 - [x] Release artifacts uploaded by CI.
