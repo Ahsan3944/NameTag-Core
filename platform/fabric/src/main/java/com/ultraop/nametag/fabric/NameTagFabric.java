@@ -91,7 +91,8 @@ public final class NameTagFabric {
                             suggestTags(context, builder, service, permissions, configuration, "edit"));
             var editProperty = CommandManager.argument("property", StringArgumentType.word())
                     .suggests((context, builder) -> CommandSource.suggestMatching(
-                            List.of("name", "color", "gradient", "style", "priority", "enabled", "chat"), builder));
+                            List.of("name", "item", "color", "gradient", "style", "effect", "glitch",
+                                    "priority", "enabled", "chat", "item-mode", "item-speed"), builder));
             var editValue = CommandManager.argument("value", StringArgumentType.greedyString())
                     .suggests((context, builder) ->
                             suggestEditValues(context, builder, service, permissions, configuration))
