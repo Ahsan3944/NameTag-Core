@@ -814,9 +814,12 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     private static TagEffect parseEffect(String value) {
         return switch(value.toLowerCase(Locale.ROOT)){
             case "none", "regular", "normal" -> TagEffect.none();
-            case "rainbow", "rgb" -> TagEffect.rgb();
-            case "pulse", "breath" -> TagEffect.breath();
-            case "wave", "neon" -> TagEffect.neon();
+            case "rainbow" -> TagEffect.rainbow();
+            case "rgb" -> TagEffect.rgb();
+            case "pulse" -> TagEffect.pulse();
+            case "breath" -> TagEffect.breath();
+            case "wave" -> TagEffect.wave();
+            case "neon" -> TagEffect.neon();
             case "blink" -> TagEffect.blink();
             default -> throw new IllegalArgumentException(
                     "Invalid effect: " + value + ". Use regular, neon, breath, blink or rgb."
