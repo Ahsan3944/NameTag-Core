@@ -90,7 +90,9 @@ public final class NameTagFabric {
 
             var createItem = CommandManager.literal("item");
             var createItemValue = CommandManager.argument("item", IdentifierArgumentType.identifier())
-                    .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
+                    .suggests((context, builder) -> suggestCreateItems(context, builder, permissions))
+                    .executes(context -> executeCreateItemStatic(
+                            context, service, permissions, messages, configuration));
             createItemValue.then(createSpinNode(
                     service, permissions, messages, configuration, false));
             createItem.then(createItemValue);
@@ -802,6 +804,20 @@ public final class NameTagFabric {
         spinValue.then(speed);
         spin.then(spinValue);
         return spin;
+    }
+
+    private static int executeCreateItemStatic(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        return execute(context, service, permissions, messages, configuration, new String[]{
+                "tag", "create",
+                StringArgumentType.getString(context, "tag"),
+                "item", IdentifierArgumentType.getIdentifier(context, "item").toString(),
+                "item-mode", "static"
+        });
     }
 
     private static int executeCreateItemWizard(
