@@ -355,5 +355,4 @@ public final class NameTagFabric {
                 builder
         );
     }
-
-
+}
