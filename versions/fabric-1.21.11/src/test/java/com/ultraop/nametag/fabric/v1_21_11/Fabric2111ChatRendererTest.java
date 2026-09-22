@@ -219,7 +219,7 @@ class Fabric2111ChatRendererTest {
                 Map.of("item", "minecraft:diamond")
         );
         assertEquals("", iconOnly.displayName());
-        Text iconOnlyText = Fabric2111ChatRenderer.renderFormat("{item}{tag} {player}: {message}", iconOnly, Text.literal("UltraOP"), Text.literal("Hi"));
-        assertEquals(" UltraOP: Hi", iconOnlyText.getString());
+        assertEquals("{item}{tag} {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("{tag} {player}: {message}"));
+        assertEquals("minecraft:item/diamond", Fabric2111ChatRenderer.itemSpriteId(iconOnly).toString());
     }
 }
