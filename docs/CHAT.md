@@ -13,6 +13,18 @@ The integration is enabled only when:
 
 If any condition is false, NameTag-Core leaves the existing chat renderer untouched.
 
+## Fabric 1.21.11
+
+Fabric uses the server message content decorator. Because vanilla supplies the sender's display name after the content decorator runs, NameTag-Core removes the `{player}` placeholder from the Fabric content-format path. This prevents the player name from appearing twice.
+
+The same item/rank composition contract is used on Fabric and Paper:
+
+- `[OWNER] Player: Message`
+- `[<item icon>] Player: Message`
+- `[<item icon> OWNER] Player: Message`
+
+The item icon is a native atlas object component using the Minecraft 1.21.11 `minecraft:items` atlas and the item's `item/<path>` sprite identifier. No custom resource pack is required for standard Minecraft item sprites.
+
 ## Format
 
 The configured `chatFormat` supports these placeholders:
@@ -72,6 +84,6 @@ A tag can independently contain:
 - item/icon only: `[<item icon>] Player: Message`
 - item/icon + text: `[<item icon>OWNER] Player: Message`
 
-The item is always emitted before the tag text, and the player name is emitted exactly once by the platform chat renderer. Existing configurations that still use `[{tag}] {player}: {message}` are automatically normalized at render time so the item is inserted before the tag when one is configured.
+The item is always emitted before the tag text, and the player name is emitted exactly once. Fabric achieves this by rendering only the message content and allowing vanilla to add the sender name; Paper owns the complete rendered component. Existing configurations that still use `[{tag}] {player}: {message}` are automatically normalized at render time so the item is inserted before the tag when one is configured.
 
 Use `/nametag tag edit <tag> name none` to make a tag icon-only. The item itself is configured with `/nametag display item <tag> set <item>`.
