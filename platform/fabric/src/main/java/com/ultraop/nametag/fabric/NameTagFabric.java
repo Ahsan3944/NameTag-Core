@@ -129,26 +129,61 @@ public final class NameTagFabric {
             tagCreate.then(createTag);
             tag.then(tagCreate);
 
+            // EDIT
             var tagEdit = CommandManager.literal("edit");
             var editTag = CommandManager.argument("tag", StringArgumentType.word())
                     .suggests((context, builder) ->
                             suggestTags(context, builder, service, permissions, configuration, "edit"));
-            var editProperty = CommandManager.argument("property", StringArgumentType.word())
-                    .suggests((context, builder) -> CommandSource.suggestMatching(
-                            List.of("name", "item", "color", "gradient", "style", "effect", "glitch",
-                                    "priority", "enabled", "chat", "item-mode", "item-speed"), builder));
-            var editValue = CommandManager.argument("value", StringArgumentType.greedyString())
-                    .suggests((context, builder) ->
-                            suggestEditValues(context, builder, service, permissions, configuration))
-                    .executes(context -> execute(context, service, permissions, messages, configuration,
-                            new String[]{
-                                    "tag", "edit",
-                                    StringArgumentType.getString(context, "tag"),
-                                    StringArgumentType.getString(context, "property"),
-                                    StringArgumentType.getString(context, "value")
-                            }));
-            editProperty.then(editValue);
-            editTag.then(editProperty);
+
+            var editName = CommandManager.literal("name");
+            editName.then(CommandManager.argument("displayName", StringArgumentType.word())
+                    .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                            "name", StringArgumentType.getString(context, "displayName"))));
+
+            var editItem = CommandManager.literal("item");
+            var editItemValue = CommandManager.argument("item", StringArgumentType.word())
+                    .suggests((context, builder) -> suggestEditItems(context, builder, permissions))
+                    .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                            "item", StringArgumentType.getString(context, "item")));
+            editItemValue.then(CommandManager.literal("mode")
+                    .then(CommandManager.argument("mode", StringArgumentType.word())
+                            .suggests((context, builder) -> CommandSource.suggestMatching(
+                                    List.of("static", "rotate"), builder))
+                            .executes(context -> executeEditNestedOption(context, service, permissions, messages, configuration,
+                                    "item", "mode", StringArgumentType.getString(context, "mode")))));
+            editItemValue.then(CommandManager.literal("speed")
+                    .then(CommandManager.argument("speed", StringArgumentType.word())
+                            .suggests((context, builder) -> CommandSource.suggestMatching(
+                                    List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), builder))
+                            .executes(context -> executeEditNestedOption(context, service, permissions, messages, configuration,
+                                    "item", "speed", StringArgumentType.getString(context, "speed")))));
+            editItemValue.then(CommandManager.literal("clear")
+                    .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                            "item", "clear")));
+            editItem.then(editItemValue);
+
+            var editAppearance = CommandManager.literal("appearance");
+            editAppearance.then(createEditColorNode(service, permissions, messages, configuration));
+            editAppearance.then(createEditGradientNode(service, permissions, messages, configuration));
+            editAppearance.then(createEditStyleNode(service, permissions, messages, configuration));
+            editAppearance.then(createEditEffectNode(service, permissions, messages, configuration));
+            editAppearance.then(createEditGlitchNode(service, permissions, messages, configuration));
+
+            var editBehavior = CommandManager.literal("behavior");
+            editBehavior.then(createEditSimpleOptionNode("priority",
+                    List.of("0", "10", "25", "50", "100", "1000"),
+                    service, permissions, messages, configuration));
+            editBehavior.then(createEditSimpleOptionNode("enabled",
+                    List.of("true", "false"),
+                    service, permissions, messages, configuration));
+            editBehavior.then(createEditSimpleOptionNode("chat",
+                    List.of("true", "false"),
+                    service, permissions, messages, configuration));
+
+            editTag.then(editName);
+            editTag.then(editItem);
+            editTag.then(editAppearance);
+            editTag.then(editBehavior);
             tagEdit.then(editTag);
             tag.then(tagEdit);
 
@@ -559,6 +594,138 @@ public final class NameTagFabric {
                 )),
                 builder
         );
+    }
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createEditColorNode(
+            TagService service, PermissionService permissions, DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        var node = CommandManager.literal("color");
+        node.then(CommandManager.argument("color", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(
+                        List.of("black", "dark_blue", "dark_green", "dark_aqua", "dark_red",
+                                "dark_purple", "gold", "gray", "dark_gray", "blue", "green",
+                                "aqua", "red", "light_purple", "yellow", "white", "random"),
+                        builder))
+                .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                        "color", StringArgumentType.getString(context, "color"))));
+        return node;
+    }
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createEditGradientNode(
+            TagService service, PermissionService permissions, DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        var node = CommandManager.literal("gradient");
+        var start = CommandManager.argument("startHex", StringArgumentType.word());
+        start.then(CommandManager.argument("endHex", StringArgumentType.word())
+                .executes(context -> executeEditGradient(context, service, permissions, messages, configuration)));
+        node.then(start);
+        return node;
+    }
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createEditStyleNode(
+            TagService service, PermissionService permissions, DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        var node = CommandManager.literal("style");
+        node.then(CommandManager.argument("style", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(
+                        List.of("plain", "bold", "italic", "underlined", "strikethrough", "obfuscated",
+                                "bold_italic", "bold_underlined", "italic_underlined"), builder))
+                .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                        "style", StringArgumentType.getString(context, "style"))));
+        return node;
+    }
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createEditEffectNode(
+            TagService service, PermissionService permissions, DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        var node = CommandManager.literal("effect");
+        node.then(CommandManager.argument("effect", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(
+                        List.of("none", "rainbow", "pulse", "wave"), builder))
+                .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                        "effect", StringArgumentType.getString(context, "effect"))));
+        return node;
+    }
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createEditGlitchNode(
+            TagService service, PermissionService permissions, DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        var node = CommandManager.literal("glitch");
+        node.then(CommandManager.argument("glitch", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(
+                        List.of("none", "white", "colorful"), builder))
+                .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                        "glitch", StringArgumentType.getString(context, "glitch"))));
+        return node;
+    }
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createEditSimpleOptionNode(
+            String property, List<String> values, TagService service, PermissionService permissions,
+            DefaultMessageService messages, DefaultConfigurationService configuration) {
+        var node = CommandManager.literal(property);
+        node.then(CommandManager.argument(property, StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(values, builder))
+                .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                        property, StringArgumentType.getString(context, property))));
+        return node;
+    }
+
+    private static java.util.concurrent.CompletableFuture<Suggestions> suggestEditItems(
+            CommandContext<ServerCommandSource> context,
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
+            PermissionService permissions) {
+        java.util.List<String> values = new java.util.ArrayList<>();
+        values.add("clear");
+        values.addAll(new FabricCommandSource(context.getSource(), permissions).itemNames());
+        return CommandSource.suggestMatching(values, builder);
+    }
+
+    private static int executeEditOption(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration,
+            String property,
+            String value) {
+        return execute(context, service, permissions, messages, configuration, new String[]{
+                "tag", "edit",
+                StringArgumentType.getString(context, "tag"),
+                property, value
+        });
+    }
+
+    private static int executeEditNestedOption(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration,
+            String group,
+            String property,
+            String value) {
+        return execute(context, service, permissions, messages, configuration, new String[]{
+                "tag", "edit",
+                StringArgumentType.getString(context, "tag"),
+                group,
+                StringArgumentType.getString(context, "item"),
+                property, value
+        });
+    }
+
+    private static int executeEditGradient(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        return execute(context, service, permissions, messages, configuration, new String[]{
+                "tag", "edit",
+                StringArgumentType.getString(context, "tag"),
+                "appearance", "gradient",
+                StringArgumentType.getString(context, "startHex"),
+                StringArgumentType.getString(context, "endHex")
+        });
     }
 
     private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createColorNode(
