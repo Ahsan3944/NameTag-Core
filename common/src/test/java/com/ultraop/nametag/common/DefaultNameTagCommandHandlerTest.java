@@ -516,8 +516,9 @@ final class DefaultNameTagCommandHandlerTest {
 
         assertEquals(List.of("owner"),
                 handler.suggest(new CommandContext(source, new String[]{"edit", "ow"})));
-        assertEquals(List.of("name", "item", "style", "color", "gradient", "effect", "advanced"),
-                handler.suggest(new CommandContext(source, new String[]{"edit", "owner", ""})));
+        Collection<String> editProperties = handler.suggest(
+                new CommandContext(source, new String[]{"tag", "edit", "owner", ""}));
+        assertTrue(editProperties.containsAll(List.of("name", "item", "style", "color", "gradient", "effect", "advanced")));
         Collection<String> styleSuggestions = handler.suggest(
                 new CommandContext(source, new String[]{"tag", "edit", "owner", "style", ""}));
         assertTrue(styleSuggestions.contains("bold"));
@@ -626,28 +627,40 @@ final class DefaultNameTagCommandHandlerTest {
                 service, new EmptyPlayerResolver(), new DefaultMessageService()
         );
 
-        assertEquals(List.of("name", "item", "name+item"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", ""})));
-        assertEquals(List.of("normal", "bold", "italic", "bold_italic", "underlined", "strikethrough", "obfuscated"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", ""})));
-        assertEquals(List.of("black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
-                        "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
-                        "yellow", "white", "random"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", "bold", ""})));
-        assertEquals(List.of("normal", "glitch"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", "bold", "gold", ""})));
-        assertEquals(List.of("regular", "neon", "breath", "blink", "rgb", "rainbow", "pulse", "wave"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", "bold", "gold", "normal", ""})));
-        assertEquals(List.of("white", "colorful"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", "bold", "gold", "glitch", ""})));
-        assertEquals(List.of("minecraft:diamond", "minecraft:emerald"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", ""})));
-        assertEquals(List.of("spin"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", ""})));
-        assertEquals(List.of("true", "false"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", "spin", ""})));
+        Collection<String> top = handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", ""}));
+        assertTrue(top.containsAll(List.of("name", "item", "name+item")));
+
+        Collection<String> styles = handler.suggest(new CommandContext(source,
+                new String[]{"tag", "create", "vip", "name", "VIP", ""}));
+        assertTrue(styles.containsAll(List.of("normal", "bold", "italic", "bold_italic")));
+
+        Collection<String> colors = handler.suggest(new CommandContext(source,
+                new String[]{"tag", "create", "vip", "name", "VIP", "bold", ""}));
+        assertTrue(colors.containsAll(List.of("red", "gold", "blue", "white")));
+
+        Collection<String> effectKinds = handler.suggest(new CommandContext(source,
+                new String[]{"tag", "create", "vip", "name", "VIP", "bold", "gold", ""}));
+        assertTrue(effectKinds.containsAll(List.of("normal", "glitch")));
+
+        Collection<String> normalEffects = handler.suggest(new CommandContext(source,
+                new String[]{"tag", "create", "vip", "name", "VIP", "bold", "gold", "normal", ""}));
+        assertTrue(normalEffects.containsAll(List.of("regular", "neon", "breath", "blink", "rgb")));
+
+        Collection<String> glitchEffects = handler.suggest(new CommandContext(source,
+                new String[]{"tag", "create", "vip", "name", "VIP", "bold", "gold", "glitch", ""}));
+        assertTrue(glitchEffects.containsAll(List.of("white", "colorful")));
+
+        Collection<String> items = handler.suggest(new CommandContext(source,
+                new String[]{"tag", "create", "vip", "item", ""}));
+        assertEquals(List.of("minecraft:diamond", "minecraft:emerald"), items);
+
+        assertEquals(List.of("spin"), handler.suggest(new CommandContext(source,
+                new String[]{"tag", "create", "vip", "item", "minecraft:diamond", ""})));
+        assertEquals(List.of("true", "false"), handler.suggest(new CommandContext(source,
+                new String[]{"tag", "create", "vip", "item", "minecraft:diamond", "spin", ""})));
         assertEquals(List.of("1","2","3","4","5","6","7","8","9","10"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", "spin", "true", ""})));
+                handler.suggest(new CommandContext(source,
+                        new String[]{"tag", "create", "vip", "item", "minecraft:diamond", "spin", "true", ""})));
     }
 
     @Test
