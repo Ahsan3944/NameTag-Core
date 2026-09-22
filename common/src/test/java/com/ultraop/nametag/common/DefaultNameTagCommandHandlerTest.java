@@ -100,6 +100,32 @@ final class DefaultNameTagCommandHandlerTest {
     }
 
     @Test
+    void setActivatesAndAssignsTagWhenItWasNotPreviouslyGiven() {
+        InMemoryTagRepository tags = new InMemoryTagRepository();
+        InMemoryPlayerAssignmentRepository assignments = new InMemoryPlayerAssignmentRepository();
+        DefaultTagService service = new DefaultTagService(tags, assignments);
+        service.create(new Tag(
+                new TagId("vip"), "VIP", new TagColor.Preset("gold"),
+                TagStyle.plain(), TagEffect.none(), 0, true, true, Map.of()
+        ));
+
+        UUID playerUuid = UUID.randomUUID();
+        RecordingSource source = new RecordingSource();
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service,
+                new SinglePlayerResolver(new OnlinePlayer(playerUuid, "UltraOP")),
+                new DefaultMessageService()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{"set", "UltraOP", "vip"}));
+
+        assertEquals("vip", service.activeTag(playerUuid).orElseThrow().id().value());
+        assertEquals(List.of(new TagId("vip")),
+                assignments.find(playerUuid).orElseThrow().assignedTagIds());
+        assertEquals("Set vip as active for UltraOP", source.lastMessage);
+    }
+
+    @Test
     void giveAcceptsTemporaryDuration() {
         InMemoryTagRepository tags=new InMemoryTagRepository();
         InMemoryPlayerAssignmentRepository assignments=new InMemoryPlayerAssignmentRepository();
@@ -514,7 +540,10 @@ final class DefaultNameTagCommandHandlerTest {
                 service, new EmptyPlayerResolver(), new DefaultMessageService()
         );
 
-        assertEquals(List.of("name", "item"),
+        assertEquals(List.of(
+                        "name", "item", "color", "gradient", "style", "effect", "glitch",
+                        "priority", "enabled", "chat", "item-mode", "item-speed"
+                ),
                 handler.suggest(new CommandContext(source, new String[]{"create", ""})));
         assertEquals(List.of("minecraft:diamond", "minecraft:emerald", "minecraft:iron_block"),
                 handler.suggest(new CommandContext(source, new String[]{"create", "vip", "item", ""})));
@@ -535,6 +564,37 @@ final class DefaultNameTagCommandHandlerTest {
         Tag iconOnly = service.find(new TagId("icon")).orElseThrow();
         assertEquals("", iconOnly.displayName());
         assertEquals("minecraft:emerald", iconOnly.metadata().get(TagItemSettings.ITEM_KEY));
+    }
+
+    @Test
+    void createSupportsFullPresentationConfigurationInOneCommand() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        RecordingSource source = new RecordingSource();
+        source.items = List.of("minecraft:diamond");
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{
+                "create", "vip", "name", "VIP", "item", "minecraft:diamond",
+                "color", "gold", "style", "bold+italic+underlined",
+                "effect", "rainbow", "priority", "100", "enabled", "true", "chat", "true",
+                "item-mode", "rotate", "item-speed", "8"
+        }));
+
+        Tag tag = service.find(new TagId("vip")).orElseThrow();
+        assertEquals("VIP", tag.displayName());
+        assertEquals(new TagColor.Preset("gold"), tag.color());
+        assertEquals(new TagStyle(true, true, true, false, false), tag.style());
+        assertEquals(TagEffect.RAINBOW_ID, tag.effect().id());
+        assertEquals(100, tag.priority());
+        assertTrue(tag.enabled());
+        assertTrue(tag.chatEnabled());
+        assertEquals("minecraft:diamond", tag.metadata().get(TagItemSettings.ITEM_KEY));
+        assertEquals("rotate", tag.metadata().get(TagItemSettings.MODE_KEY));
+        assertEquals("8", tag.metadata().get(TagItemSettings.SPEED_KEY));
     }
 
     @Test
