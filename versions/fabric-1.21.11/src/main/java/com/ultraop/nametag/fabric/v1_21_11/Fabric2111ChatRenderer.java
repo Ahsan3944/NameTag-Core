@@ -51,16 +51,36 @@ public final class Fabric2111ChatRenderer {
                 .filter(Tag::enabled).filter(Tag::chatEnabled).toList();
         if (active.isEmpty()) return message;
 
-        return renderFormat(
+        return renderContentFormat(
                 configuration.current().chatFormat(),
                 active,
-                Text.literal(sender.getName().getString()),
                 message
         );
     }
 
     static Text renderFormat(String format, Tag tag, Text playerName, Text message) {
         return renderFormat(format, List.of(tag), playerName, message);
+    }
+
+    static Text renderContentFormat(String format, List<Tag> tags, Text message) {
+        return renderFormat(removePlayerPlaceholderForContent(format), tags, Text.empty(), message);
+    }
+
+    private static String removePlayerPlaceholderForContent(String format) {
+        int playerIndex = format.indexOf(PLAYER_PLACEHOLDER);
+        if (playerIndex < 0) {
+            return format;
+        }
+
+        String before = format.substring(0, playerIndex);
+        String after = format.substring(playerIndex + PLAYER_PLACEHOLDER.length());
+
+        // Fabric's message decorator only replaces message content. Vanilla
+        // applies the sender decoration afterward, so rendering {player} here
+        // would display the player name twice. Remove the sender placeholder
+        // together with its following separator when present.
+        after = after.replaceFirst("^\\s*[:|>-]\\s*", "");
+        return before + after;
     }
 
     static Text renderFormat(String format, List<Tag> tags, Text playerName, Text message) {
