@@ -80,10 +80,9 @@ Primary namespace:
 
 Canonical grouped command surface:
 ```
-/nametag tag create <tag> name <displayName>
-/nametag tag create <tag> item <item> [mode <static|rotate>] [speed <1-10>]
-/nametag tag create <tag> appearance color|gradient|style|effect|glitch ...
-/nametag tag create <tag> behavior priority|enabled|chat ...
+/nametag tag create <tag> name <displayName> -> <style> -> <color> -> <normal|glitch> -> <effect>
+/nametag tag create <tag> item <item> -> spin <true|false> -> <speed 1-10 when true>
+/nametag tag create <tag> name+item <item> <displayName> -> <style> -> <color> -> <normal|glitch> -> <effect>
 
 The command tree is grouped for TAB completion: group -> sub-group/option -> valid values.
 /nametag tag edit <tag> name <displayName|none>
@@ -95,10 +94,9 @@ The command tree is grouped for TAB completion: group -> sub-group/option -> val
 /nametag tag edit <tag> chat <true|false>
 /nametag tag list
 /nametag tag delete <tag>
-/nametag player give <player> <tag> [duration]
-/nametag player set <player> <tag>
+/nametag player set <player> <tag> [duration]
 
-`give` grants/adds a tag; `set` activates a tag and also assigns it when necessary.
+`set` is the single direct assignment and activation command.
 /nametag player remove <player>
 /nametag player clear <player>
 /nametag display glitch <tag> <white|colorful>
@@ -434,7 +432,7 @@ Every new Minecraft adapter must pass the same core behavior suite.
 - Core/API build cleanly.
 - Fabric 1.21.11 build/start/test.
 - Paper 1.21.11 build/start/test.
-- Create/list/give/remove/delete/reload work.
+- Create/list/set/remove/delete/reload work.
 - Persistence survives restart.
 - YAML and configured JDBC providers use the same repository contracts.
 - Preset/RGB/random colors work.
