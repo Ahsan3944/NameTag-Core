@@ -38,6 +38,7 @@ The same contextual multi-tag resolution rules are used by nameplate and chat re
 - Strikethrough.
 - Obfuscated.
 - Clean/reset formatting.
+- Optional item-based icon metadata for the tag.
 
 ### Effects
 - Effect engine from day one.
@@ -51,6 +52,9 @@ The same contextual multi-tag resolution rules are used by nameplate and chat re
 
 ### Chat
 - Active tag shown in chat when enabled.
+- Optional native item-atlas icon shown before the tag/rank text.
+- Icon and tag text are independently optional, so text-only, icon-only, and icon+text tags are supported.
+- Player name is rendered exactly once.
 - Configurable tag/name/message placement.
 - Reuse tag color/style where the target platform supports it.
 - Global chat toggle.
@@ -76,26 +80,34 @@ Primary namespace:
 
 Initial contract:
 ```
-/nametag create <tag> <displayName>
-/nametag edit <tag> name <displayName>
-/nametag edit <tag> color <preset|random|#RRGGBB>
-/nametag edit <tag> gradient <startHex> <endHex>
-/nametag edit <tag> style <plain|bold|italic|bold_italic>
-/nametag edit <tag> priority <integer>
-/nametag edit <tag> enabled <true|false>
-/nametag edit <tag> chat <true|false>
-/nametag list
-/nametag give <player> <tag>
-/nametag set <player> <tag>
-/nametag remove <player>
-/nametag clear <player>
-/nametag delete <tag>
-/nametag reload
-/nametag glitch <tag> <white|colorful>
-/nametag effect <tag> <none|rainbow|pulse|wave>
-/nametag role <tag> <permission|clear>
-/nametag export <file>
-/nametag import <file>
+Canonical grouped command surface:
+/nametag tag create <tag> <displayName>
+/nametag tag edit <tag> name <displayName|none>
+/nametag tag edit <tag> color <preset|random|#RRGGBB>
+/nametag tag edit <tag> gradient <startHex> <endHex>
+/nametag tag edit <tag> style <plain|bold|italic|bold_italic>
+/nametag tag edit <tag> priority <integer>
+/nametag tag edit <tag> enabled <true|false>
+/nametag tag edit <tag> chat <true|false>
+/nametag tag list
+/nametag tag delete <tag>
+/nametag player give <player> <tag> [duration]
+/nametag player set <player> <tag>
+/nametag player remove <player>
+/nametag player clear <player>
+/nametag display glitch <tag> <white|colorful>
+/nametag display effect <tag> <none|rainbow|pulse|wave>
+/nametag display item <tag> set <item>
+/nametag display item <tag> mode <static|rotate>
+/nametag display item <tag> speed <1-10>
+/nametag display item <tag> clear
+/nametag advanced role <tag> <permission|clear>
+/nametag advanced scope <tag> clear
+/nametag advanced scope <tag> world <world>
+/nametag advanced scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>
+/nametag admin reload
+/nametag admin export <file>
+/nametag admin import <file>
 ```
 
 Tab completion is required for subcommands, players, tags and valid options.
@@ -169,6 +181,8 @@ per-tag expiration timestamps
 
 Tag ID and display name are separate. Player UUID is the persistent identity; username is never the primary key.
 
+Item presentation metadata uses `item`, `item-mode`, and `item-speed`. An empty display name is valid when an item icon is configured for an icon-only tag.
+
 ## 7. Colors
 
 Color abstraction supports:
@@ -241,6 +255,7 @@ Chat is a first-class integration, not a separate duplicate tag system.
 Conceptual:
 ```
 ChatFormat
+├── itemPosition
 ├── tagPosition
 ├── playerNamePosition
 ├── messagePosition
@@ -254,6 +269,8 @@ Permissions:
 ```
 nametag.chat
 ```
+
+The `{item}` placeholder renders the tag's native Minecraft 1.21.11 item-atlas sprite. It is independent from `{tag}`: text-only, icon-only, and icon+text tags are supported. Fabric's content-phase decorator must not render `{player}` because vanilla supplies the sender name afterward; Paper owns the complete rendered component. Legacy formats that omit `{item}` are normalized at render time by inserting it before `{tag}`/`{tags}`, or before `{player}` when no tag placeholder exists.
 
 The Fabric/Paper adapter owns native chat event/component handling.
 
@@ -325,7 +342,7 @@ No API event exposes platform-specific classes.
 
 Validate before persistence:
 - ID syntax/length.
-- Display name.
+- Display name; an empty display name is valid for an icon-only tag when an item is configured.
 - Duplicate IDs.
 - RGB values.
 - Gradient stops.
@@ -421,6 +438,8 @@ Every new Minecraft adapter must pass the same core behavior suite.
 - `/nametag glitch <tag> white|colorful` changes only the effect configuration.
 - Active contextual/layered tags render in nameplate.
 - Contextual/layered tags render in chat when enabled.
+- Native item-icon chat composition supports text-only, icon-only and icon+text tags.
+- Legacy chat formats remain compatible with automatic `{item}` insertion.
 - Automatic role resolution works without persisting derived assignments.
 - Chat permission and per-tag visibility work.
 - Reload does not duplicate formatting/listeners.
