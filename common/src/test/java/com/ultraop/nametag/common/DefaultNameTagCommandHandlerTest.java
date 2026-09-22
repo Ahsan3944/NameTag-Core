@@ -514,7 +514,7 @@ final class DefaultNameTagCommandHandlerTest {
                 service, new EmptyPlayerResolver(), new DefaultMessageService()
         );
 
-        assertEquals(List.of("item", "name"),
+        assertEquals(List.of("name", "item"),
                 handler.suggest(new CommandContext(source, new String[]{"create", ""})));
         assertEquals(List.of("minecraft:diamond", "minecraft:emerald", "minecraft:iron_block"),
                 handler.suggest(new CommandContext(source, new String[]{"create", "vip", "item", ""})));
