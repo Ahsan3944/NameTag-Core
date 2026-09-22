@@ -375,6 +375,10 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         String[] values = Arrays.copyOfRange(input, 3, input.length);
         if (values.length == 0) return List.of();
         if ("create".equals(command)) return createWizardSuggestions(context, values);
+        // For edit, the first token after the subcommand is the tag id.
+        // A third input token means the user is still completing that tag id;
+        // a fourth means the tag id is complete and the property wizard begins.
+        if (input.length == 3) return tagNames(values[0]);
         return editWizardSuggestions(context, values);
     }
 
