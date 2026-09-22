@@ -29,9 +29,6 @@ permissions:
   nametag.delete:
     description: Allows deleting NameTags
     default: op
-  nametag.give:
-    description: Allows assigning NameTags
-    default: op
   nametag.remove:
     description: Allows removing NameTags from players
     default: op
