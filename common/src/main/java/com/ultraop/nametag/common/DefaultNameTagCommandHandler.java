@@ -865,9 +865,17 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         TagId id = new TagId(args[2].toLowerCase(Locale.ROOT));
         if ("set".equalsIgnoreCase(args[0])) {
-            if (args.length != 3) throw new IllegalArgumentException(messages.message("error.usage.assign"));
+            if (args.length == 4) {
+                Duration duration = parseDuration(args[3]);
+                tagService.assignUntil(player.uuid(), id, Instant.now().plus(duration));
+            }
             tagService.setActive(player.uuid(), id);
-            source.sendMessage(messages.format("message.set_active", Map.of("tag", id.value(), "player", player.name())));
+            if (args.length == 4) {
+                source.sendMessage(messages.format("message.set_active", Map.of("tag", id.value(), "player", player.name()))
+                        + " (" + args[3] + ")");
+            } else {
+                source.sendMessage(messages.format("message.set_active", Map.of("tag", id.value(), "player", player.name())));
+            }
             return;
         }
         if (args.length == 4) {
