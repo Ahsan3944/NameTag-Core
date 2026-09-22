@@ -366,7 +366,9 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         if (input.length == 1) return new String[0];
 
         String[] args = Arrays.copyOfRange(input, 1, input.length);
-        if (args.length < 1 || !"create".equalsIgnoreCase(args[0])) return args;
+        if (args.length < 1) return args;
+        if ("edit".equalsIgnoreCase(args[0])) return normalizeEditGroupedArgs(args);
+        if (!"create".equalsIgnoreCase(args[0])) return args;
         if (args.length < 2) return args;
 
         List<String> normalized = new java.util.ArrayList<>();
@@ -431,6 +433,57 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                             normalized.add(args[index++]);
                         }
                     }
+                }
+            }
+        }
+        return normalized.toArray(String[]::new);
+    }
+
+    private static String[] normalizeEditGroupedArgs(String[] args) {
+        if (args.length < 2) return args;
+        List<String> normalized = new java.util.ArrayList<>();
+        normalized.add("edit");
+        normalized.add(args[1]);
+
+        int index = 2;
+        while (index < args.length) {
+            String token = args[index].toLowerCase(Locale.ROOT);
+            switch (token) {
+                case "appearance" -> {
+                    index++;
+                    if (index >= args.length) return normalized.toArray(String[]::new);
+                    normalized.add(args[index++]);
+                    int values = "gradient".equalsIgnoreCase(normalized.get(normalized.size() - 1)) ? 2 : 1;
+                    for (int i = 0; i < values && index < args.length; i++) normalized.add(args[index++]);
+                }
+                case "behavior" -> {
+                    index++;
+                    if (index >= args.length) return normalized.toArray(String[]::new);
+                    normalized.add(args[index++]);
+                    if (index < args.length) normalized.add(args[index++]);
+                }
+                case "item" -> {
+                    normalized.add("item");
+                    index++;
+                    if (index < args.length) normalized.add(args[index++]);
+                    while (index < args.length) {
+                        String nested = args[index].toLowerCase(Locale.ROOT);
+                        if ("mode".equals(nested)) {
+                            normalized.add("item-mode");
+                            index++;
+                            if (index < args.length) normalized.add(args[index++]);
+                        } else if ("speed".equals(nested)) {
+                            normalized.add("item-speed");
+                            index++;
+                            if (index < args.length) normalized.add(args[index++]);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                default -> {
+                    normalized.add(args[index++]);
+                    if (index < args.length) normalized.add(args[index++]);
                 }
             }
         }
