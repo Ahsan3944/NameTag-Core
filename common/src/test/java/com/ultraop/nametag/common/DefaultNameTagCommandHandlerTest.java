@@ -457,6 +457,29 @@ final class DefaultNameTagCommandHandlerTest {
     }
 
     @Test
+    void groupedCreateSuggestionsExposeNestedOptionsAndValues() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+        RecordingSource source = new RecordingSource();
+        source.items = List.of("minecraft:diamond", "minecraft:apple");
+
+        assertEquals(List.of("name", "item", "appearance", "behavior"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", ""})));
+        assertEquals(List.of("color", "gradient", "style", "effect", "glitch"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "appearance", ""})));
+        assertEquals(List.of("gold", "gray"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "appearance", "color", "g"})));
+        assertEquals(List.of("minecraft:apple", "minecraft:diamond"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", ""})));
+        assertEquals(List.of("mode", "speed"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", ""})));
+    }
+
+    @Test
     void editSuggestionsExposeCommandPropertiesAndValues() {
         DefaultTagService service = new DefaultTagService(
                 new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
