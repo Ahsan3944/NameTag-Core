@@ -6,12 +6,17 @@ import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagPresentation;
+import com.ultraop.nametag.core.model.TagItemSettings;
 import com.ultraop.nametag.core.model.TagStyle;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.minecraft.command.DefaultPermissions;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Atlases;
+import net.minecraft.util.Identifier;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
+import net.minecraft.text.object.AtlasTextObjectContents;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 
@@ -20,6 +25,7 @@ import java.util.Objects;
 
 public final class Fabric2111ChatRenderer {
     private static final String TAG_PLACEHOLDER = "{tag}";
+    private static final String ITEM_PLACEHOLDER = "{item}";
     private static final String PLAYER_PLACEHOLDER = "{player}";
     private static final String MESSAGE_PLACEHOLDER = "{message}";
     private static final String TAG_META_PREFIX = "{tag_meta:";
@@ -96,6 +102,7 @@ public final class Fabric2111ChatRenderer {
 
             Text replacement = switch (match.placeholder()) {
                 case TAG_PLACEHOLDER -> styledTag(tags.get(0));
+                case ITEM_PLACEHOLDER -> itemIcon(tags.get(0));
                 case "{tags}" -> styledTags(tags);
                 case "{tag_id}" -> Text.literal(tags.get(0).id().value());
                 case "{tag_priority}" -> Text.literal(String.valueOf(tags.get(0).priority()));
@@ -109,6 +116,17 @@ public final class Fabric2111ChatRenderer {
             cursor = match.end();
         }
         return result;
+    }
+
+    static Text itemIcon(Tag tag) {
+        TagItemSettings settings = TagItemSettings.from(tag);
+        if (settings == null) return Text.empty();
+        Identifier itemId = Identifier.tryParse(settings.itemId());
+        if (itemId == null || !Registries.ITEM.containsId(itemId)) return Text.empty();
+        Identifier sprite = Identifier.of(itemId.getNamespace(), "item/" + itemId.getPath());
+        MutableText icon = Text.object(new AtlasTextObjectContents(Atlases.ITEMS, sprite));
+        if (!TagPresentation.displayText(tag).isBlank()) icon.append(Text.literal(" "));
+        return icon;
     }
 
     static Text styledTags(List<Tag> tags) {
@@ -184,6 +202,7 @@ public final class Fabric2111ChatRenderer {
 
     private static PlaceholderMatch nextPlaceholder(String format, int fromIndex) {
         int tag = format.indexOf(TAG_PLACEHOLDER, fromIndex);
+        int item = format.indexOf(ITEM_PLACEHOLDER, fromIndex);
         int tags = format.indexOf("{tags}", fromIndex);
         int player = format.indexOf(PLAYER_PLACEHOLDER, fromIndex);
         int message = format.indexOf(MESSAGE_PLACEHOLDER, fromIndex);
@@ -203,6 +222,7 @@ public final class Fabric2111ChatRenderer {
             if (end >= 0) { start = tagMeta; placeholder = format.substring(tagMeta, end + 1); }
         }
         if (tags >= 0 && tags < start) { start = tags; placeholder = "{tags}"; }
+        if (item >= 0 && item < start) { start = item; placeholder = ITEM_PLACEHOLDER; }
         if (tag >= 0 && tag < start) { start = tag; placeholder = TAG_PLACEHOLDER; }
         if (player >= 0 && player < start) { start = player; placeholder = PLAYER_PLACEHOLDER; }
         if (message >= 0 && message < start) { start = message; placeholder = MESSAGE_PLACEHOLDER; }
