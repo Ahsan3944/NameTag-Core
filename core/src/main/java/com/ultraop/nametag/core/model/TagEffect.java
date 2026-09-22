@@ -50,6 +50,14 @@ public record TagEffect(
     public static TagEffect pulse(int intensity, int speedMs) { return animated(PULSE_ID, intensity, speedMs); }
     public static TagEffect wave() { return wave(45, 80); }
     public static TagEffect wave(int intensity, int speedMs) { return animated(WAVE_ID, intensity, speedMs); }
+    public static TagEffect neon() { return neon(45, 80); }
+    public static TagEffect neon(int intensity, int speedMs) { return animated(NEON_ID, intensity, speedMs); }
+    public static TagEffect breath() { return breath(45, 140); }
+    public static TagEffect breath(int intensity, int speedMs) { return animated(BREATH_ID, intensity, speedMs); }
+    public static TagEffect blink() { return blink(45, 200); }
+    public static TagEffect blink(int intensity, int speedMs) { return animated(BLINK_ID, intensity, speedMs); }
+    public static TagEffect rgb() { return rgb(45, 60); }
+    public static TagEffect rgb(int intensity, int speedMs) { return animated(RGB_ID, intensity, speedMs); }
     private static TagEffect animated(String id, int intensity, int speedMs) {
         if (intensity < 0 || intensity > 100) throw new IllegalArgumentException("Animation intensity must be between 0 and 100");
         if (speedMs < 30 || speedMs > 2000) throw new IllegalArgumentException("Animation speed must be between 30 and 2000 ms");
