@@ -669,6 +669,51 @@ final class DefaultNameTagCommandHandlerTest {
     }
 
     @Test
+    void groupedCreateWizardStoresSelectedStyleColorAndEffect() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        RecordingSource source = new RecordingSource();
+        source.items = List.of("minecraft:diamond");
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{
+                "tag", "create", "vip", "name", "VIP", "style", "bold",
+                "color", "gold", "effect", "neon"
+        }));
+
+        Tag tag = service.find(new TagId("vip")).orElseThrow();
+        assertEquals("VIP", tag.displayName());
+        assertEquals(new TagColor.Preset("gold"), tag.color());
+        assertEquals(new TagStyle(true, false, false, false, false), tag.style());
+        assertEquals(TagEffect.NEON_ID, tag.effect().id());
+    }
+
+    @Test
+    void groupedItemCreateStoresStaticOrRotatingMode() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        RecordingSource source = new RecordingSource();
+        source.items = List.of("minecraft:diamond");
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{
+                "tag", "create", "diamond", "item", "minecraft:diamond", "spin", "true", "speed", "7"
+        }));
+
+        Tag tag = service.find(new TagId("diamond")).orElseThrow();
+        assertEquals("minecraft:diamond", tag.metadata().get(TagItemSettings.ITEM_KEY));
+        assertEquals("rotate", tag.metadata().get(TagItemSettings.MODE_KEY));
+        assertEquals("7", tag.metadata().get(TagItemSettings.SPEED_KEY));
+        assertTrue(tag.displayName().isBlank());
+    }
+
+    @Test
     void createSupportsFullPresentationConfigurationInOneCommand() {
         DefaultTagService service = new DefaultTagService(
                 new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
