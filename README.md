@@ -90,32 +90,42 @@ The current command namespace is:
 
 `/nametag`
 
-Implemented commands:
-- `/nametag create <tag> <displayName>`
-- `/nametag edit <tag> name <displayName>`
-- `/nametag edit <tag> color <preset|random|#RRGGBB>`
-- `/nametag edit <tag> gradient <startHex> <endHex>`
-- `/nametag edit <tag> style <plain|bold|italic|bold_italic>`
-- `/nametag edit <tag> priority <integer>`
-- `/nametag edit <tag> enabled <true|false>`
-- `/nametag edit <tag> chat <true|false>`
-- `/nametag list`
-- `/nametag give <player> <tag> [duration]`
-- `/nametag remove <player>`
-- `/nametag set <player> <tag>`
-- `/nametag clear <player>`
-- `/nametag delete <tag>`
-- `/nametag reload`
-- `/nametag glitch <tag> <white|colorful>`
-- `/nametag effect <tag> <none|rainbow|pulse|wave>`
-- `/nametag role <tag> <permission|clear>`
-- `/nametag scope <tag> clear`
-- `/nametag scope <tag> world <world>`
-- `/nametag scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>`
-- `/nametag export <file>`
-- `/nametag import <file>`
+Commands are grouped into focused namespaces so the first tab-completion level stays small and predictable:
 
-Command behavior is implemented through the common command layer and exposed consistently by Fabric and Paper adapters.
+- `/nametag tag ...` — create, edit, list and delete tags.
+- `/nametag player ...` — give, set, remove and clear player assignments.
+- `/nametag display ...` — glitch and visual effects.
+- `/nametag advanced ...` — role mappings and scopes.
+- `/nametag admin ...` — reload and import/export.
+
+Implemented commands:
+
+- `/nametag tag create <tag> <displayName>`
+- `/nametag tag edit <tag> name <displayName>`
+- `/nametag tag edit <tag> color <preset|random|#RRGGBB>`
+- `/nametag tag edit <tag> gradient <startHex> <endHex>`
+- `/nametag tag edit <tag> style <plain|bold|italic|bold_italic>`
+- `/nametag tag edit <tag> priority <integer>`
+- `/nametag tag edit <tag> enabled <true|false>`
+- `/nametag tag edit <tag> chat <true|false>`
+- `/nametag tag list`
+- `/nametag tag delete <tag>`
+- `/nametag player give <player> <tag> [duration]`
+- `/nametag player set <player> <tag>`
+- `/nametag player remove <player>`
+- `/nametag player clear <player>`
+- `/nametag display glitch <tag> <white|colorful>`
+- `/nametag display effect <tag> <none|rainbow|pulse|wave>`
+- `/nametag advanced role <tag> <permission|clear>`
+- `/nametag advanced scope <tag> clear`
+- `/nametag advanced scope <tag> world <world>`
+- `/nametag advanced scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>`
+- `/nametag admin reload`
+- `/nametag admin export <file>`
+- `/nametag admin import <file>`
+
+Tab completion is context-aware at each level. Tag IDs, online players, edit properties, colors, styles, booleans, effects, durations, world names, role examples and common numeric values are suggested where the command can safely provide a finite list. Free-form values such as new tag IDs, display names, permission nodes and region names remain open text inputs.
+
 
 ### Automatic Role Tags
 
