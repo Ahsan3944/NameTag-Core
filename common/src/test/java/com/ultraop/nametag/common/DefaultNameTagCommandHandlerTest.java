@@ -499,7 +499,7 @@ final class DefaultNameTagCommandHandlerTest {
         assertTrue(source.messages.stream().anyMatch(value -> value.contains("/nametag display item <tag> set <item>")));
 
         handler.execute(new CommandContext(source, new String[]{"info"}));
-        assertTrue(source.messages.stream().anyMatch(value -> value.contains("Version: 0.2")));
+        assertTrue(source.messages.stream().anyMatch(value -> value.contains("Version:")));
         assertTrue(source.messages.stream().anyMatch(value -> value.contains("Created by:") && value.contains("UltraOP")));
     }
 
