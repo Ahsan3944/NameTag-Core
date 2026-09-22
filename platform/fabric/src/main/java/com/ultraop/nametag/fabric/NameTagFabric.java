@@ -73,9 +73,6 @@ public final class NameTagFabric {
                             new String[]{"tag", "list"}));
             tag.then(tagList);
 
-            var tagCreate = CommandManager.literal("create");
-            var createTag = CommandManager.argument("tag", StringArgumentType.word());
-
             // CREATE WIZARD
             // Top-level flow is intentionally small:
             //   name | item | name+item
@@ -101,8 +98,7 @@ public final class NameTagFabric {
             var createNameItemValue = CommandManager.argument("item", IdentifierArgumentType.identifier())
                     .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
             var createNameItemName = CommandManager.argument("displayName", StringArgumentType.string());
-            createNameItemName.then(createStyleFlow(
-                    service, permissions, messages, configuration, "name+item"));
+            addStyleChoices(createNameItemName, service, permissions, messages, configuration, "name+item");
             createNameItemValue.then(createNameItemName);
             createNameItem.then(createNameItemValue);
 
