@@ -28,6 +28,7 @@ dependencies {
     include "org.mariadb.jdbc:mariadb-java-client:3.5.8"
     include "org.postgresql:postgresql:42.7.10"
     include "org.checkerframework:checker-qual:3.52.0"
+    include "org.yaml:snakeyaml:2.4"
 }
 
 fabricApi {
