@@ -74,7 +74,7 @@ public final class Fabric2111ChatRenderer {
                 sender.getDisplayName(),
                 signedMessage.getContent()
         );
-        for (ServerPlayerEntity recipient : sender.getServer().getPlayerManager().getPlayerList()) {
+        for (ServerPlayerEntity recipient : sender.getEntityWorld().getServer().getPlayerManager().getPlayerList()) {
             recipient.sendMessage(rendered);
         }
         return false;
