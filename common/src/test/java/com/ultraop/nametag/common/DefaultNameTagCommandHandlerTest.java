@@ -208,10 +208,7 @@ final class DefaultNameTagCommandHandlerTest {
                 handler.suggest(new CommandContext(source, new String[]{""})));
         assertEquals(List.of("create", "edit", "list", "delete"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", ""})));
-        assertEquals(List.of(
-                        "name", "item", "color", "gradient", "style", "effect", "glitch",
-                        "priority", "enabled", "chat", "item-mode", "item-speed"
-                ),
+        assertEquals(List.of("name", "item", "appearance", "behavior"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", ""})));
         assertEquals(List.of("0", "10", "25", "50", "100", "1000"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", "priority", ""})));
@@ -570,6 +567,58 @@ final class DefaultNameTagCommandHandlerTest {
         Tag iconOnly = service.find(new TagId("icon")).orElseThrow();
         assertEquals("", iconOnly.displayName());
         assertEquals("minecraft:emerald", iconOnly.metadata().get(TagItemSettings.ITEM_KEY));
+    }
+
+    @Test
+    void groupedCreateSuggestionsExposeNestedOptionsAndItemValues() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        RecordingSource source = new RecordingSource();
+        source.items = List.of("minecraft:diamond", "minecraft:emerald");
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        assertEquals(List.of("name", "item", "appearance", "behavior"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", ""})));
+        assertEquals(List.of("color", "gradient", "style", "effect", "glitch"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "appearance", ""})));
+        assertEquals(List.of("black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
+                        "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
+                        "yellow", "white", "random"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "appearance", "color", ""})));
+        assertEquals(List.of("minecraft:diamond", "minecraft:emerald"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", ""})));
+        assertEquals(List.of("mode", "speed"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", ""})));
+        assertEquals(List.of("static", "rotate"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", "mode", ""})));
+
+        assertEquals(List.of("name", "item", "appearance", "behavior"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "vip", ""})));
+        assertEquals(List.of("color", "gradient", "style", "effect", "glitch"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "vip", "appearance", ""})));
+        assertEquals(List.of("mode", "speed"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "vip", "item", "minecraft:diamond", ""})));
+
+        handler.execute(new CommandContext(source, new String[]{
+                "tag", "create", "vip", "appearance", "color", "gold",
+                "behavior", "priority", "100",
+                "item", "minecraft:diamond", "mode", "rotate", "speed", "8"
+        }));
+        Tag created = service.find(new TagId("vip")).orElseThrow();
+        assertEquals(new TagColor.Preset("gold"), created.color());
+        assertEquals(100, created.priority());
+        assertEquals("minecraft:diamond", created.metadata().get(TagItemSettings.ITEM_KEY));
+        assertEquals("rotate", created.metadata().get(TagItemSettings.MODE_KEY));
+        assertEquals("8", created.metadata().get(TagItemSettings.SPEED_KEY));
+
+        handler.execute(new CommandContext(source, new String[]{
+                "tag", "edit", "vip", "appearance", "style", "bold"
+        }));
+        assertEquals(new TagStyle(true, false, false, false, false),
+                service.find(new TagId("vip")).orElseThrow().style());
     }
 
     @Test

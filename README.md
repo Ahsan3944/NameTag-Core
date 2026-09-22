@@ -103,8 +103,12 @@ Commands are grouped into focused namespaces so the first tab-completion level s
 
 Implemented commands:
 
-- `/nametag tag create <tag> [name <displayName>] [item <item>] [color <color>] [gradient <startHex> <endHex>] [style <style>] [effect <effect>] [glitch <white|colorful>] [priority <number>] [enabled <true|false>] [chat <true|false>] [item-mode <static|rotate>] [item-speed <1-10>]`
-  - All tag presentation settings can be supplied during creation; item IDs are tab-completed from the live Minecraft item registry.
+- `/nametag tag create <tag> <group> ...`
+  - `name <displayName>`
+  - `item <item> [mode <static|rotate>] [speed <1-10>]`
+  - `appearance color|gradient|style|effect|glitch ...`
+  - `behavior priority|enabled|chat ...`
+  - The create tree is grouped intentionally so TAB first shows groups, then their sub-options and finally the valid values/item IDs.
   - Legacy `/nametag tag create <tag> <displayName>` remains supported.
 - `/nametag tag edit <tag> name <displayName|none>`
 - `/nametag tag edit <tag> color <preset|random|#RRGGBB>`
