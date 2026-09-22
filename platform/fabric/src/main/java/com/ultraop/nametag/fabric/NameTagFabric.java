@@ -200,6 +200,76 @@ public final class NameTagFabric {
 
             root.then(display);
 
+            // DISPLAY ITEM
+            var displayItem = CommandManager.literal("item");
+            var itemTag = CommandManager.argument("tag", StringArgumentType.word())
+                    .suggests((context, builder) ->
+                            suggestTags(context, builder, service, permissions, configuration, "item"));
+            var itemSet = CommandManager.literal("set");
+            itemSet.then(CommandManager.argument("item", StringArgumentType.word())
+                    .suggests((context, builder) -> suggestItemValues(
+                            context, builder, service, permissions, configuration))
+                    .executes(context -> execute(context, service, permissions, messages, configuration,
+                            new String[]{
+                                    "display", "item",
+                                    StringArgumentType.getString(context, "tag"),
+                                    "set",
+                                    StringArgumentType.getString(context, "item")
+                            })));
+            itemTag.then(itemSet);
+
+            var itemMode = CommandManager.literal("mode");
+            itemMode.then(CommandManager.argument("mode", StringArgumentType.word())
+                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                            List.of("static", "rotate"), builder))
+                    .executes(context -> execute(context, service, permissions, messages, configuration,
+                            new String[]{
+                                    "display", "item",
+                                    StringArgumentType.getString(context, "tag"),
+                                    "mode",
+                                    StringArgumentType.getString(context, "mode")
+                            })));
+            itemTag.then(itemMode);
+
+            var itemSpeed = CommandManager.literal("speed");
+            itemSpeed.then(CommandManager.argument("speed", StringArgumentType.word())
+                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                            List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), builder))
+                    .executes(context -> execute(context, service, permissions, messages, configuration,
+                            new String[]{
+                                    "display", "item",
+                                    StringArgumentType.getString(context, "tag"),
+                                    "speed",
+                                    StringArgumentType.getString(context, "speed")
+                            })));
+            itemTag.then(itemSpeed);
+
+            itemTag.then(CommandManager.literal("clear")
+                    .executes(context -> execute(context, service, permissions, messages, configuration,
+                            new String[]{
+                                    "display", "item",
+                                    StringArgumentType.getString(context, "tag"),
+                                    "clear"
+                            })));
+            displayItem.then(itemTag);
+            display.then(displayItem);
+
+            // HELP
+            var help = CommandManager.literal("help");
+            help.executes(context -> executeHelp(context, service, permissions, messages, configuration, null));
+            help.then(CommandManager.argument("category", StringArgumentType.word())
+                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                            List.of("tag", "player", "display", "advanced", "admin"), builder))
+                    .executes(context -> executeHelp(
+                            context, service, permissions, messages, configuration,
+                            StringArgumentType.getString(context, "category"))));
+            root.then(help);
+
+            root.then(CommandManager.literal("info")
+                    .executes(context -> executeInfo(context, service, permissions, messages, configuration)));
+            root.then(CommandManager.literal("version")
+                    .executes(context -> executeInfo(context, service, permissions, messages, configuration)));
+
             // ADVANCED GROUP
             var advanced = CommandManager.literal("advanced");
 
@@ -330,6 +400,46 @@ public final class NameTagFabric {
         });
     }
 
+
+    private static java.util.concurrent.CompletableFuture<Suggestions> suggestItemValues(
+            CommandContext<ServerCommandSource> context,
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
+            TagService service,
+            PermissionService permissions,
+            DefaultConfigurationService configuration
+    ) {
+        String tag = StringArgumentType.getString(context, "tag");
+        NameTagCommandHandler handler = handler(context.getSource(), service, new DefaultMessageService(), configuration);
+        return CommandSource.suggestMatching(
+                handler.suggest(new com.ultraop.nametag.api.CommandContext(
+                        new FabricCommandSource(context.getSource(), permissions),
+                        new String[]{"display", "item", tag, "set", builder.getRemaining()}
+                )),
+                builder
+        );
+    }
+
+    private static int executeHelp(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration,
+            String category
+    ) {
+        String[] args = category == null ? new String[]{"help"} : new String[]{"help", category};
+        return execute(context, service, permissions, messages, configuration, args);
+    }
+
+    private static int executeInfo(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration
+    ) {
+        return execute(context, service, permissions, messages, configuration, new String[]{"info"});
+    }
 
     private static java.util.concurrent.CompletableFuture<Suggestions> suggestEditValues(
             CommandContext<ServerCommandSource> context,

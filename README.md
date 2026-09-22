@@ -4,7 +4,7 @@ A cross-platform, version-aware Minecraft NameTag framework designed to provide 
 
 ## Project Status
 
-**Phase:** Fabric/Paper 1.21.11 — core rendering, lifecycle, chat, persistence, layered/contextual resolution, GameTests and stability hardening implemented; core scope finalized; stable 1.0.0 release baseline  
+**Phase:** Fabric/Paper 1.21.11 — core rendering, lifecycle, chat, persistence, layered/contextual resolution, GameTests and stability hardening implemented; core scope finalized; 0.2 feature-release baseline  
 **Target baseline:** Minecraft Java Edition **1.21.11**  
 **Platforms:** Fabric Server + Paper Server  
 **Primary goal:** Build the core once, isolate platform/version-specific code, and make future Minecraft version upgrades predictable and maintainable.
@@ -94,9 +94,11 @@ Commands are grouped into focused namespaces so the first tab-completion level s
 
 - `/nametag tag ...` — create, edit, list and delete tags.
 - `/nametag player ...` — give, set, remove and clear player assignments.
-- `/nametag display ...` — glitch and visual effects.
+- `/nametag display ...` — glitch, visual effects and item-based name icons.
 - `/nametag advanced ...` — role mappings and scopes.
 - `/nametag admin ...` — reload and import/export.
+- `/nametag help <category>` — category-specific command help.
+- `/nametag info` / `/nametag version` — version and platform information.
 
 Implemented commands:
 
@@ -116,6 +118,10 @@ Implemented commands:
 - `/nametag player clear <player>`
 - `/nametag display glitch <tag> <white|colorful>`
 - `/nametag display effect <tag> <none|rainbow|pulse|wave>`
+- `/nametag display item <tag> set <item>`
+- `/nametag display item <tag> mode <static|rotate>`
+- `/nametag display item <tag> speed <1-10>`
+- `/nametag display item <tag> clear`
 - `/nametag advanced role <tag> <permission|clear>`
 - `/nametag advanced scope <tag> clear`
 - `/nametag advanced scope <tag> world <world>`
@@ -124,7 +130,7 @@ Implemented commands:
 - `/nametag admin export <file>`
 - `/nametag admin import <file>`
 
-Tab completion is context-aware at each level. Tag IDs, online players, edit properties, colors, styles, booleans, effects, durations, world names, role examples and common numeric values are suggested where the command can safely provide a finite list. Free-form values such as new tag IDs, display names, permission nodes and region names remain open text inputs.
+Tab completion is context-aware at each level. Tag IDs, online players, edit properties, colors, styles, booleans, effects, durations, world names, role examples, item IDs and item rotation speeds are suggested where the command can safely provide a finite list. Free-form values such as new tag IDs, display names, permission nodes and region names remain open text inputs. Item-based name icons use the Minecraft item model and remain an additional visual beside the existing text name. Registered Minecraft items are supported; a block must have an item form to be rendered as an inventory-style icon.
 
 
 ### Automatic Role Tags
@@ -263,7 +269,7 @@ The architectural boundary is fixed: **core/API code must not be mixed with plat
 
 The project uses semantic project versioning independently from Minecraft versions.
 
-Current stable project version: `1.0.0`.
+Current project version: `0.2`.
 
 The 1.0.0 release baseline targets Minecraft 1.21.11 on Fabric Server and Paper Server. Future Minecraft adapters remain separate versioned implementation tracks. Future Minecraft adapters are not prerequisites for that core release.
 

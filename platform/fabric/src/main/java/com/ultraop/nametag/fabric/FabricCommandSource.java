@@ -2,6 +2,7 @@ package com.ultraop.nametag.fabric;
 
 import com.ultraop.nametag.api.CommandSource;
 import com.ultraop.nametag.api.PermissionService;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
@@ -42,6 +43,14 @@ public final class FabricCommandSource implements CommandSource {
     public Collection<String> worldNames() {
         return source.getWorldKeys().stream()
                 .map(key -> key.getValue().toString())
+                .sorted()
+                .toList();
+    }
+
+    @Override
+    public Collection<String> itemNames() {
+        return Registries.ITEM.getIds().stream()
+                .map(Object::toString)
                 .sorted()
                 .toList();
     }

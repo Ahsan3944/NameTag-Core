@@ -17,6 +17,7 @@ import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagEffect;
 import com.ultraop.nametag.core.model.TagId;
+import com.ultraop.nametag.core.model.TagItemSettings;
 import com.ultraop.nametag.core.model.TagStyle;
 
 import java.time.Duration;
@@ -34,10 +35,14 @@ import java.nio.file.Path;
 public final class DefaultNameTagCommandHandler implements NameTagCommandHandler {
     private static final List<String> GROUPS =
             List.of("tag", "player", "display", "advanced", "admin");
+    private static final List<String> HELP_TOPICS = List.of("tag", "player", "display", "advanced", "admin");
+    private static final List<String> ITEM_MODES = List.of("static", "rotate");
+    private static final List<String> ITEM_SPEEDS = List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10");
+    private static final String VERSION = "0.2";
     private static final Map<String, List<String>> GROUP_COMMANDS = Map.of(
             "tag", List.of("create", "edit", "list", "delete"),
             "player", List.of("give", "set", "remove", "clear"),
-            "display", List.of("glitch", "effect"),
+            "display", List.of("glitch", "effect", "item"),
             "advanced", List.of("role", "scope"),
             "admin", List.of("reload", "export", "import")
     );
@@ -109,6 +114,8 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         }
 
         String subcommand = args[0].toLowerCase(Locale.ROOT);
+        if ("help".equals(subcommand)) { help(context.source(), args); return; }
+        if ("info".equals(subcommand) || "version".equals(subcommand)) { info(context.source()); return; }
         if ("list".equals(subcommand)) {
             if (allowed(context.source(), "nametag.use")) {
                 list(context.source());
@@ -141,6 +148,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 case "remove", "clear" -> clear(context.source(), args);
                 case "glitch" -> glitch(context.source(), args);
                 case "effect" -> effect(context.source(), args);
+                case "item" -> item(context.source(), args);
                 case "role" -> role(context.source(), args);
                 case "scope" -> scope(context.source(), args);
                 case "export" -> exportTags(context.source(), args);
@@ -161,12 +169,18 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         if (input.length == 1) {
             String prefix = input[0].toLowerCase(Locale.ROOT);
-            return GROUPS.stream()
+            List<String> roots = new java.util.ArrayList<>(GROUPS);
+            roots.add("help"); roots.add("info"); roots.add("version");
+            return roots.stream()
                     .filter(value -> value.startsWith(prefix))
                     .toList();
         }
 
         String group = input[0].toLowerCase(Locale.ROOT);
+        if ("help".equals(group) && input.length == 2) {
+            String prefix = input[1].toLowerCase(Locale.ROOT);
+            return HELP_TOPICS.stream().filter(value -> value.startsWith(prefix)).toList();
+        }
         List<String> commands = GROUP_COMMANDS.get(group);
         if (commands != null && input.length == 2) {
             String prefix = input[1].toLowerCase(Locale.ROOT);
@@ -230,6 +244,18 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             }
         }
 
+        if (args.length == 2 && "item".equals(subcommand)) return tagNames(args[1]);
+        if (args.length == 3 && "item".equals(subcommand)) {
+            String prefix = args[2].toLowerCase(Locale.ROOT);
+            return List.of("set", "mode", "speed", "clear").stream().filter(value -> value.startsWith(prefix)).toList();
+        }
+        if (args.length == 4 && "item".equals(subcommand)) {
+            String action = args[2].toLowerCase(Locale.ROOT);
+            String prefix = args[3].toLowerCase(Locale.ROOT);
+            if ("set".equals(action)) return context.source().itemNames().stream().map(DefaultNameTagCommandHandler::normalizeItemId).filter(value -> value.startsWith(prefix)).sorted().toList();
+            if ("mode".equals(action)) return ITEM_MODES.stream().filter(value -> value.startsWith(prefix)).toList();
+            if ("speed".equals(action)) return ITEM_SPEEDS.stream().filter(value -> value.startsWith(prefix)).toList();
+        }
         if (args.length == 2 && ("scope".equals(subcommand) || "effect".equals(subcommand) || "role".equals(subcommand))) {
             return tagNames(args[1]);
         }
@@ -581,6 +607,84 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         ));
     }
 
+    private void item(CommandSource source, String[] args) {
+        if (args.length < 3) throw new IllegalArgumentException("Usage: /nametag display item <tag> set <item>|mode <static|rotate>|speed <1-10>|clear");
+        TagId id = new TagId(args[1].toLowerCase(Locale.ROOT));
+        Tag current = tagService.find(id).orElseThrow(() -> new IllegalArgumentException(messages.format("error.tag.not_found", Map.of("tag", id.value()))));
+        Map<String, String> metadata = new java.util.LinkedHashMap<>(current.metadata());
+        String action = args[2].toLowerCase(Locale.ROOT);
+        switch (action) {
+            case "set" -> {
+                if (args.length != 4) throw new IllegalArgumentException("Usage: /nametag display item <tag> set <item>");
+                String item = normalizeItemId(args[3]);
+                if (!contextItemNames(source).contains(item)) throw new IllegalArgumentException("Unknown Minecraft item: " + item);
+                metadata.put(TagItemSettings.ITEM_KEY, item);
+                metadata.putIfAbsent(TagItemSettings.MODE_KEY, "static");
+                metadata.putIfAbsent(TagItemSettings.SPEED_KEY, "5");
+            }
+            case "mode" -> {
+                if (args.length != 4) throw new IllegalArgumentException("Usage: /nametag display item <tag> mode <static|rotate>");
+                String mode = args[3].toLowerCase(Locale.ROOT);
+                if (!ITEM_MODES.contains(mode)) throw new IllegalArgumentException("Unknown item mode: " + mode + ". Use static or rotate.");
+                if (!metadata.containsKey(TagItemSettings.ITEM_KEY)) throw new IllegalArgumentException("Set an item first with: /nametag display item <tag> set <item>");
+                metadata.put(TagItemSettings.MODE_KEY, mode);
+            }
+            case "speed" -> {
+                if (args.length != 4) throw new IllegalArgumentException("Usage: /nametag display item <tag> speed <1-10>");
+                int speed = parseItemSpeed(args[3]);
+                if (!metadata.containsKey(TagItemSettings.ITEM_KEY)) throw new IllegalArgumentException("Set an item first with: /nametag display item <tag> set <item>");
+                metadata.put(TagItemSettings.SPEED_KEY, Integer.toString(speed));
+            }
+            case "clear" -> {
+                if (args.length != 3) throw new IllegalArgumentException("Usage: /nametag display item <tag> clear");
+                metadata.remove(TagItemSettings.ITEM_KEY); metadata.remove(TagItemSettings.MODE_KEY); metadata.remove(TagItemSettings.SPEED_KEY);
+            }
+            default -> throw new IllegalArgumentException("Unknown item option: " + action + ". Use set, mode, speed or clear.");
+        }
+        Tag updated = new Tag(current.id(), current.displayName(), current.color(), current.style(), current.effect(), current.priority(), current.enabled(), current.chatEnabled(), metadata);
+        tagService.update(updated);
+        source.sendMessage("Item display updated for " + updated.id().value() + ".");
+    }
+
+    private static String normalizeItemId(String value) {
+        String normalized = value.toLowerCase(Locale.ROOT);
+        return normalized.contains(":") ? normalized : "minecraft:" + normalized;
+    }
+
+    private static int parseItemSpeed(String value) {
+        try { int speed = Integer.parseInt(value); if (speed < 1 || speed > 10) throw new NumberFormatException(); return speed; }
+        catch (NumberFormatException exception) { throw new IllegalArgumentException("Invalid item rotation speed: " + value + ". Use 1-10."); }
+    }
+
+    private static Collection<String> contextItemNames(CommandSource source) {
+        return source.itemNames().stream().map(DefaultNameTagCommandHandler::normalizeItemId).collect(java.util.stream.Collectors.toSet());
+    }
+
+    private void help(CommandSource source, String[] args) {
+        if (args.length == 1) {
+            source.sendMessage("NameTag-Core Help");
+            source.sendMessage("Categories: tag, player, display, advanced, admin");
+            source.sendMessage("Use /nametag help <category> for complete category help.");
+            return;
+        }
+        String topic = args[1].toLowerCase(Locale.ROOT);
+        switch (topic) {
+            case "tag" -> { source.sendMessage("/nametag tag create <tag> <displayName>"); source.sendMessage("/nametag tag edit <tag> name|color|gradient|style|priority|enabled|chat <value>"); source.sendMessage("/nametag tag list"); source.sendMessage("/nametag tag delete <tag>"); }
+            case "player" -> { source.sendMessage("/nametag player give <player> <tag> [duration]"); source.sendMessage("/nametag player set <player> <tag>"); source.sendMessage("/nametag player remove <player>"); source.sendMessage("/nametag player clear <player>"); source.sendMessage("Duration units: s, m, h, d, w; maximum 365d."); }
+            case "display" -> { source.sendMessage("/nametag display glitch <tag> <white|colorful>"); source.sendMessage("/nametag display effect <tag> <none|rainbow|pulse|wave>"); source.sendMessage("/nametag display item <tag> set <item>"); source.sendMessage("/nametag display item <tag> mode <static|rotate>"); source.sendMessage("/nametag display item <tag> speed <1-10>"); source.sendMessage("/nametag display item <tag> clear"); source.sendMessage("Item model appears beside the existing text name."); }
+            case "advanced" -> { source.sendMessage("/nametag advanced role <tag> <permission|clear>"); source.sendMessage("/nametag advanced scope <tag> clear"); source.sendMessage("/nametag advanced scope <tag> world <world>"); source.sendMessage("/nametag advanced scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>"); }
+            case "admin" -> { source.sendMessage("/nametag admin reload"); source.sendMessage("/nametag admin export <file>"); source.sendMessage("/nametag admin import <file>"); }
+            default -> source.sendMessage("Unknown help category: " + topic + ". Use /nametag help <TAB>.");
+        }
+    }
+
+    private void info(CommandSource source) {
+        source.sendMessage("NameTag-Core");
+        source.sendMessage("Version: " + VERSION);
+        source.sendMessage("Minecraft: 1.21.11");
+        source.sendMessage("Platforms: Fabric Server + Paper Server");
+    }
+
     private void effect(CommandSource source, String[] args) {
         if (args.length != 3) throw new IllegalArgumentException(messages.message("error.usage.effect"));
         TagId id = new TagId(args[1].toLowerCase(Locale.ROOT));
@@ -762,7 +866,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             case "delete" -> "nametag.delete";
             case "give", "set" -> "nametag.give";
             case "remove", "clear" -> "nametag.remove";
-            case "edit", "glitch", "effect", "role", "scope" -> "nametag.edit";
+            case "edit", "glitch", "effect", "item", "role", "scope" -> "nametag.edit";
             case "reload" -> "nametag.reload";
             case "export", "import" -> "nametag.admin";
             default -> null;
