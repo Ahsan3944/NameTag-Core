@@ -188,6 +188,12 @@ class Fabric2111ChatRendererTest {
 
 
     @Test
+    void injectsItemBeforeExistingTagPlaceholder() {
+        assertEquals("[{item}{tag}] {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("[{tag}] {player}: {message}"));
+        assertEquals("[{item}{tags}] {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("[{tags}] {player}: {message}"));
+    }
+
+    @Test
     void rendersItemIconBeforeTagAndSupportsIconOnly() {
         Tag tagged = new Tag(
                 new TagId("vip"),
