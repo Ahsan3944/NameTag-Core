@@ -19,6 +19,10 @@ public final class AnimatedEffectEngine {
                 case TagEffect.RAINBOW_ID -> rainbowColor(index, length, frameIndex, settings.intensity());
                 case TagEffect.PULSE_ID -> pulseColor(safeBase(baseColorResolver.apply(index)), frameIndex, settings.intensity());
                 case TagEffect.WAVE_ID -> waveColor(safeBase(baseColorResolver.apply(index)), index, frameIndex, settings.intensity());
+                case TagEffect.NEON_ID -> neonColor(safeBase(baseColorResolver.apply(index)), index, frameIndex, settings.intensity());
+                case TagEffect.BREATH_ID -> breathColor(safeBase(baseColorResolver.apply(index)), frameIndex, settings.intensity());
+                case TagEffect.BLINK_ID -> blinkColor(safeBase(baseColorResolver.apply(index)), frameIndex, settings.intensity());
+                case TagEffect.RGB_ID -> rgbColor(index, length, frameIndex, settings.intensity());
                 default -> throw new IllegalArgumentException("Unsupported animated effect: " + settings.effectId());
             };
             rendered.append(character);
