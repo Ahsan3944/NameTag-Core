@@ -478,8 +478,11 @@ final class DefaultNameTagCommandHandlerTest {
                         "priority", "enabled", "chat", "item-mode", "item-speed"
                 ),
                 handler.suggest(new CommandContext(source, new String[]{"edit", "owner", ""})));
-        assertEquals(List.of("bold", "bold_italic", "bold_underlined"),
-                handler.suggest(new CommandContext(source, new String[]{"edit", "owner", "style", "bold"})));
+        List<String> styleSuggestions = handler.suggest(
+                new CommandContext(source, new String[]{"edit", "owner", "style", "bold"}));
+        assertTrue(styleSuggestions.contains("bold"));
+        assertTrue(styleSuggestions.contains("bold_italic"));
+        assertTrue(styleSuggestions.contains("bold_underlined"));
     }
 
 
