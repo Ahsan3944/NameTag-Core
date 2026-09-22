@@ -356,3 +356,113 @@ public final class NameTagFabric {
         );
     }
 }
+
+    private static int execute(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration,
+            String[] args
+    ) {
+        handler(context.getSource(), service, messages, configuration)
+                .execute(new com.ultraop.nametag.api.CommandContext(
+                        new FabricCommandSource(context.getSource(), permissions),
+                        args
+                ));
+        return 1;
+    }
+
+    private static int executeTarget(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration,
+            boolean setActive
+    ) {
+        try {
+            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+            String subcommand = setActive ? "set" : "give";
+            String tag = StringArgumentType.getString(context, "tag");
+            boolean hasDuration = context.getNodes().stream()
+                    .anyMatch(node -> node.getNode().getName().equals("duration"));
+            String[] args = hasDuration
+                    ? new String[]{subcommand, player.getName().getString(), tag, StringArgumentType.getString(context, "duration")}
+                    : new String[]{subcommand, player.getName().getString(), tag};
+            return execute(context, service, permissions, messages, configuration, args);
+        } catch (CommandSyntaxException exception) {
+            context.getSource().sendError(Text.literal(exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int executeTargetClear(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration,
+            String subcommand
+    ) {
+        try {
+            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+            return execute(
+                    context,
+                    service,
+                    permissions,
+                    messages,
+                    configuration,
+                    new String[]{subcommand, player.getName().getString()}
+            );
+        } catch (CommandSyntaxException exception) {
+            context.getSource().sendError(Text.literal(exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static java.util.concurrent.CompletableFuture<Suggestions> suggestTags(
+            CommandContext<ServerCommandSource> context,
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
+            TagService service,
+            PermissionService permissions,
+            DefaultConfigurationService configuration,
+            String subcommand
+    ) {
+        String prefix = builder.getRemaining();
+        NameTagCommandHandler handler = handler(
+                context.getSource(),
+                service,
+                new DefaultMessageService(),
+                configuration
+        );
+        return CommandSource.suggestMatching(
+                handler.suggest(new com.ultraop.nametag.api.CommandContext(
+                        new FabricCommandSource(context.getSource(), permissions),
+                        subcommand.equals("give") || subcommand.equals("set")
+                                ? new String[]{subcommand, "", prefix}
+                                : new String[]{subcommand, prefix}
+                )),
+                builder
+        );
+    }
+
+    private static NameTagCommandHandler handler(
+            ServerCommandSource source,
+            TagService service,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration
+    ) {
+        java.nio.file.Path dataDirectory = FabricLoader.getInstance()
+                .getConfigDir()
+                .resolve("nametag-core");
+        return new DefaultNameTagCommandHandler(
+                service,
+                new FabricPlayerResolver(source.getServer()),
+                messages,
+                configuration,
+                configuration,
+                dataDirectory
+        );
+    }
+}
