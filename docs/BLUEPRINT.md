@@ -96,7 +96,7 @@ The command tree is grouped for TAB completion: group -> sub-group/option -> val
 /nametag tag delete <tag>
 /nametag player set <player> <tag> [duration]
 
-`give` grants/adds a tag; `set` activates a tag and also assigns it when necessary.
+`set` directly assigns and activates the tag; an optional duration makes the assignment temporary.
 /nametag player remove <player>
 /nametag player clear <player>
 /nametag display glitch <tag> <white|colorful>
