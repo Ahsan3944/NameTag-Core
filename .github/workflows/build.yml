@@ -72,6 +72,7 @@ jobs:
           grep -q '"id": "nametag-core"' dist/fabric/fabric.mod.json
           grep -q '"minecraft": "~1.21.11"' dist/fabric/fabric.mod.json
           unzip -l "$fabric_jar" | grep -q 'com/ultraop/nametag/fabric/NameTagFabricEntrypoint.class'
+          unzip -l "$fabric_jar" | grep -q 'org/yaml/snakeyaml/constructor/BaseConstructor.class'
 
           unzip -p "$paper_jar" plugin.yml > dist/paper/plugin.yml
 
