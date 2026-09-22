@@ -80,9 +80,9 @@ Primary namespace:
 
 Canonical grouped command surface:
 ```
-/nametag tag create <tag> name <displayName> style <style> color <color> effect <normal|glitch> ...
-/nametag tag create <tag> item <item> spin <true|false> [speed <1-10>]
-/nametag tag create <tag> name+item <item> name <displayName> style <style> color <color> effect <normal|glitch> ...
+/nametag tag create <tag> name <displayName> -> <style> -> <color> -> <normal|glitch> -> <effect>
+/nametag tag create <tag> item <item> -> spin <true|false> -> <speed 1-10 when true>
+/nametag tag create <tag> name+item <item> <displayName> -> <style> -> <color> -> <normal|glitch> -> <effect>
 
 The command tree is grouped for TAB completion: group -> sub-group/option -> valid values.
 /nametag tag edit <tag> name <displayName|none>
