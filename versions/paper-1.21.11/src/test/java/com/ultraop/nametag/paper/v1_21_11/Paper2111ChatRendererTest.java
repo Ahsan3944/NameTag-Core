@@ -8,6 +8,7 @@ import com.ultraop.nametag.core.model.TagStyle;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ObjectComponent;
 import net.kyori.adventure.text.object.ObjectContents;
+import net.kyori.adventure.text.object.SpriteObjectContents;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.junit.jupiter.api.Test;
@@ -165,7 +166,11 @@ class Paper2111ChatRendererTest {
         if (!(icon instanceof ObjectComponent object)) {
             throw new AssertionError("Expected a native object component for the item icon");
         }
-        assertEquals("minecraft:items", object.contents().examinableProperties().findFirst().map(Object::toString).orElse(""));
+        if (!(object.contents() instanceof SpriteObjectContents sprite)) {
+            throw new AssertionError("Expected a sprite object content for the item icon");
+        }
+        assertEquals("minecraft:items", sprite.atlas().asString());
+        assertEquals("minecraft:item/diamond", sprite.sprite().asString());
 
         Tag iconOnly = new Tag(
                 new TagId("icon_only"),
