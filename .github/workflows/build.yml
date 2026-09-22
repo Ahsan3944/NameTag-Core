@@ -76,6 +76,18 @@ jobs:
           # safe under "set -o pipefail".
           unzip -Z1 "$fabric_jar" > /tmp/fabric-entries.txt
           grep -q 'com/ultraop/nametag/fabric/NameTagFabricEntrypoint.class' /tmp/fabric-entries.txt
+          grep -q 'com/ultraop/nametag/fabric/v1_21_11/Fabric2111Adapter.class' /tmp/fabric-entries.txt
+
+          # The version adapter is compiled by this Loom project so its Minecraft
+          # named references are remapped before distribution. Guard against the
+          # exact runtime failure where net.minecraft.text.Text remains in the JAR.
+          unzip -p "$fabric_jar" com/ultraop/nametag/fabric/v1_21_11/Fabric2111Adapter.class > /tmp/fabric-adapter.class
+          strings /tmp/fabric-adapter.class > /tmp/fabric-adapter-strings.txt
+          if grep -q 'net/minecraft/text/Text' /tmp/fabric-adapter-strings.txt; then
+            echo "Fabric version adapter still contains named Minecraft references."
+            exit 1
+          fi
+          grep -q 'net/minecraft/class_2561' /tmp/fabric-adapter-strings.txt
 
           # Loom packages external libraries as nested JARs under
           # META-INF/jars. Verify the nested SnakeYAML JAR and the
