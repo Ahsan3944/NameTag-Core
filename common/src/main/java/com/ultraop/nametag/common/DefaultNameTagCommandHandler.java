@@ -359,19 +359,82 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     }
 
     private static String[] normalizeGroupedArgs(String[] input) {
-        if (input.length == 0) {
-            return input;
-        }
+        if (input.length == 0) return input;
+
         String group = input[0].toLowerCase(Locale.ROOT);
-        if (!GROUP_COMMANDS.containsKey(group)) {
-            return input;
+        if (!GROUP_COMMANDS.containsKey(group)) return input;
+        if (input.length == 1) return new String[0];
+
+        String[] args = Arrays.copyOfRange(input, 1, input.length);
+        if (args.length < 1 || !"create".equalsIgnoreCase(args[0])) return args;
+        if (args.length < 2) return args;
+
+        List<String> normalized = new java.util.ArrayList<>();
+        normalized.add("create");
+        normalized.add(args[1]);
+
+        int index = 2;
+        while (index < args.length) {
+            String token = args[index].toLowerCase(Locale.ROOT);
+            switch (token) {
+                case "appearance" -> {
+                    index++;
+                    if (index >= args.length) return normalized.toArray(String[]::new);
+                    String property = args[index].toLowerCase(Locale.ROOT);
+                    if (!List.of("color", "gradient", "style", "effect", "glitch").contains(property)) {
+                        normalized.add(property);
+                        index++;
+                        continue;
+                    }
+                    normalized.add(property);
+                    index++;
+                    int values = "gradient".equals(property) ? 2 : 1;
+                    for (int i = 0; i < values && index < args.length; i++, index++) normalized.add(args[index]);
+                }
+                case "behavior" -> {
+                    index++;
+                    if (index >= args.length) return normalized.toArray(String[]::new);
+                    String property = args[index].toLowerCase(Locale.ROOT);
+                    if (!List.of("priority", "enabled", "chat").contains(property)) {
+                        normalized.add(property);
+                        index++;
+                        continue;
+                    }
+                    normalized.add(property);
+                    index++;
+                    if (index < args.length) normalized.add(args[index++]);
+                }
+                case "item" -> {
+                    normalized.add("item");
+                    index++;
+                    if (index < args.length) normalized.add(args[index++]);
+                    while (index < args.length) {
+                        String nested = args[index].toLowerCase(Locale.ROOT);
+                        if ("mode".equals(nested)) {
+                            normalized.add("item-mode");
+                            index++;
+                            if (index < args.length) normalized.add(args[index++]);
+                        } else if ("speed".equals(nested)) {
+                            normalized.add("item-speed");
+                            index++;
+                            if (index < args.length) normalized.add(args[index++]);
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                default -> {
+                    normalized.add(args[index++]);
+                    if (isCreateOption(token) && !"name".equals(token) && index < args.length) {
+                        int values = "gradient".equals(token) ? 2 : 1;
+                        for (int i = 0; i < values && index < args.length && !isCreateOption(args[index]); i++) {
+                            normalized.add(args[index++]);
+                        }
+                    }
+                }
+            }
         }
-        if (input.length == 1) {
-            return new String[0];
-        }
-        String[] normalized = new String[input.length - 1];
-        System.arraycopy(input, 1, normalized, 0, normalized.length);
-        return normalized;
+        return normalized.toArray(String[]::new);
     }
 
     private void create(CommandSource source, String[] args) {
