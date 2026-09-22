@@ -460,13 +460,11 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
     private static List<String> editWizardSuggestions(CommandContext context, String[] values) {
         if (values.length == 1) return tagNames(values[0]);
-        if (values.length == 2) {
-            return prefix(List.of("name", "item", "style", "color", "effect", "advanced"), values[1]);
-        }
+        if (values.length == 2) return prefix(
+                List.of("name", "item", "style", "color", "effect", "advanced"), values[1]);
 
         String property = values[1].toLowerCase(Locale.ROOT);
         String prefix = values[values.length - 1].toLowerCase(Locale.ROOT);
-
         if ("item".equals(property)) {
             if (values.length == 3) {
                 List<String> items = new java.util.ArrayList<>();
