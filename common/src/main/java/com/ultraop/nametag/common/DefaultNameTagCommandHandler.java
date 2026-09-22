@@ -403,6 +403,11 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                             .filter(v -> v.startsWith(last)).sorted().toList();
                 }
                 if (values.length >= 4 && trailing) return List.of("mode", "speed");
+                if (values.length >= 5 && trailing) {
+                    String nested = values[3].toLowerCase(Locale.ROOT);
+                    if ("mode".equals(nested)) return ITEM_MODES;
+                    if ("speed".equals(nested)) return ITEM_SPEEDS;
+                }
             }
             return null;
         }
@@ -433,6 +438,11 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 return items.stream().filter(v -> v.startsWith(last)).sorted().toList();
             }
             if (values.length >= 4 && trailing) return List.of("mode", "speed");
+            if (values.length >= 5 && trailing) {
+                String nested = values[3].toLowerCase(Locale.ROOT);
+                if ("mode".equals(nested)) return ITEM_MODES;
+                if ("speed".equals(nested)) return ITEM_SPEEDS;
+            }
         }
         return null;
     }
