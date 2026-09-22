@@ -112,6 +112,7 @@
 - [x] Direct tag creation with name/item options and item autocomplete.
 - [x] Consolidated `/nametag info` command; standalone `/nametag version` removed.
 - [x] Direct create-time configuration for item, color, gradient, style, effect, glitch, priority, enabled, chat and item animation settings.
+- [x] Grouped create/edit command tree: primary group -> sub-option -> final value/item registry.
 - [x] Registry-backed item autocomplete at create-time, including icon-only tags.
 - [x] `/nametag player set` can activate and assign an unassigned tag; `give` remains the additive/grant operation.
 - [x] Item-first chat composition with exact-once player-name rendering.
