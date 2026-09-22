@@ -604,6 +604,24 @@ final class DefaultNameTagCommandHandlerTest {
                 handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "vip", "appearance", ""})));
         assertEquals(List.of("mode", "speed"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "vip", "item", "minecraft:diamond", ""})));
+
+        handler.execute(new CommandContext(source, new String[]{
+                "tag", "create", "vip", "appearance", "color", "gold",
+                "behavior", "priority", "100",
+                "item", "minecraft:diamond", "mode", "rotate", "speed", "8"
+        }));
+        Tag created = service.find(new TagId("vip")).orElseThrow();
+        assertEquals(new TagColor.Preset("gold"), created.color());
+        assertEquals(100, created.priority());
+        assertEquals("minecraft:diamond", created.metadata().get(TagItemSettings.ITEM_KEY));
+        assertEquals("rotate", created.metadata().get(TagItemSettings.MODE_KEY));
+        assertEquals("8", created.metadata().get(TagItemSettings.SPEED_KEY));
+
+        handler.execute(new CommandContext(source, new String[]{
+                "tag", "edit", "vip", "appearance", "style", "bold"
+        }));
+        assertEquals(new TagStyle(true, false, false, false, false),
+                service.find(new TagId("vip")).orElseThrow().style());
     }
 
     @Test
