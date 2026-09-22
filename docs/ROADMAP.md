@@ -111,7 +111,7 @@
 - [x] Icon-only tag support.
 - [x] Direct tag creation with name/item options and item autocomplete.
 - [x] Consolidated `/nametag info` command; standalone `/nametag version` removed.
-- [x] Direct create-time configuration for item, color, gradient, style, effect, glitch, priority, enabled, chat and item animation settings.
+- [x] Guided create-time wizard: name, item or name+item; sequential style/color/effect choices; item spin true/false with speed only when enabled.
 - [x] Guided create wizard: `name`, `item`, `name+item` top-level branches.
 - [x] Sequential style → color → effect → normal/glitch → effect-mode suggestions.
 - [x] Registry-backed item autocomplete with identifier validation and spin/speed selection.
