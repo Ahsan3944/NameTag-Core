@@ -41,7 +41,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     private static final String VERSION = "0.2";
     private static final Map<String, List<String>> GROUP_COMMANDS = Map.of(
             "tag", List.of("create", "edit", "list", "delete"),
-            "player", List.of("give", "set", "remove", "clear"),
+            "player", List.of("set", "remove", "clear"),
             "display", List.of("glitch", "effect", "item"),
             "advanced", List.of("role", "scope"),
             "admin", List.of("reload", "export", "import")
@@ -152,7 +152,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 case "create" -> create(context.source(), args);
                 case "edit" -> edit(context.source(), args);
                 case "delete" -> delete(context.source(), args);
-                case "give", "set" -> assign(context.source(), args);
+                case "set" -> assign(context.source(), args);
                 case "remove", "clear" -> clear(context.source(), args);
                 case "glitch" -> glitch(context.source(), args);
                 case "effect" -> effect(context.source(), args);
@@ -236,11 +236,11 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             return CREATE_OPTIONS.stream().filter(value -> value.startsWith(last)).toList();
         }
 
-        if (args.length == 2 && List.of("give", "set", "remove", "clear").contains(subcommand)) {
+        if (args.length == 2 && List.of("set", "remove", "clear").contains(subcommand)) {
             return playerNames(args[1]);
         }
 
-        if (args.length == 3 && List.of("give", "set").contains(subcommand)) {
+        if (args.length == 3 && "set".equals(subcommand)) {
             return tagNames(args[2]);
         }
 
@@ -326,7 +326,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     .stream().filter(value -> value.startsWith(prefix)).toList();
         }
 
-        if (args.length == 3 && "give".equals(subcommand)) {
+        if (args.length == 3 && "set".equals(subcommand)) {
             String prefix = args[2].toLowerCase(Locale.ROOT);
             return List.of("30m", "1h", "1d", "7d")
                     .stream().filter(value -> value.startsWith(prefix)).toList();
