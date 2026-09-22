@@ -404,7 +404,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                             .map(DefaultNameTagCommandHandler::normalizeItemId)
                             .filter(v -> v.startsWith(last)).sorted().toList();
                 }
-                if (values.length >= 5 && trailing) {
+                if (values.length == 5 && trailing) {
                     String nested = values[3].toLowerCase(Locale.ROOT);
                     if ("mode".equals(nested)) return ITEM_MODES;
                     if ("speed".equals(nested)) return ITEM_SPEEDS;
@@ -451,7 +451,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 items.addAll(context.source().itemNames().stream().map(DefaultNameTagCommandHandler::normalizeItemId).toList());
                 return items.stream().filter(v -> v.startsWith(last)).sorted().toList();
             }
-            if (values.length >= 5 && trailing) {
+            if (values.length == 5 && trailing) {
                 String nested = values[3].toLowerCase(Locale.ROOT);
                 if ("mode".equals(nested)) return ITEM_MODES;
                 if ("speed".equals(nested)) return ITEM_SPEEDS;
