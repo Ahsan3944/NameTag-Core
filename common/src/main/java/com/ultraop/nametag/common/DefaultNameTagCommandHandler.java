@@ -32,8 +32,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class DefaultNameTagCommandHandler implements NameTagCommandHandler {
-    private static final List<String> SUBCOMMANDS =
-            List.of("create", "edit", "list", "give", "set", "remove", "clear", "delete", "glitch", "effect", "role", "scope", "reload", "export", "import");
+    private static final List<String> GROUPS =
+            List.of("tag", "player", "display", "advanced", "admin");
+    private static final Map<String, List<String>> GROUP_COMMANDS = Map.of(
+            "tag", List.of("create", "edit", "list", "delete"),
+            "player", List.of("give", "set", "remove", "clear"),
+            "display", List.of("glitch", "effect"),
+            "advanced", List.of("role", "scope"),
+            "admin", List.of("reload", "export", "import")
+    );
     private static final List<String> EDIT_PROPERTIES =
             List.of("name", "color", "gradient", "style", "priority", "enabled", "chat");
     private static final List<String> PRESET_COLORS = List.of(
@@ -95,7 +102,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
     @Override
     public void execute(CommandContext context) {
-        String[] args = context.args();
+        String[] args = normalizeGroupedArgs(context.args());
         if (args.length == 0) {
             sendUsage(context.source());
             return;
@@ -147,19 +154,38 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
     @Override
     public Collection<String> suggest(CommandContext context) {
-        String[] args = context.args();
-        if (args.length == 0) {
-            return SUBCOMMANDS;
+        String[] input = context.args();
+        if (input.length == 0) {
+            return GROUPS;
         }
 
-        if (args.length == 1) {
-            String prefix = args[0].toLowerCase(Locale.ROOT);
-            return SUBCOMMANDS.stream()
+        if (input.length == 1) {
+            String prefix = input[0].toLowerCase(Locale.ROOT);
+            return GROUPS.stream()
                     .filter(value -> value.startsWith(prefix))
                     .toList();
         }
 
+        String group = input[0].toLowerCase(Locale.ROOT);
+        List<String> commands = GROUP_COMMANDS.get(group);
+        if (commands == null) {
+            return List.of();
+        }
+
+        if (input.length == 2) {
+            String prefix = input[1].toLowerCase(Locale.ROOT);
+            return commands.stream()
+                    .filter(value -> value.startsWith(prefix))
+                    .toList();
+        }
+
+        String[] args = normalizeGroupedArgs(input);
+        if (args.length == 0) {
+            return List.of();
+        }
+
         String subcommand = args[0].toLowerCase(Locale.ROOT);
+
         if (args.length == 2 && ("delete".equals(subcommand) || "glitch".equals(subcommand) || "edit".equals(subcommand))) {
             return tagNames(args[1]);
         }
@@ -176,14 +202,30 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             String prefix = args[2].toLowerCase(Locale.ROOT);
             return EDIT_PROPERTIES.stream().filter(value -> value.startsWith(prefix)).toList();
         }
+
         if (args.length == 4 && "edit".equals(subcommand)) {
             String property = args[2].toLowerCase(Locale.ROOT);
             String prefix = args[3].toLowerCase(Locale.ROOT);
+            if ("name".equals(property)) {
+                return tagService.find(new TagId(args[1].toLowerCase(Locale.ROOT)))
+                        .map(Tag::displayName)
+                        .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(prefix))
+                        .map(List::of)
+                        .orElse(List.of());
+            }
             if ("color".equals(property)) {
                 return PRESET_COLORS.stream().filter(value -> value.startsWith(prefix)).toList();
             }
+            if ("gradient".equals(property)) {
+                return List.of("#FFFFFF #000000", "#FF0000 #00FFFF", "#FFD700 #8A2BE2")
+                        .stream().filter(value -> value.toLowerCase(Locale.ROOT).startsWith(prefix)).toList();
+            }
             if ("style".equals(property)) {
                 return STYLE_VALUES.stream().filter(value -> value.startsWith(prefix)).toList();
+            }
+            if ("priority".equals(property)) {
+                return List.of("0", "10", "25", "50", "100", "1000")
+                        .stream().filter(value -> value.startsWith(prefix)).toList();
             }
             if ("enabled".equals(property) || "chat".equals(property)) {
                 return List.of("true", "false").stream().filter(value -> value.startsWith(prefix)).toList();
@@ -205,20 +247,48 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     .filter(value -> value.startsWith(prefix))
                     .toList();
         }
+
         if (args.length == 3 && "effect".equals(subcommand)) {
             String prefix = args[2].toLowerCase(Locale.ROOT);
-            return List.of("none", "rainbow", "pulse", "wave").stream().filter(value -> value.startsWith(prefix)).toList();
+            return List.of("none", "rainbow", "pulse", "wave")
+                    .stream().filter(value -> value.startsWith(prefix)).toList();
         }
+
+        if (args.length == 3 && "give".equals(subcommand)) {
+            String prefix = args[2].toLowerCase(Locale.ROOT);
+            return List.of("30m", "1h", "1d", "7d")
+                    .stream().filter(value -> value.startsWith(prefix)).toList();
+        }
+
         if (args.length >= 3 && "scope".equals(subcommand)) {
             String prefix = args[2].toLowerCase(Locale.ROOT);
-            return List.of("clear", "world", "region").stream().filter(value -> value.startsWith(prefix)).toList();
+            return List.of("clear", "world", "region").stream()
+                    .filter(value -> value.startsWith(prefix))
+                    .toList();
         }
+
         if (args.length == 3 && "role".equals(subcommand)) {
             String prefix = args[2].toLowerCase(Locale.ROOT);
             return List.of("clear").stream().filter(value -> value.startsWith(prefix)).toList();
         }
 
         return List.of();
+    }
+
+    private static String[] normalizeGroupedArgs(String[] input) {
+        if (input.length == 0) {
+            return input;
+        }
+        String group = input[0].toLowerCase(Locale.ROOT);
+        if (!GROUP_COMMANDS.containsKey(group)) {
+            return input;
+        }
+        if (input.length == 1) {
+            return new String[0];
+        }
+        String[] normalized = new String[input.length - 1];
+        System.arraycopy(input, 1, normalized, 0, normalized.length);
+        return normalized;
     }
 
     private void create(CommandSource source, String[] args) {
