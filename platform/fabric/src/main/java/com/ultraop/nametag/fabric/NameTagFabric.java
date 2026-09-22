@@ -74,58 +74,37 @@ public final class NameTagFabric {
             var createTag = CommandManager.argument("tag", StringArgumentType.word());
 
             // CREATE
-            // Layout is intentionally grouped so TAB shows a small, predictable
-            // command tree instead of one flat list of every property.
+            // The create wizard deliberately exposes only three top-level choices:
+            // name, item, and name+item. Every choice then walks through the next
+            // valid value instead of dumping implementation properties into one list.
+
             var createName = CommandManager.literal("name");
-            createName.then(CommandManager.argument("displayName", StringArgumentType.string())
-                    .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
-                            "name", StringArgumentType.getString(context, "displayName"))));
+            var createNameValue = CommandManager.argument("displayName", StringArgumentType.greedyString());
+            createNameValue.then(createStyleNode(
+                    service, permissions, messages, configuration, "name"));
+            createName.then(createNameValue);
 
             var createItem = CommandManager.literal("item");
             var createItemValue = CommandManager.argument("item", StringArgumentType.word())
-                    .suggests((context, builder) -> suggestCreateItems(context, builder, permissions))
-                    .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
-                            "item", StringArgumentType.getString(context, "item")));
-
-            var createItemMode = CommandManager.literal("mode");
-            createItemMode.then(CommandManager.argument("mode", StringArgumentType.word())
-                    .suggests((context, builder) -> CommandSource.suggestMatching(
-                            List.of("static", "rotate"), builder))
-                    .executes(context -> executeCreateNestedOption(context, service, permissions, messages, configuration,
-                            "item", "mode", StringArgumentType.getString(context, "mode"))));
-            createItemValue.then(createItemMode);
-
-            var createItemSpeed = CommandManager.literal("speed");
-            createItemSpeed.then(CommandManager.argument("speed", StringArgumentType.word())
-                    .suggests((context, builder) -> CommandSource.suggestMatching(
-                            List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), builder))
-                    .executes(context -> executeCreateNestedOption(context, service, permissions, messages, configuration,
-                            "item", "speed", StringArgumentType.getString(context, "speed"))));
-            createItemValue.then(createItemSpeed);
+                    .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
+            createItemValue.then(createSpinNode(
+                    service, permissions, messages, configuration, false));
             createItem.then(createItemValue);
 
-            var appearance = CommandManager.literal("appearance");
-            appearance.then(createColorNode(service, permissions, messages, configuration));
-            appearance.then(createGradientNode(service, permissions, messages, configuration));
-            appearance.then(createStyleNode(service, permissions, messages, configuration));
-            appearance.then(createEffectNode(service, permissions, messages, configuration));
-            appearance.then(createGlitchNode(service, permissions, messages, configuration));
-
-            var behavior = CommandManager.literal("behavior");
-            behavior.then(createSimpleOptionNode("priority",
-                    List.of("0", "10", "25", "50", "100", "1000"),
-                    service, permissions, messages, configuration));
-            behavior.then(createSimpleOptionNode("enabled",
-                    List.of("true", "false"),
-                    service, permissions, messages, configuration));
-            behavior.then(createSimpleOptionNode("chat",
-                    List.of("true", "false"),
-                    service, permissions, messages, configuration));
+            var createNameItem = CommandManager.literal("name+item");
+            var createNameItemValue = CommandManager.argument("item", StringArgumentType.word())
+                    .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
+            var createNameItemName = CommandManager.literal("name");
+            var createNameItemNameValue = CommandManager.argument("displayName", StringArgumentType.string());
+            createNameItemNameValue.then(createStyleNode(
+                    service, permissions, messages, configuration, "name+item"));
+            createNameItemName.then(createNameItemNameValue);
+            createNameItemValue.then(createNameItemName);
+            createNameItem.then(createNameItemValue);
 
             createTag.then(createName);
             createTag.then(createItem);
-            createTag.then(appearance);
-            createTag.then(behavior);
+            createTag.then(createNameItem);
             tagCreate.then(createTag);
             tag.then(tagCreate);
 
@@ -201,23 +180,6 @@ public final class NameTagFabric {
             // PLAYER GROUP
             var player = CommandManager.literal("player");
 
-            var playerGive = CommandManager.literal("give");
-            var givePlayer = CommandManager.argument("player", EntityArgumentType.player());
-            var giveTag = CommandManager.argument("tag", StringArgumentType.word())
-                    .suggests((context, builder) ->
-                            suggestTags(context, builder, service, permissions, configuration, "give"))
-                    .executes(context -> executeTarget(
-                            context, service, permissions, messages, configuration, false));
-            var giveDuration = CommandManager.argument("duration", StringArgumentType.word())
-                    .suggests((context, builder) ->
-                            CommandSource.suggestMatching(List.of("30m", "1h", "1d", "7d"), builder))
-                    .executes(context -> executeTarget(
-                            context, service, permissions, messages, configuration, false));
-            giveTag.then(giveDuration);
-            givePlayer.then(giveTag);
-            playerGive.then(givePlayer);
-            player.then(playerGive);
-
             var playerSet = CommandManager.literal("set");
             var setPlayer = CommandManager.argument("player", EntityArgumentType.player());
             var setTag = CommandManager.argument("tag", StringArgumentType.word())
@@ -225,6 +187,12 @@ public final class NameTagFabric {
                             suggestTags(context, builder, service, permissions, configuration, "set"))
                     .executes(context -> executeTarget(
                             context, service, permissions, messages, configuration, true));
+            var setDuration = CommandManager.argument("duration", StringArgumentType.word())
+                    .suggests((context, builder) ->
+                            CommandSource.suggestMatching(List.of("30m", "1h", "1d", "7d"), builder))
+                    .executes(context -> executeTarget(
+                            context, service, permissions, messages, configuration, true));
+            setTag.then(setDuration);
             setPlayer.then(setTag);
             playerSet.then(setPlayer);
             player.then(playerSet);
