@@ -77,7 +77,7 @@ public final class NameTagFabric {
             // Layout is intentionally grouped so TAB shows a small, predictable
             // command tree instead of one flat list of every property.
             var createName = CommandManager.literal("name");
-            createName.then(CommandManager.argument("displayName", StringArgumentType.word())
+            createName.then(CommandManager.argument("displayName", StringArgumentType.string())
                     .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
                             "name", StringArgumentType.getString(context, "displayName"))));
 
@@ -747,8 +747,12 @@ public final class NameTagFabric {
             TagService service, PermissionService permissions, DefaultMessageService messages,
             DefaultConfigurationService configuration) {
         var node = CommandManager.literal("gradient");
-        var start = CommandManager.argument("startHex", StringArgumentType.word());
+        var start = CommandManager.argument("startHex", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(
+                        List.of("#FFFFFF", "#FF0000", "#FFD700"), builder));
         var end = CommandManager.argument("endHex", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(
+                        List.of("#000000", "#00FFFF", "#8A2BE2"), builder))
                 .executes(context -> executeCreateGradient(context, service, permissions, messages, configuration));
         start.then(end);
         node.then(start);
