@@ -1009,12 +1009,20 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         String topic = args[1].toLowerCase(Locale.ROOT);
         switch (topic) {
             case "tag" -> {
-                source.sendMessage("/nametag tag create <tag> [name <displayName>] [item <item>] [color <color>] [gradient <startHex> <endHex>] [style <style>] [effect <effect>] [glitch <white|colorful>] [priority <number>] [enabled <true|false>] [chat <true|false>] [item-mode <static|rotate>] [item-speed <1-10>]");
-                source.sendMessage("/nametag tag edit <tag> <name|item|color|gradient|style|effect|glitch|priority|enabled|chat|item-mode|item-speed> <value>");
+                source.sendMessage("/nametag tag create <tag> <name|item|name+item>");
+                source.sendMessage("  name <displayName> -> style -> color -> effect -> normal|glitch -> effect value");
+                source.sendMessage("  item <item> -> spin <true|false> -> [speed <1-10> when true]");
+                source.sendMessage("  name+item <item> -> name <displayName> -> style -> color -> effect -> value");
+                source.sendMessage("/nametag tag edit <tag> <name|item|style|color|effect|advanced>");
                 source.sendMessage("/nametag tag list");
                 source.sendMessage("/nametag tag delete <tag>");
             }
-            case "player" -> { source.sendMessage("/nametag player give <player> <tag> [duration]"); source.sendMessage("/nametag player set <player> <tag>"); source.sendMessage("/nametag player remove <player>"); source.sendMessage("/nametag player clear <player>"); source.sendMessage("Duration units: s, m, h, d, w; maximum 365d."); }
+            case "player" -> {
+                source.sendMessage("/nametag player set <player> <tag> [duration]");
+                source.sendMessage("/nametag player remove <player>");
+                source.sendMessage("/nametag player clear <player>");
+                source.sendMessage("set directly assigns and activates the tag. Duration units: s, m, h, d, w; maximum 365d.");
+            }
             case "display" -> { source.sendMessage("/nametag display glitch <tag> <white|colorful>"); source.sendMessage("/nametag display effect <tag> <none|rainbow|pulse|wave>"); source.sendMessage("/nametag display item <tag> set <item>"); source.sendMessage("/nametag display item <tag> mode <static|rotate>"); source.sendMessage("/nametag display item <tag> speed <1-10>"); source.sendMessage("/nametag display item <tag> clear"); source.sendMessage("Chat order: item icon, tag/rank (if present), player name, message."); source.sendMessage("Use /nametag tag edit <tag> name none for icon-only."); }
             case "advanced" -> { source.sendMessage("/nametag advanced role <tag> <permission|clear>"); source.sendMessage("/nametag advanced scope <tag> clear"); source.sendMessage("/nametag advanced scope <tag> world <world>"); source.sendMessage("/nametag advanced scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>"); }
             case "admin" -> { source.sendMessage("/nametag admin reload"); source.sendMessage("/nametag admin export <file>"); source.sendMessage("/nametag admin import <file>"); }
