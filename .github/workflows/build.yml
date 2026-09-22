@@ -52,6 +52,45 @@ jobs:
             fi
           done
 
+      - name: Prepare installable platform artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf dist
+          mkdir -p dist/fabric dist/paper
+
+          fabric_jar="$(find platform/fabric/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-dev.jar' ! -name '*-sources.jar' | head -n 1)"
+          paper_jar="$(find platform/paper/build/libs -maxdepth 1 -type f -name '*.jar' ! -name '*-dev.jar' ! -name '*-sources.jar' | head -n 1)"
+
+          test -n "$fabric_jar"
+          test -n "$paper_jar"
+
+          cp "$fabric_jar" "dist/fabric/NameTag-Core-Fabric-1.21.11.jar"
+          cp "$paper_jar" "dist/paper/NameTag-Core-Paper-1.21.11.jar"
+
+          unzip -p "$fabric_jar" fabric.mod.json > dist/fabric/fabric.mod.json
+          grep -q '"id": "nametag-core"' dist/fabric/fabric.mod.json
+          grep -q '"minecraft": "~1.21.11"' dist/fabric/fabric.mod.json
+          unzip -l "$fabric_jar" | grep -q 'com/ultraop/nametag/fabric/NameTagFabricEntrypoint.class'
+
+          unzip -p "$paper_jar" plugin.yml > dist/paper/plugin.yml
+
+      - name: Upload installable Fabric artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nametag-core-fabric-1.21.11
+          path: dist/fabric/NameTag-Core-Fabric-1.21.11.jar
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload installable Paper artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nametag-core-paper-1.21.11
+          path: dist/paper/NameTag-Core-Paper-1.21.11.jar
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload build artifacts
         if: success()
         uses: actions/upload-artifact@v4

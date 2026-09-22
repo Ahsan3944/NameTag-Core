@@ -11,6 +11,15 @@ dependencies {
     implementation project(':api')
     implementation project(':common')
     implementation project(path: ':versions:fabric-1.21.11', configuration: 'namedElements')
+
+    // Ship the complete Fabric mod as one installable JAR. These project
+    // dependencies are intentionally included because the server only loads
+    // the platform JAR from its mods directory. Loom's include configuration
+    // is non-transitive, so every internal runtime module is listed explicitly.
+    include project(':api')
+    include project(':core')
+    include project(':common')
+    include project(path: ':versions:fabric-1.21.11', configuration: 'namedElements')
     compileOnly "net.luckperms:api:5.5"
 
     include "org.xerial:sqlite-jdbc:3.53.0.0"
