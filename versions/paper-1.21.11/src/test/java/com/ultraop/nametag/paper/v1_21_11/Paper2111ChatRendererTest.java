@@ -6,6 +6,8 @@ import com.ultraop.nametag.core.model.TagEffect;
 import com.ultraop.nametag.core.model.TagId;
 import com.ultraop.nametag.core.model.TagStyle;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ObjectComponent;
+import net.kyori.adventure.text.object.ObjectContents;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.junit.jupiter.api.Test;
@@ -144,5 +146,40 @@ class Paper2111ChatRendererTest {
 
     private static String textOf(Component component) {
         return ((TextComponent) component).content();
+    }
+
+    @Test
+    void rendersItemIconBeforeTagAndSupportsIconOnly() {
+        Tag tagged = new Tag(
+                new TagId("vip"),
+                "VIP",
+                new TagColor.Preset("gold"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of("item", "minecraft:diamond")
+        );
+        Component icon = Paper2111ChatRenderer.itemIcon(tagged);
+        if (!(icon instanceof ObjectComponent object)) {
+            throw new AssertionError("Expected a native object component for the item icon");
+        }
+        assertEquals("minecraft:items", object.contents().examinableProperties().findFirst().map(Object::toString).orElse(""));
+
+        Tag iconOnly = new Tag(
+                new TagId("icon_only"),
+                "",
+                new TagColor.Preset("white"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of("item", "minecraft:diamond")
+        );
+        assertEquals("", iconOnly.displayName());
+        Component rendered = Paper2111ChatRenderer.renderFormat("{item}{tag} {player}: {message}", iconOnly, Component.text("UltraOP"), Component.text("Hi"));
+        assertEquals(" UltraOP: Hi", plain(rendered));
     }
 }
