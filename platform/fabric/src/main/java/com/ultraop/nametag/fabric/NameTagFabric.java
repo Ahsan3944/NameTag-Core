@@ -76,14 +76,16 @@ public final class NameTagFabric {
             var tagCreate = CommandManager.literal("create");
             var createTag = CommandManager.argument("tag", StringArgumentType.word());
 
-            // CREATE
-            // The create wizard deliberately exposes only three top-level choices:
-            // name, item, and name+item. Every choice then walks through the next
-            // valid value instead of dumping implementation properties into one list.
+            // CREATE WIZARD
+            // Top-level flow is intentionally small:
+            //   name | item | name+item
+            // Every following space opens only the next valid group/value.
+            var tagCreate = CommandManager.literal("create");
+            var createTag = CommandManager.argument("tag", StringArgumentType.word());
 
             var createName = CommandManager.literal("name");
-            var createNameValue = CommandManager.argument("displayName", StringArgumentType.string());
-            createNameValue.then(createStyleNode(
+            var createNameValue = CommandManager.argument("displayName", StringArgumentType.greedyString());
+            createNameValue.then(createStyleFlow(
                     service, permissions, messages, configuration, "name"));
             createName.then(createNameValue);
 
@@ -97,11 +99,9 @@ public final class NameTagFabric {
             var createNameItem = CommandManager.literal("name+item");
             var createNameItemValue = CommandManager.argument("item", IdentifierArgumentType.identifier())
                     .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
-            var createNameItemName = CommandManager.literal("name");
-            var createNameItemNameValue = CommandManager.argument("displayName", StringArgumentType.string());
-            createNameItemNameValue.then(createStyleNode(
+            var createNameItemName = CommandManager.argument("displayName", StringArgumentType.greedyString());
+            createNameItemName.then(createStyleFlow(
                     service, permissions, messages, configuration, "name+item"));
-            createNameItemName.then(createNameItemNameValue);
             createNameItemValue.then(createNameItemName);
             createNameItem.then(createNameItemValue);
 
@@ -732,77 +732,98 @@ public final class NameTagFabric {
         });
     }
 
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createStyleNode(
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createStyleFlow(
             TagService service, PermissionService permissions, DefaultMessageService messages,
             DefaultConfigurationService configuration, String flow) {
-        var node = CommandManager.literal("style");
-        node.then(CommandManager.argument("style", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(
-                        List.of("normal", "bold", "italic", "bold_italic", "underlined",
-                                "strikethrough", "obfuscated"),
-                        builder))
-                .then(createWizardColorNode(service, permissions, messages, configuration, flow)));
+        var node = CommandManager.literal("normal");
+
+        // Style is the first value after the display name. "normal" means no style.
+        for (String style : List.of(
+                "normal", "bold", "italic", "bold_italic",
+                "underlined", "strikethrough", "obfuscated")) {
+            var styleNode = CommandManager.literal(style);
+            styleNode.then(createWizardColorFlow(
+                    service, permissions, messages, configuration, flow, style));
+            node.then(styleNode);
+        }
         return node;
     }
 
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createWizardColorNode(
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createWizardColorFlow(
             TagService service, PermissionService permissions, DefaultMessageService messages,
-            DefaultConfigurationService configuration, String flow) {
-        var node = CommandManager.literal("color");
-        node.then(CommandManager.argument("color", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(
-                        List.of("black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
-                                "gold", "gray", "dark_gray", "blue", "green", "aqua", "red",
-                                "light_purple", "yellow", "white", "random"),
-                        builder))
-                .then(createWizardEffectNode(service, permissions, messages, configuration, flow)));
-        return node;
+            DefaultConfigurationService configuration, String flow, String style) {
+        var group = CommandManager.literal("color");
+        for (String color : List.of(
+                "black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
+                "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
+                "yellow", "white", "random")) {
+            var colorNode = CommandManager.literal(color);
+            colorNode.then(createWizardEffectFlow(
+                    service, permissions, messages, configuration, flow, style, color));
+            group.then(colorNode);
+        }
+
+        // The UI should show the colors directly after the selected style, not
+        // force the user to type a second "color" keyword.
+        var direct = CommandManager.literal("color");
+        for (String color : List.of(
+                "black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
+                "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
+                "yellow", "white", "random")) {
+            var colorNode = CommandManager.literal(color);
+            colorNode.then(createWizardEffectFlow(
+                    service, permissions, messages, configuration, flow, style, color));
+            direct.then(colorNode);
+        }
+        return direct;
     }
 
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createWizardEffectNode(
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createWizardEffectFlow(
             TagService service, PermissionService permissions, DefaultMessageService messages,
-            DefaultConfigurationService configuration, String flow) {
-        var node = CommandManager.literal("effect");
+            DefaultConfigurationService configuration, String flow, String style, String color) {
+        var effectGroup = CommandManager.literal("effect");
 
         var normal = CommandManager.literal("normal");
-        normal.then(CommandManager.argument("normalEffect", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(
-                        List.of("regular", "neon", "breath", "blink", "rgb"),
-                        builder))
-                .executes(context -> executeCreateWizard(
-                        context, service, permissions, messages, configuration, flow,
-                        "effect", StringArgumentType.getString(context, "normalEffect"))));
+        for (String effect : List.of(
+                "regular", "neon", "breath", "blink", "rgb", "rainbow", "pulse", "wave")) {
+            normal.then(CommandManager.literal(effect)
+                    .executes(context -> executeCreateWizard(
+                            context, service, permissions, messages, configuration,
+                            flow, style, color, "effect", effect)));
+        }
 
         var glitch = CommandManager.literal("glitch");
-        glitch.then(CommandManager.argument("glitchMode", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(
-                        List.of("white", "colorful"),
-                        builder))
-                .executes(context -> executeCreateWizard(
-                        context, service, permissions, messages, configuration, flow,
-                        "glitch", StringArgumentType.getString(context, "glitchMode"))));
+        for (String mode : List.of("white", "colorful")) {
+            glitch.then(CommandManager.literal(mode)
+                    .executes(context -> executeCreateWizard(
+                            context, service, permissions, messages, configuration,
+                            flow, style, color, "glitch", mode)));
+        }
 
-        node.then(normal);
-        node.then(glitch);
-        return node;
+        effectGroup.then(normal);
+        effectGroup.then(glitch);
+        return effectGroup;
     }
 
     private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createSpinNode(
             TagService service, PermissionService permissions, DefaultMessageService messages,
             DefaultConfigurationService configuration, boolean nameAndItem) {
-        var node = CommandManager.literal("spin");
-        var value = CommandManager.argument("spin", BoolArgumentType.bool());
-        value.executes(context -> executeCreateItemWizard(
-                context, service, permissions, messages, configuration, nameAndItem, false));
-        var speed = CommandManager.literal("speed");
-        speed.then(CommandManager.argument("itemSpeed", IntegerArgumentType.integer(1, 10))
-                .suggests((context, builder) -> CommandSource.suggestMatching(
-                        List.of("1","2","3","4","5","6","7","8","9","10"), builder))
+        var spin = CommandManager.literal("spin");
+        var spinValue = CommandManager.argument("spin", BoolArgumentType.bool())
+                .suggests((context, builder) ->
+                        CommandSource.suggestMatching(List.of("true", "false"), builder))
                 .executes(context -> executeCreateItemWizard(
-                        context, service, permissions, messages, configuration, nameAndItem, true)));
-        value.then(speed);
-        node.then(value);
-        return node;
+                        context, service, permissions, messages, configuration, nameAndItem, false));
+
+        var speed = CommandManager.argument("speed", IntegerArgumentType.integer(1, 10))
+                .suggests((context, builder) ->
+                        CommandSource.suggestMatching(
+                                List.of("1","2","3","4","5","6","7","8","9","10"), builder))
+                .executes(context -> executeCreateItemWizard(
+                        context, service, permissions, messages, configuration, nameAndItem, true));
+        spinValue.then(speed);
+        spin.then(spinValue);
+        return spin;
     }
 
     private static int executeCreateItemWizard(
@@ -824,7 +845,7 @@ public final class NameTagFabric {
         args.add(spin ? "rotate" : "static");
         if (withSpeed) {
             args.add("item-speed");
-            args.add(Integer.toString(IntegerArgumentType.getInteger(context, "itemSpeed")));
+            args.add(Integer.toString(IntegerArgumentType.getInteger(context, "speed")));
         }
         if (nameAndItem) {
             args.add("name");
@@ -837,9 +858,11 @@ public final class NameTagFabric {
             CommandContext<ServerCommandSource> context,
             TagService service,
             PermissionService permissions,
-            DefaultMessageService messages,
+            DefaultMessageService configurationMessages,
             DefaultConfigurationService configuration,
             String flow,
+            String style,
+            String color,
             String effectType,
             String effectValue) {
         List<String> args = new java.util.ArrayList<>();
@@ -847,10 +870,7 @@ public final class NameTagFabric {
         args.add("create");
         args.add(StringArgumentType.getString(context, "tag"));
 
-        if ("item".equals(flow)) {
-            args.add("item");
-            args.add(StringArgumentType.getString(context, "item"));
-        } else if ("name+item".equals(flow)) {
+        if ("name+item".equals(flow)) {
             args.add("item");
             args.add(StringArgumentType.getString(context, "item"));
             args.add("name");
@@ -861,97 +881,13 @@ public final class NameTagFabric {
         }
 
         args.add("style");
-        args.add(StringArgumentType.getString(context, "style"));
+        args.add("normal".equals(style) ? "plain" : style);
         args.add("color");
-        args.add(StringArgumentType.getString(context, "color"));
+        args.add(color);
         args.add(effectType);
         args.add(effectValue);
 
-        return execute(context, service, permissions, messages, configuration, args.toArray(String[]::new));
-    }
-
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createColorNode(
-            TagService service, PermissionService permissions, DefaultMessageService messages,
-            DefaultConfigurationService configuration) {
-        var node = CommandManager.literal("color");
-        node.then(CommandManager.argument("color", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(
-                        List.of("black", "dark_blue", "dark_green", "dark_aqua", "dark_red",
-                                "dark_purple", "gold", "gray", "dark_gray", "blue", "green",
-                                "aqua", "red", "light_purple", "yellow", "white", "random"),
-                        builder))
-                .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
-                        "color", StringArgumentType.getString(context, "color"))));
-        return node;
-    }
-
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createGradientNode(
-            TagService service, PermissionService permissions, DefaultMessageService messages,
-            DefaultConfigurationService configuration) {
-        var node = CommandManager.literal("gradient");
-        var start = CommandManager.argument("startHex", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(
-                        List.of("#FFFFFF", "#FF0000", "#FFD700"), builder));
-        var end = CommandManager.argument("endHex", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(
-                        List.of("#000000", "#00FFFF", "#8A2BE2"), builder))
-                .executes(context -> executeCreateGradient(context, service, permissions, messages, configuration));
-        start.then(end);
-        node.then(start);
-        return node;
-    }
-
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createStyleNode(
-            TagService service, PermissionService permissions, DefaultMessageService messages,
-            DefaultConfigurationService configuration) {
-        var node = CommandManager.literal("style");
-        node.then(CommandManager.argument("style", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(
-                        List.of("plain", "bold", "italic", "underlined", "strikethrough", "obfuscated",
-                                "bold_italic", "bold_underlined", "italic_underlined"),
-                        builder))
-                .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
-                        "style", StringArgumentType.getString(context, "style"))));
-        return node;
-    }
-
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createEffectNode(
-            TagService service, PermissionService permissions, DefaultMessageService messages,
-            DefaultConfigurationService configuration) {
-        var node = CommandManager.literal("effect");
-        node.then(CommandManager.argument("effect", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(
-                        List.of("none", "rainbow", "pulse", "wave"), builder))
-                .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
-                        "effect", StringArgumentType.getString(context, "effect"))));
-        return node;
-    }
-
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createGlitchNode(
-            TagService service, PermissionService permissions, DefaultMessageService messages,
-            DefaultConfigurationService configuration) {
-        var node = CommandManager.literal("glitch");
-        node.then(CommandManager.argument("glitch", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(
-                        List.of("none", "white", "colorful"), builder))
-                .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
-                        "glitch", StringArgumentType.getString(context, "glitch"))));
-        return node;
-    }
-
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createSimpleOptionNode(
-            String property,
-            List<String> values,
-            TagService service,
-            PermissionService permissions,
-            DefaultMessageService messages,
-            DefaultConfigurationService configuration) {
-        var node = CommandManager.literal(property);
-        node.then(CommandManager.argument(property, StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(values, builder))
-                .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
-                        property, StringArgumentType.getString(context, property))));
-        return node;
+        return execute(context, service, permissions, configurationMessages, configuration, args.toArray(String[]::new));
     }
 
     private static java.util.concurrent.CompletableFuture<Suggestions> suggestCreateItems(
