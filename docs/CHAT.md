@@ -95,9 +95,8 @@ For an active NameTag chat composition, Fabric must cancel the vanilla player-ch
 
 Create-time configuration is grouped in the command tree:
 
-`/nametag tag create <tag> name <displayName>`
-`/nametag tag create <tag> item <item> [mode <static|rotate>] [speed <1-10>]`
-`/nametag tag create <tag> appearance color|gradient|style|effect|glitch ...`
-`/nametag tag create <tag> behavior priority|enabled|chat ...`
+`/nametag tag create <tag> name <displayName> -> <style> -> <color> -> <normal|glitch> -> <effect>`
+`/nametag tag create <tag> item <item> -> spin <true|false> -> <speed 1-10 when true>`
+`/nametag tag create <tag> name+item <item> <displayName> -> <style> -> <color> -> <normal|glitch> -> <effect>`
 
-All presentation and behavior settings can still be supplied in one create command. TAB now reveals each group and its sub-options before showing the final value. Item values are validated and tab-completed from the platform's registered Minecraft item IDs. Omitting the name while supplying an item creates an icon-only tag.
+The create wizard exposes only the next valid choices. Style, color, effect kind and effect value are shown as dropdown choices; item values use Minecraft identifiers and are registry-backed/validated before creation.
