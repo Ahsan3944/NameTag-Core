@@ -370,44 +370,49 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         String command = values[1].toLowerCase(Locale.ROOT);
         if ("create".equals(command)) {
-            if (values.length == 3) return prefix(List.of("name", "item", "name+item"), values[2]);
-            String flow = values[2].toLowerCase(Locale.ROOT);
+            if (values.length == 4) return prefix(List.of("name", "item", "name+item"), values[3]);
+            if (values.length < 4) return List.of();
+
+            String flow = values[3].toLowerCase(Locale.ROOT);
             if ("item".equals(flow)) {
-                if (values.length == 4) {
+                if (values.length == 5) {
                     return context.source().itemNames().stream()
                             .map(DefaultNameTagCommandHandler::normalizeItemId)
-                            .filter(v -> v.startsWith(values[3].toLowerCase(Locale.ROOT)))
+                            .filter(v -> v.startsWith(values[4].toLowerCase(Locale.ROOT)))
                             .sorted().toList();
                 }
-                if (values.length == 5) return prefix(List.of("spin"), values[4]);
-                if (values.length == 6 && "spin".equalsIgnoreCase(values[4])) return prefix(List.of("true", "false"), values[5]);
-                if (values.length == 7 && "spin".equalsIgnoreCase(values[4]) && "true".equalsIgnoreCase(values[5])) {
-                    return prefix(ITEM_SPEEDS, values[6]);
+                if (values.length == 6) return prefix(List.of("spin"), values[5]);
+                if (values.length == 7 && "spin".equalsIgnoreCase(values[5])) {
+                    return prefix(List.of("true", "false"), values[6]);
+                }
+                if (values.length == 8 && "spin".equalsIgnoreCase(values[5]) && "true".equalsIgnoreCase(values[6])) {
+                    return prefix(ITEM_SPEEDS, values[7]);
                 }
                 return List.of();
             }
             if ("name".equals(flow)) {
-                if (values.length == 4) return List.of();
-                return createWizardValueSuggestions(values, 4);
-            }
-            if ("name+item".equals(flow)) {
-                if (values.length == 4) {
-                    return context.source().itemNames().stream()
-                            .map(DefaultNameTagCommandHandler::normalizeItemId)
-                            .filter(v -> v.startsWith(values[3].toLowerCase(Locale.ROOT)))
-                            .sorted().toList();
-                }
                 if (values.length == 5) return List.of();
                 return createWizardValueSuggestions(values, 5);
+            }
+            if ("name+item".equals(flow)) {
+                if (values.length == 5) {
+                    return context.source().itemNames().stream()
+                            .map(DefaultNameTagCommandHandler::normalizeItemId)
+                            .filter(v -> v.startsWith(values[4].toLowerCase(Locale.ROOT)))
+                            .sorted().toList();
+                }
+                if (values.length == 6) return List.of();
+                return createWizardValueSuggestions(values, 6);
             }
             return List.of();
         }
 
         if ("edit".equals(command)) {
-            if (values.length == 3) {
-                return prefix(List.of("name", "item", "style", "color", "gradient", "effect", "advanced"), values[2]);
+            if (values.length == 4) {
+                return prefix(List.of("name", "item", "style", "color", "gradient", "effect", "advanced"), values[3]);
             }
-            if (values.length < 4) return List.of();
+            if (values.length < 5) return List.of();
+
             String property = values[3].toLowerCase(Locale.ROOT);
             String inputPrefix = values[values.length - 1];
 
@@ -428,7 +433,9 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 return List.of();
             }
             if ("style".equals(property)) {
-                return values.length == 5 ? prefix(STYLE_VALUES.stream().map(v -> "plain".equals(v) ? "normal" : v).toList(), inputPrefix) : List.of();
+                return values.length == 5
+                        ? prefix(STYLE_VALUES.stream().map(v -> "plain".equals(v) ? "normal" : v).toList(), inputPrefix)
+                        : List.of();
             }
             if ("color".equals(property)) return values.length == 5 ? prefix(PRESET_COLORS, inputPrefix) : List.of();
             if ("gradient".equals(property)) return List.of();
@@ -445,7 +452,9 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             if ("advanced".equals(property)) {
                 if (values.length == 5) return prefix(List.of("priority", "enabled", "chat"), inputPrefix);
                 if (values.length == 6 && "priority".equalsIgnoreCase(values[4])) return prefix(List.of("0","10","25","50","100","1000"), inputPrefix);
-                if (values.length == 6 && ("enabled".equalsIgnoreCase(values[4]) || "chat".equalsIgnoreCase(values[4]))) return prefix(List.of("true","false"), inputPrefix);
+                if (values.length == 6 && ("enabled".equalsIgnoreCase(values[4]) || "chat".equalsIgnoreCase(values[4]))) {
+                    return prefix(List.of("true","false"), inputPrefix);
+                }
             }
         }
 
