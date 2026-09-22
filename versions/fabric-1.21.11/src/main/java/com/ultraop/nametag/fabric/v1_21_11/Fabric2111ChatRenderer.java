@@ -135,12 +135,19 @@ public final class Fabric2111ChatRenderer {
     static Text itemIcon(Tag tag) {
         TagItemSettings settings = TagItemSettings.from(tag);
         if (settings == null) return Text.empty();
-        Identifier itemId = Identifier.tryParse(settings.itemId());
-        if (itemId == null || !Registries.ITEM.containsId(itemId)) return Text.empty();
-        Identifier sprite = Identifier.of(itemId.getNamespace(), "item/" + itemId.getPath());
+        Identifier sprite = itemSpriteId(tag);
+        if (sprite == null) return Text.empty();
         MutableText icon = Text.object(new AtlasTextObjectContents(Atlases.ITEMS, sprite));
         if (!TagPresentation.displayText(tag).isBlank()) icon.append(Text.literal(" "));
         return icon;
+    }
+
+    static Identifier itemSpriteId(Tag tag) {
+        TagItemSettings settings = TagItemSettings.from(tag);
+        if (settings == null) return null;
+        Identifier itemId = Identifier.tryParse(settings.itemId());
+        if (itemId == null || !Registries.ITEM.containsId(itemId)) return null;
+        return Identifier.of(itemId.getNamespace(), "item/" + itemId.getPath());
     }
 
     static Text styledTags(List<Tag> tags) {
