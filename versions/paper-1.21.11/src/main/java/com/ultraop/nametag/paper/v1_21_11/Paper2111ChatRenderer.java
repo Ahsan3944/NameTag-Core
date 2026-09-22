@@ -7,8 +7,11 @@ import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagStyle;
 import com.ultraop.nametag.core.model.TagPresentation;
+import com.ultraop.nametag.core.model.TagItemSettings;
 import io.papermc.paper.chat.ChatRenderer;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.object.ObjectContents;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
@@ -26,6 +29,7 @@ import java.util.List;
  */
 public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
     private static final String TAG_PLACEHOLDER = "{tag}";
+    private static final String ITEM_PLACEHOLDER = "{item}";
     private static final String PLAYER_PLACEHOLDER = "{player}";
     private static final String MESSAGE_PLACEHOLDER = "{message}";
     private static final String TAG_META_PREFIX = "{tag_meta:";
@@ -88,6 +92,7 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
 
             Component replacement = switch (match.placeholder()) {
                 case TAG_PLACEHOLDER -> styledTag(tags.get(0));
+                case ITEM_PLACEHOLDER -> itemIcon(tags.get(0));
                 case "{tags}" -> styledTags(tags);
                 case "{tag_id}" -> Component.text(tags.get(0).id().value());
                 case "{tag_priority}" -> Component.text(String.valueOf(tags.get(0).priority()));
@@ -104,6 +109,19 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         return result;
     }
 
+    static Component itemIcon(Tag tag) {
+        TagItemSettings settings = TagItemSettings.from(tag);
+        if (settings == null) return Component.empty();
+        String[] parts = settings.itemId().split(":", 2);
+        if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) return Component.empty();
+        Component icon = Component.object(ObjectContents.sprite(
+                Key.key("minecraft", "items"),
+                Key.key(parts[0], "item/" + parts[1])
+        ));
+        if (!TagPresentation.displayText(tag).isBlank()) icon = icon.append(Component.text(" "));
+        return icon;
+    }
+
     private static String metadataValue(Tag tag, String placeholder) {
         if (placeholder.startsWith(TAG_META_PREFIX) && placeholder.endsWith("}")) {
             String key = placeholder.substring(TAG_META_PREFIX.length(), placeholder.length() - 1);
@@ -115,6 +133,7 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
 
     private static PlaceholderMatch nextPlaceholder(String format, int fromIndex) {
         int tag = format.indexOf(TAG_PLACEHOLDER, fromIndex);
+        int item = format.indexOf(ITEM_PLACEHOLDER, fromIndex);
         int tags = format.indexOf("{tags}", fromIndex);
         int player = format.indexOf(PLAYER_PLACEHOLDER, fromIndex);
         int message = format.indexOf(MESSAGE_PLACEHOLDER, fromIndex);
@@ -137,6 +156,7 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         // {tag_id}, {tag_priority}, {tag_prefix}, and {tag_suffix} all begin with {tag}.
         // Resolve the longer placeholders first so the generic {tag} token cannot consume them.
         if (tags >= 0 && tags < start) { start = tags; placeholder = "{tags}"; }
+        if (item >= 0 && item < start) { start = item; placeholder = ITEM_PLACEHOLDER; }
         if (tag >= 0 && tag < start) {
             start = tag;
             placeholder = TAG_PLACEHOLDER;
