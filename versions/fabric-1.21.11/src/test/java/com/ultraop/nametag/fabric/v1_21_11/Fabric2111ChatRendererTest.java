@@ -6,6 +6,7 @@ import com.ultraop.nametag.core.model.TagEffect;
 import com.ultraop.nametag.core.model.TagId;
 import com.ultraop.nametag.core.model.TagStyle;
 import net.minecraft.text.Text;
+import net.minecraft.text.object.AtlasTextObjectContents;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -185,4 +186,39 @@ class Fabric2111ChatRendererTest {
         assertEquals(0xFFFFFF, nameplate.getSiblings().get(2).getStyle().getColor().getRgb());
     }
 
+
+    @Test
+    void rendersItemIconBeforeTagAndSupportsIconOnly() {
+        Tag tagged = new Tag(
+                new TagId("vip"),
+                "VIP",
+                new TagColor.Preset("gold"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of("item", "minecraft:diamond")
+        );
+        Text icon = Fabric2111ChatRenderer.itemIcon(tagged);
+        assertEquals(AtlasTextObjectContents.class, icon.getContent().getClass());
+        AtlasTextObjectContents contents = (AtlasTextObjectContents) icon.getContent();
+        assertEquals("minecraft:items", contents.atlas().toString());
+        assertEquals("minecraft:item/diamond", contents.sprite().toString());
+
+        Tag iconOnly = new Tag(
+                new TagId("icon_only"),
+                "",
+                new TagColor.Preset("white"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of("item", "minecraft:diamond")
+        );
+        assertEquals("", iconOnly.displayName());
+        Text iconOnlyText = Fabric2111ChatRenderer.renderFormat("{item}{tag} {player}: {message}", iconOnly, Text.literal("UltraOP"), Text.literal("Hi"));
+        assertEquals(" UltraOP: Hi", iconOnlyText.getString());
+    }
 }
