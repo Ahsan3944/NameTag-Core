@@ -72,14 +72,16 @@ public final class NameTagFabric {
 
             var tagCreate = CommandManager.literal("create");
             var createTag = CommandManager.argument("tag", StringArgumentType.word());
-            var createDisplayName = CommandManager.argument("displayName", StringArgumentType.greedyString())
+            var createOptions = CommandManager.argument("options", StringArgumentType.greedyString())
+                    .suggests((context, builder) -> suggestCreateOptions(
+                            context, builder, service, permissions, configuration))
                     .executes(context -> execute(context, service, permissions, messages, configuration,
                             new String[]{
                                     "tag", "create",
-                                    StringArgumentType.getString(context, "tag"),
-                                    StringArgumentType.getString(context, "displayName")
-                            }));
-            createTag.then(createDisplayName);
+                                    StringArgumentType.getString(context, "tag")
+                            },
+                            StringArgumentType.getString(context, "options")));
+            createTag.then(createOptions);
             tagCreate.then(createTag);
             tag.then(tagCreate);
 
@@ -267,8 +269,6 @@ public final class NameTagFabric {
 
             root.then(CommandManager.literal("info")
                     .executes(context -> executeInfo(context, service, permissions, messages, configuration)));
-            root.then(CommandManager.literal("version")
-                    .executes(context -> executeInfo(context, service, permissions, messages, configuration)));
 
             // ADVANCED GROUP
             var advanced = CommandManager.literal("advanced");
@@ -401,6 +401,56 @@ public final class NameTagFabric {
     }
 
 
+    private static java.util.concurrent.CompletableFuture<Suggestions> suggestCreateOptions(
+            CommandContext<ServerCommandSource> context,
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
+            TagService service,
+            PermissionService permissions,
+            DefaultConfigurationService configuration
+    ) {
+        String tag = StringArgumentType.getString(context, "tag");
+        String raw = builder.getRemaining();
+        String[] tail;
+        if (raw.isEmpty()) {
+            tail = new String[]{""};
+        } else {
+            String trimmed = raw.trim();
+            tail = trimmed.isEmpty() ? new String[]{""} : trimmed.split("\\s+");
+            if (raw.endsWith(" ")) {
+                tail = java.util.Arrays.copyOf(tail, tail.length + 1);
+                tail[tail.length - 1] = "";
+            }
+        }
+
+        String[] args = new String[2 + tail.length];
+        args[0] = "tag";
+        args[1] = "create";
+        System.arraycopy(tail, 0, args, 2, tail.length);
+
+        NameTagCommandHandler handler = handler(
+                context.getSource(),
+                service,
+                new DefaultMessageService(),
+                configuration
+        );
+        return CommandSource.suggestMatching(
+                handler.suggest(new com.ultraop.nametag.api.CommandContext(
+                        new FabricCommandSource(context.getSource(), permissions),
+                        prependTag(args, tag)
+                )),
+                builder
+        );
+    }
+
+    private static String[] prependTag(String[] createArgs, String tag) {
+        String[] result = new String[createArgs.length + 1];
+        result[0] = "tag";
+        result[1] = "create";
+        result[2] = tag;
+        System.arraycopy(createArgs, 2, result, 3, createArgs.length - 2);
+        return result;
+    }
+
     private static java.util.concurrent.CompletableFuture<Suggestions> suggestItemValues(
             CommandContext<ServerCommandSource> context,
             com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
@@ -480,6 +530,24 @@ public final class NameTagFabric {
                         args
                 ));
         return 1;
+    }
+
+    private static int execute(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration,
+            String[] prefixArgs,
+            String greedyTail
+    ) {
+        String[] tail = greedyTail == null || greedyTail.isBlank()
+                ? new String[0]
+                : greedyTail.trim().split("\\s+");
+        String[] args = new String[prefixArgs.length + tail.length];
+        System.arraycopy(prefixArgs, 0, args, 0, prefixArgs.length);
+        System.arraycopy(tail, 0, args, prefixArgs.length, tail.length);
+        return execute(context, service, permissions, messages, configuration, args);
     }
 
     private static int executeTarget(
