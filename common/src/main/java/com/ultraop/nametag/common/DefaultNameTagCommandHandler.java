@@ -445,7 +445,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             if ("advanced".equals(property)) {
                 if (values.length == 5) return prefix(List.of("priority", "enabled", "chat"), inputPrefix);
                 if (values.length == 6 && "priority".equalsIgnoreCase(values[4])) return prefix(List.of("0","10","25","50","100","1000"), inputPrefix);
-                if (values.length == 6 && ("enabled".equalsIgnoreCase(values[4]) || "chat".equalsIgnoreCase(values[4]))) return prefix(List.of("true","false"), prefix);
+                if (values.length == 6 && ("enabled".equalsIgnoreCase(values[4]) || "chat".equalsIgnoreCase(values[4]))) return prefix(List.of("true","false"), inputPrefix);
             }
         }
 
