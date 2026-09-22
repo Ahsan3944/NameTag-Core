@@ -206,7 +206,7 @@ class Fabric2111ChatRendererTest {
                 Map.of("item", "minecraft:diamond")
         );
         Text icon = Fabric2111ChatRenderer.itemIcon(tagged);
-        assertEquals("minecraft.text.object.AtlasTextObjectContents", icon.getContent().getClass().getName());
+        assertEquals("net.minecraft.text.object.AtlasTextObjectContents", icon.getContent().getClass().getName());
         assertEquals("minecraft:items", icon.getContent().toString().contains("minecraft:items") ? "minecraft:items" : "missing");
         assertEquals("minecraft:item/diamond", icon.getContent().toString().contains("minecraft:item/diamond") ? "minecraft:item/diamond" : "missing");
 
