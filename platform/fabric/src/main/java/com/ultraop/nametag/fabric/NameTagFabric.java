@@ -108,8 +108,8 @@ public final class NameTagFabric {
             tag.then(tagCreate);
 
             // EDIT
-            // Edit mirrors the same guided structure without the old flat
-            // appearance/behavior dump. Advanced administrative fields remain
+            // Edit mirrors the same guided structure without the old flat option dump.
+            // Advanced administrative fields remain
             // available under one nested node.
             var tagEdit = CommandManager.literal("edit");
             var editTag = CommandManager.argument("tag", StringArgumentType.word())
@@ -224,12 +224,12 @@ public final class NameTagFabric {
                     .suggests((context, builder) ->
                             suggestTags(context, builder, service, permissions, configuration, "set"))
                     .executes(context -> executeTarget(
-                            context, service, permissions, messages, configuration, true));
+                            context, service, permissions, messages, configuration));
             var setDuration = CommandManager.argument("duration", StringArgumentType.word())
                     .suggests((context, builder) ->
                             CommandSource.suggestMatching(List.of("30m", "1h", "1d", "7d"), builder))
                     .executes(context -> executeTarget(
-                            context, service, permissions, messages, configuration, true));
+                            context, service, permissions, messages, configuration));
             setTag.then(setDuration);
             setPlayer.then(setTag);
             playerSet.then(setPlayer);
@@ -913,54 +913,6 @@ public final class NameTagFabric {
         return CommandSource.suggestMatching(source.itemNames(), builder);
     }
 
-    private static int executeCreateOption(
-            CommandContext<ServerCommandSource> context,
-            TagService service,
-            PermissionService permissions,
-            DefaultMessageService messages,
-            DefaultConfigurationService configuration,
-            String property,
-            String value) {
-        return execute(context, service, permissions, messages, configuration, new String[]{
-                "tag", "create",
-                StringArgumentType.getString(context, "tag"),
-                property, value
-        });
-    }
-
-    private static int executeCreateNestedOption(
-            CommandContext<ServerCommandSource> context,
-            TagService service,
-            PermissionService permissions,
-            DefaultMessageService messages,
-            DefaultConfigurationService configuration,
-            String group,
-            String property,
-            String value) {
-        return execute(context, service, permissions, messages, configuration, new String[]{
-                "tag", "create",
-                StringArgumentType.getString(context, "tag"),
-                group,
-                StringArgumentType.getString(context, "item"),
-                property, value
-        });
-    }
-
-    private static int executeCreateGradient(
-            CommandContext<ServerCommandSource> context,
-            TagService service,
-            PermissionService permissions,
-            DefaultMessageService messages,
-            DefaultConfigurationService configuration) {
-        return execute(context, service, permissions, messages, configuration, new String[]{
-                "tag", "create",
-                StringArgumentType.getString(context, "tag"),
-                "appearance", "gradient",
-                StringArgumentType.getString(context, "startHex"),
-                StringArgumentType.getString(context, "endHex")
-        });
-    }
-
     private static int execute(
             CommandContext<ServerCommandSource> context,
             TagService service,
@@ -1000,12 +952,11 @@ public final class NameTagFabric {
             TagService service,
             PermissionService permissions,
             DefaultMessageService messages,
-            DefaultConfigurationService configuration,
-            boolean setActive
+            DefaultConfigurationService configuration
     ) {
         try {
             ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
-            String subcommand = setActive ? "set" : "give";
+            String subcommand = "set";
             String tag = StringArgumentType.getString(context, "tag");
             boolean hasDuration = context.getNodes().stream()
                     .anyMatch(node -> node.getNode().getName().equals("duration"));
@@ -1061,7 +1012,7 @@ public final class NameTagFabric {
         return CommandSource.suggestMatching(
                 handler.suggest(new com.ultraop.nametag.api.CommandContext(
                         new FabricCommandSource(context.getSource(), permissions),
-                        subcommand.equals("give") || subcommand.equals("set")
+                        "set".equals(subcommand)
                                 ? new String[]{subcommand, "", prefix}
                                 : new String[]{subcommand, prefix}
                 )),
