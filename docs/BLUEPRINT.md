@@ -432,7 +432,7 @@ Every new Minecraft adapter must pass the same core behavior suite.
 - Core/API build cleanly.
 - Fabric 1.21.11 build/start/test.
 - Paper 1.21.11 build/start/test.
-- Create/list/give/remove/delete/reload work.
+- Create/list/set/remove/delete/reload work.
 - Persistence survives restart.
 - YAML and configured JDBC providers use the same repository contracts.
 - Preset/RGB/random colors work.
