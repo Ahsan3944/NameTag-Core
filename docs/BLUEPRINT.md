@@ -228,7 +228,7 @@ Configuration:
 The core exposes a platform-independent `GlitchFrame` containing final text and per-glyph RGB values. Scheduling and native rendering remain platform/version responsibilities.
 
 Canonical command:
-`/nametag glitch <tag> <white|colorful>`
+`/nametag display glitch <tag> <white|colorful>`
 
 The command changes only the tag effect; display name, base color, style, priority, enabled state, chat visibility and metadata remain unchanged.
 
@@ -434,7 +434,7 @@ Every new Minecraft adapter must pass the same core behavior suite.
 - Formatting works.
 - Glitch white mode works within supported rendering limits.
 - Glitch colorful mode works within supported rendering limits.
-- `/nametag glitch <tag> white|colorful` changes only the effect configuration.
+- `/nametag display glitch <tag> white|colorful` changes only the effect configuration.
 - Active contextual/layered tags render in nameplate.
 - Contextual/layered tags render in chat when enabled.
 - Native item-icon chat composition supports text-only, icon-only and icon+text tags.
