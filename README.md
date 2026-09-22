@@ -103,7 +103,7 @@ Commands are grouped into focused namespaces so the first tab-completion level s
 
 Implemented commands:
 
-- `/nametag tag create <tag> name <displayName> [item <item>]>`
+- `/nametag tag create <tag> name <displayName> [item <item>]`
 - `/nametag tag create <tag> item <item> [name <displayName>]`
 - `/nametag tag edit <tag> name <displayName|none>`
 - `/nametag tag edit <tag> color <preset|random|#RRGGBB>`
