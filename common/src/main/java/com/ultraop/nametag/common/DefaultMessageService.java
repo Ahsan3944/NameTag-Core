@@ -40,17 +40,17 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("error.reload.unavailable", "Configuration reload is not available.");
         defaults.put("error.reload.failed", "Configuration reload failed: {reason}");
         defaults.put("message.reload_success", "Configuration reloaded successfully.");
-        defaults.put("error.usage.create", "Usage: /nametag create <tag> <displayName>");
-        defaults.put("error.usage.edit", "Usage: /nametag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value>");
-        defaults.put("error.usage.delete", "Usage: /nametag delete <tag>");
-        defaults.put("error.usage.assign", "Usage: /nametag give <player> <tag> [duration]");
+        defaults.put("error.usage.create", "Usage: /nametag tag create <tag> <displayName>");
+        defaults.put("error.usage.edit", "Usage: /nametag tag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value>");
+        defaults.put("error.usage.delete", "Usage: /nametag tag delete <tag>");
+        defaults.put("error.usage.assign", "Usage: /nametag player give <player> <tag> [duration]");
         defaults.put("message.assigned_temporary", "Assigned {tag} to {player} for {duration}");
         defaults.put("message.exported", "Exported {count} tags to {file}");
         defaults.put("message.imported", "Imported {count} tags from {file}");
-        defaults.put("error.usage.remove", "Usage: /nametag remove <player>");
-        defaults.put("error.usage.glitch", "Usage: /nametag glitch <tag> <white|colorful>");
-        defaults.put("error.usage.effect", "Usage: /nametag effect <tag> <none|rainbow|pulse|wave>");
-        defaults.put("error.usage.role", "Usage: /nametag role <tag> <permission|clear>");
+        defaults.put("error.usage.remove", "Usage: /nametag player remove <player>");
+        defaults.put("error.usage.glitch", "Usage: /nametag display glitch <tag> <white|colorful>");
+        defaults.put("error.usage.effect", "Usage: /nametag display effect <tag> <none|rainbow|pulse|wave>");
+        defaults.put("error.usage.role", "Usage: /nametag advanced role <tag> <permission|clear>");
         defaults.put("error.player.offline", "Player must be online: {player}");
         defaults.put("error.tag.not_found", "Tag not found: {tag}");
         defaults.put("message.created", "Created NameTag: {tag}");
@@ -63,7 +63,7 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("message.role_set", "Automatic role mapping for tag {tag}: {permission}");
         defaults.put("message.list_header", "NameTags ({count} total):");
         defaults.put("message.list_entry", "- {tag} -> {displayName} | color={color} | style={style} | enabled={enabled} | chat={chat} | effect={effect}");
-        defaults.put("message.usage", "/nametag create <tag> <displayName> | edit <tag> <name|color|gradient|style|enabled|chat> <value> | list | give <player> <tag> [duration] | set <player> <tag> | remove <player> | clear <player> | delete <tag> | reload | glitch <tag> <white|colorful> | effect <tag> <none|rainbow|pulse|wave> | role <tag> <permission|clear> | scope <tag> ... | export <file> | import <file>");
+        defaults.put("message.usage", "/nametag tag create <tag> <displayName> | tag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value> | tag list | tag delete <tag> | player give <player> <tag> [duration] | player set <player> <tag> | player remove <player> | player clear <player> | display glitch <tag> <white|colorful> | display effect <tag> <none|rainbow|pulse|wave> | advanced role <tag> <permission|clear> | advanced scope <tag> clear|world <world>|region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ> | admin reload | admin export <file> | admin import <file>");
         return defaults;
     }
 }

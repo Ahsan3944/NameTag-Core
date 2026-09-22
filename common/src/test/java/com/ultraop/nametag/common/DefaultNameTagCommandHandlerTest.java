@@ -163,6 +163,34 @@ final class DefaultNameTagCommandHandlerTest {
     }
 
     @Test
+    void groupedCommandsExposeFocusedSuggestionsAndExecute() {
+        InMemoryTagRepository tags = new InMemoryTagRepository();
+        DefaultTagService service = new DefaultTagService(tags, new InMemoryPlayerAssignmentRepository());
+        service.create(new Tag(
+                new TagId("owner"), "OWNER", new TagColor.Preset("white"),
+                TagStyle.plain(), TagEffect.none(), 10, true, true, Map.of()
+        ));
+        RecordingSource source = new RecordingSource();
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service,
+                new EmptyPlayerResolver(),
+                new DefaultMessageService()
+        );
+
+        assertEquals(List.of("tag", "player", "display", "advanced", "admin"),
+                handler.suggest(new CommandContext(source, new String[]{""})));
+        assertEquals(List.of("create", "edit", "list", "delete"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", ""})));
+        assertEquals(List.of("name", "color", "gradient", "style", "priority", "enabled", "chat"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", ""})));
+        assertEquals(List.of("0", "10", "25", "50", "100", "1000"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", "priority", ""})));
+
+        handler.execute(new CommandContext(source, new String[]{"tag", "edit", "owner", "priority", "50"}));
+        assertEquals(50, service.find(new TagId("owner")).orElseThrow().priority());
+    }
+
+    @Test
     void suggestionsArePlatformIndependent() {
         DefaultTagService service = new DefaultTagService(
                 new InMemoryTagRepository(),

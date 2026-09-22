@@ -5,6 +5,7 @@ import com.ultraop.nametag.api.PermissionService;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +36,14 @@ public final class FabricCommandSource implements CommandSource {
             return true;
         }
         return playerUuid == null;
+    }
+
+    @Override
+    public Collection<String> worldNames() {
+        return source.getWorldKeys().stream()
+                .map(key -> key.getValue().toString())
+                .sorted()
+                .toList();
     }
 
     @Override
