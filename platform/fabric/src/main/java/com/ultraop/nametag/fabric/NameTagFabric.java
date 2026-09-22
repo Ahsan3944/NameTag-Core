@@ -1,6 +1,9 @@
 package com.ultraop.nametag.fabric;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
+import net.minecraft.command.argument.IdentifierArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
@@ -85,14 +88,14 @@ public final class NameTagFabric {
             createName.then(createNameValue);
 
             var createItem = CommandManager.literal("item");
-            var createItemValue = CommandManager.argument("item", StringArgumentType.word())
+            var createItemValue = CommandManager.argument("item", IdentifierArgumentType.identifier())
                     .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
             createItemValue.then(createSpinNode(
                     service, permissions, messages, configuration, false));
             createItem.then(createItemValue);
 
             var createNameItem = CommandManager.literal("name+item");
-            var createNameItemValue = CommandManager.argument("item", StringArgumentType.word())
+            var createNameItemValue = CommandManager.argument("item", IdentifierArgumentType.identifier())
                     .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
             var createNameItemName = CommandManager.literal("name");
             var createNameItemNameValue = CommandManager.argument("displayName", StringArgumentType.string());
@@ -123,7 +126,7 @@ public final class NameTagFabric {
             var editItemValue = CommandManager.argument("item", StringArgumentType.word())
                     .suggests((context, builder) -> suggestEditItems(context, builder, permissions))
                     .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
-                            "item", StringArgumentType.getString(context, "item")));
+                            "item", IdentifierArgumentType.getIdentifier(context, "item").toString()));
             editItemValue.then(CommandManager.literal("mode")
                     .then(CommandManager.argument("mode", StringArgumentType.word())
                             .suggests((context, builder) -> CommandSource.suggestMatching(
@@ -755,12 +758,11 @@ public final class NameTagFabric {
             TagService service, PermissionService permissions, DefaultMessageService messages,
             DefaultConfigurationService configuration, boolean nameAndItem) {
         var node = CommandManager.literal("spin");
-        var value = CommandManager.argument("spin", StringArgumentType.word())
-                .suggests((context, builder) -> CommandSource.suggestMatching(List.of("true", "false"), builder));
+        var value = CommandManager.argument("spin", BoolArgumentType.bool());
         value.executes(context -> executeCreateItemWizard(
                 context, service, permissions, messages, configuration, nameAndItem, false));
         var speed = CommandManager.literal("speed");
-        speed.then(CommandManager.argument("itemSpeed", StringArgumentType.word())
+        speed.then(CommandManager.argument("itemSpeed", IntegerArgumentType.integer(1, 10))
                 .suggests((context, builder) -> CommandSource.suggestMatching(
                         List.of("1","2","3","4","5","6","7","8","9","10"), builder))
                 .executes(context -> executeCreateItemWizard(
@@ -778,7 +780,7 @@ public final class NameTagFabric {
             DefaultConfigurationService configuration,
             boolean nameAndItem,
             boolean withSpeed) {
-        String spin = StringArgumentType.getString(context, "spin");
+        boolean spin = BoolArgumentType.getBool(context, "spin");
         List<String> args = new java.util.ArrayList<>();
         args.add("tag");
         args.add("create");
@@ -786,10 +788,10 @@ public final class NameTagFabric {
         args.add("item");
         args.add(StringArgumentType.getString(context, "item"));
         args.add("item-mode");
-        args.add(Boolean.parseBoolean(spin) ? "rotate" : "static");
+        args.add(spin ? "rotate" : "static");
         if (withSpeed) {
             args.add("item-speed");
-            args.add(StringArgumentType.getString(context, "itemSpeed"));
+            args.add(Integer.toString(IntegerArgumentType.getInteger(context, "itemSpeed")));
         }
         if (nameAndItem) {
             args.add("name");
