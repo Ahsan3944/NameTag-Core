@@ -72,118 +72,27 @@ public final class NameTagFabric {
 
             var tagCreate = CommandManager.literal("create");
             var createTag = CommandManager.argument("tag", StringArgumentType.word());
-
-            // CREATE
-            // Layout is intentionally grouped so TAB shows a small, predictable
-            // command tree instead of one flat list of every property.
-            var createName = CommandManager.literal("name");
-            createName.then(CommandManager.argument("displayName", StringArgumentType.word())
-                    .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
-                            "name", StringArgumentType.getString(context, "displayName"))));
-
-            var createItem = CommandManager.literal("item");
-            var createItemValue = CommandManager.argument("item", StringArgumentType.word())
-                    .suggests((context, builder) -> suggestCreateItems(context, builder, permissions))
-                    .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
-                            "item", StringArgumentType.getString(context, "item")));
-
-            var createItemMode = CommandManager.literal("mode");
-            createItemMode.then(CommandManager.argument("mode", StringArgumentType.word())
-                    .suggests((context, builder) -> CommandSource.suggestMatching(
-                            List.of("static", "rotate"), builder))
-                    .executes(context -> executeCreateNestedOption(context, service, permissions, messages, configuration,
-                            "item", "mode", StringArgumentType.getString(context, "mode"))));
-            createItemValue.then(createItemMode);
-
-            var createItemSpeed = CommandManager.literal("speed");
-            createItemSpeed.then(CommandManager.argument("speed", StringArgumentType.word())
-                    .suggests((context, builder) -> CommandSource.suggestMatching(
-                            List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), builder))
-                    .executes(context -> executeCreateNestedOption(context, service, permissions, messages, configuration,
-                            "item", "speed", StringArgumentType.getString(context, "speed"))));
-            createItemValue.then(createItemSpeed);
-            createItem.then(createItemValue);
-
-            var appearance = CommandManager.literal("appearance");
-            appearance.then(createColorNode(service, permissions, messages, configuration));
-            appearance.then(createGradientNode(service, permissions, messages, configuration));
-            appearance.then(createStyleNode(service, permissions, messages, configuration));
-            appearance.then(createEffectNode(service, permissions, messages, configuration));
-            appearance.then(createGlitchNode(service, permissions, messages, configuration));
-
-            var behavior = CommandManager.literal("behavior");
-            behavior.then(createSimpleOptionNode("priority",
-                    List.of("0", "10", "25", "50", "100", "1000"),
-                    service, permissions, messages, configuration));
-            behavior.then(createSimpleOptionNode("enabled",
-                    List.of("true", "false"),
-                    service, permissions, messages, configuration));
-            behavior.then(createSimpleOptionNode("chat",
-                    List.of("true", "false"),
-                    service, permissions, messages, configuration));
-
-            createTag.then(createName);
-            createTag.then(createItem);
-            createTag.then(appearance);
-            createTag.then(behavior);
+            var createOptions = CommandManager.argument("options", StringArgumentType.greedyString())
+                    .suggests((context, builder) -> suggestGroupedCreateOptions(
+                            context, builder, service, permissions, configuration, false))
+                    .executes(context -> execute(context, service, permissions, messages, configuration,
+                            new String[]{"tag", "create", StringArgumentType.getString(context, "tag")},
+                            StringArgumentType.getString(context, "options")));
+            createTag.then(createOptions);
             tagCreate.then(createTag);
             tag.then(tagCreate);
 
-            // EDIT
             var tagEdit = CommandManager.literal("edit");
             var editTag = CommandManager.argument("tag", StringArgumentType.word())
                     .suggests((context, builder) ->
                             suggestTags(context, builder, service, permissions, configuration, "edit"));
-
-            var editName = CommandManager.literal("name");
-            editName.then(CommandManager.argument("displayName", StringArgumentType.word())
-                    .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
-                            "name", StringArgumentType.getString(context, "displayName"))));
-
-            var editItem = CommandManager.literal("item");
-            var editItemValue = CommandManager.argument("item", StringArgumentType.word())
-                    .suggests((context, builder) -> suggestEditItems(context, builder, permissions))
-                    .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
-                            "item", StringArgumentType.getString(context, "item")));
-            editItemValue.then(CommandManager.literal("mode")
-                    .then(CommandManager.argument("mode", StringArgumentType.word())
-                            .suggests((context, builder) -> CommandSource.suggestMatching(
-                                    List.of("static", "rotate"), builder))
-                            .executes(context -> executeEditNestedOption(context, service, permissions, messages, configuration,
-                                    "item", "mode", StringArgumentType.getString(context, "mode")))));
-            editItemValue.then(CommandManager.literal("speed")
-                    .then(CommandManager.argument("speed", StringArgumentType.word())
-                            .suggests((context, builder) -> CommandSource.suggestMatching(
-                                    List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), builder))
-                            .executes(context -> executeEditNestedOption(context, service, permissions, messages, configuration,
-                                    "item", "speed", StringArgumentType.getString(context, "speed")))));
-            editItemValue.then(CommandManager.literal("clear")
-                    .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
-                            "item", "clear")));
-            editItem.then(editItemValue);
-
-            var editAppearance = CommandManager.literal("appearance");
-            editAppearance.then(createEditColorNode(service, permissions, messages, configuration));
-            editAppearance.then(createEditGradientNode(service, permissions, messages, configuration));
-            editAppearance.then(createEditStyleNode(service, permissions, messages, configuration));
-            editAppearance.then(createEditEffectNode(service, permissions, messages, configuration));
-            editAppearance.then(createEditGlitchNode(service, permissions, messages, configuration));
-
-            var editBehavior = CommandManager.literal("behavior");
-            editBehavior.then(createEditSimpleOptionNode("priority",
-                    List.of("0", "10", "25", "50", "100", "1000"),
-                    service, permissions, messages, configuration));
-            editBehavior.then(createEditSimpleOptionNode("enabled",
-                    List.of("true", "false"),
-                    service, permissions, messages, configuration));
-            editBehavior.then(createEditSimpleOptionNode("chat",
-                    List.of("true", "false"),
-                    service, permissions, messages, configuration));
-
-            editTag.then(editName);
-            editTag.then(editItem);
-            editTag.then(editAppearance);
-            editTag.then(editBehavior);
+            var editOptions = CommandManager.argument("options", StringArgumentType.greedyString())
+                    .suggests((context, builder) -> suggestGroupedCreateOptions(
+                            context, builder, service, permissions, configuration, true))
+                    .executes(context -> execute(context, service, permissions, messages, configuration,
+                            new String[]{"tag", "edit", StringArgumentType.getString(context, "tag")},
+                            StringArgumentType.getString(context, "options")));
+            editTag.then(editOptions);
             tagEdit.then(editTag);
             tag.then(tagEdit);
 
@@ -862,6 +771,44 @@ public final class NameTagFabric {
                 StringArgumentType.getString(context, "startHex"),
                 StringArgumentType.getString(context, "endHex")
         });
+    }
+
+    private static java.util.concurrent.CompletableFuture<Suggestions> suggestGroupedCreateOptions(
+            CommandContext<ServerCommandSource> context,
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
+            TagService service,
+            PermissionService permissions,
+            DefaultConfigurationService configuration,
+            boolean edit) {
+        String raw = builder.getRemaining();
+        List<String> tail = new java.util.ArrayList<>();
+        if (raw.isEmpty()) {
+            tail.add("");
+        } else {
+            String trimmed = raw.trim();
+            if (!trimmed.isEmpty()) tail.addAll(List.of(trimmed.split("\\s+")));
+            if (raw.endsWith(" ")) tail.add("");
+        }
+
+        List<String> args = new java.util.ArrayList<>();
+        args.add("tag");
+        args.add(edit ? "edit" : "create");
+        args.add(StringArgumentType.getString(context, "tag"));
+        args.addAll(tail);
+
+        NameTagCommandHandler handler = handler(
+                context.getSource(),
+                service,
+                new DefaultMessageService(),
+                configuration
+        );
+        return CommandSource.suggestMatching(
+                handler.suggest(new com.ultraop.nametag.api.CommandContext(
+                        new FabricCommandSource(context.getSource(), permissions),
+                        args.toArray(String[]::new)
+                )),
+                builder
+        );
     }
 
     private static int execute(

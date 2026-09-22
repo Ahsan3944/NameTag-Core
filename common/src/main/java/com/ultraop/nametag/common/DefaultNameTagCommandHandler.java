@@ -387,6 +387,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     return List.of("color", "gradient", "style", "effect", "glitch").stream()
                             .filter(v -> v.startsWith(last)).toList();
                 }
+                if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
                 return createValueSuggestions(values);
             }
             if ("behavior".equals(section)) {
@@ -394,6 +395,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     return List.of("priority", "enabled", "chat").stream()
                             .filter(v -> v.startsWith(last)).toList();
                 }
+                if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
                 return createValueSuggestions(values);
             }
             if ("item".equals(section)) {
@@ -402,12 +404,22 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                             .map(DefaultNameTagCommandHandler::normalizeItemId)
                             .filter(v -> v.startsWith(last)).sorted().toList();
                 }
-                if (values.length >= 5 && trailing) {
+                if (values.length == 5 && trailing) {
                     String nested = values[3].toLowerCase(Locale.ROOT);
                     if ("mode".equals(nested)) return ITEM_MODES;
                     if ("speed".equals(nested)) return ITEM_SPEEDS;
                 }
                 if (values.length == 4 && trailing) return List.of("mode", "speed");
+                if (values.length >= 6 && trailing) return List.of("name", "item", "appearance", "behavior");
+            }
+            if ("appearance".equals(section) && values.length >= 5 && trailing) {
+                return List.of("name", "item", "appearance", "behavior");
+            }
+            if ("behavior".equals(section) && values.length >= 5 && trailing) {
+                return List.of("name", "item", "appearance", "behavior");
+            }
+            if ("name".equals(section) && values.length >= 4 && trailing) {
+                return List.of("name", "item", "appearance", "behavior");
             }
             return null;
         }
@@ -423,11 +435,13 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         if ("appearance".equals(section)) {
             if (values.length == 3) return List.of("color", "gradient", "style", "effect", "glitch").stream()
                     .filter(v -> v.startsWith(last)).toList();
+            if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
             return editValueSuggestions(values);
         }
         if ("behavior".equals(section)) {
             if (values.length == 3) return List.of("priority", "enabled", "chat").stream()
                     .filter(v -> v.startsWith(last)).toList();
+            if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
             return editValueSuggestions(values);
         }
         if ("item".equals(section)) {
@@ -437,12 +451,22 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 items.addAll(context.source().itemNames().stream().map(DefaultNameTagCommandHandler::normalizeItemId).toList());
                 return items.stream().filter(v -> v.startsWith(last)).sorted().toList();
             }
-            if (values.length >= 5 && trailing) {
+            if (values.length == 5 && trailing) {
                 String nested = values[3].toLowerCase(Locale.ROOT);
                 if ("mode".equals(nested)) return ITEM_MODES;
                 if ("speed".equals(nested)) return ITEM_SPEEDS;
             }
             if (values.length == 4 && trailing) return List.of("mode", "speed");
+            if (values.length >= 6 && trailing) return List.of("name", "item", "appearance", "behavior");
+        }
+        if ("appearance".equals(section) && values.length >= 5 && trailing) {
+            return List.of("name", "item", "appearance", "behavior");
+        }
+        if ("behavior".equals(section) && values.length >= 5 && trailing) {
+            return List.of("name", "item", "appearance", "behavior");
+        }
+        if ("name".equals(section) && values.length >= 4 && trailing) {
+            return List.of("name", "item", "appearance", "behavior");
         }
         return null;
     }

@@ -570,6 +570,43 @@ final class DefaultNameTagCommandHandlerTest {
     }
 
     @Test
+    void groupedSuggestionsReturnToTopLevelAfterCompletedValues() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        RecordingSource source = new RecordingSource();
+        source.items = List.of("minecraft:diamond");
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        assertEquals(List.of("name", "item", "appearance", "behavior"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", ""})));
+        assertEquals(List.of("name", "item", "appearance", "behavior"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "appearance", "color", "gold", ""})));
+        assertEquals(List.of("mode", "speed"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", ""})));
+        assertEquals(List.of("name", "item", "appearance", "behavior"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", "mode", "rotate", ""})));
+
+        handler.execute(new CommandContext(source, new String[]{
+                "tag", "create", "vip",
+                "name", "VIP",
+                "item", "minecraft:diamond", "mode", "rotate", "speed", "8",
+                "appearance", "color", "gold", "style", "bold",
+                "behavior", "priority", "100", "enabled", "true", "chat", "true"
+        }));
+        Tag tag = service.find(new TagId("vip")).orElseThrow();
+        assertEquals("VIP", tag.displayName());
+        assertEquals(new TagColor.Preset("gold"), tag.color());
+        assertEquals(new TagStyle(true, false, false, false, false), tag.style());
+        assertEquals(100, tag.priority());
+        assertEquals("minecraft:diamond", tag.metadata().get(TagItemSettings.ITEM_KEY));
+        assertEquals("rotate", tag.metadata().get(TagItemSettings.MODE_KEY));
+        assertEquals("8", tag.metadata().get(TagItemSettings.SPEED_KEY));
+    }
+
+    @Test
     void groupedCreateSuggestionsExposeNestedOptionsAndItemValues() {
         DefaultTagService service = new DefaultTagService(
                 new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
