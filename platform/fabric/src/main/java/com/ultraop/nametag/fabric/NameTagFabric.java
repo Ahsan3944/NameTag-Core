@@ -355,7 +355,6 @@ public final class NameTagFabric {
                 builder
         );
     }
-}
 
     private static int execute(
             CommandContext<ServerCommandSource> context,
