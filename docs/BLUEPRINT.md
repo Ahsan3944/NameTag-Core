@@ -92,6 +92,8 @@ Canonical grouped command surface:
 /nametag tag delete <tag>
 /nametag player give <player> <tag> [duration]
 /nametag player set <player> <tag>
+
+`give` grants/adds a tag; `set` activates a tag and also assigns it when necessary.
 /nametag player remove <player>
 /nametag player clear <player>
 /nametag display glitch <tag> <white|colorful>
