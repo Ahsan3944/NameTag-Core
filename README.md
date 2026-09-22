@@ -31,6 +31,7 @@ This separation prevents Minecraft API changes from spreading through the entire
 - UUID-based player identity.
 - Tag priority support.
 - Temporary tag assignments with persistent per-tag expiration.
+- Optional native item-based tag icons, including icon-only tags.
 
 ### Colors
 - Minecraft named/preset colors supported by the target text API.
@@ -78,9 +79,9 @@ OP access will be the default administrative fallback where the platform support
 Tags are resolved against the player's current world and block position. Multiple matching assigned or automatic-role tags are rendered in deterministic order: the explicit active tag first, followed by remaining matching tags by priority and tag ID.
 
 Scope a tag with:
-- `/nametag scope <tag> clear`
-- `/nametag scope <tag> world <world>`
-- `/nametag scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>`
+- `/nametag advanced scope <tag> clear`
+- `/nametag advanced scope <tag> world <world>`
+- `/nametag advanced scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>`
 
 Region scopes are metadata-defined cuboids and are persistent because tag metadata is persisted by every storage provider. The `{tags}` chat placeholder renders all resolved chat-enabled layers; existing `{tag}` and tag-specific placeholders remain backward-compatible and use the first resolved layer.
 
@@ -135,7 +136,7 @@ Tab completion is context-aware at each level. Tag IDs, online players, edit pro
 
 ### Automatic Role Tags
 
-Automatic role tags allow a tag to activate from a permission without storing a player assignment. Set the tag metadata key `auto-permission` to a permission node and use `/nametag role <tag> <permission|clear>` to manage it. Explicit assigned tags remain authoritative; automatic resolution is used when no usable explicit tag resolves. Matching enabled tags are ordered deterministically by priority and tag ID. Automatic results are not persisted, so permission changes are reflected on the next active-tag resolution.
+Automatic role tags allow a tag to activate from a permission without storing a player assignment. Set the tag metadata key `auto-permission` to a permission node and use `/nametag advanced role <tag> <permission|clear>` to manage it. Explicit assigned tags remain authoritative; automatic resolution is used when no usable explicit tag resolves. Matching enabled tags are ordered deterministically by priority and tag ID. Automatic results are not persisted, so permission changes are reflected on the next active-tag resolution.
 
 ## Command-First Management
 
@@ -181,8 +182,8 @@ Two modes are supported:
 
 Example:
 ```text
-/nametag glitch owner white
-/nametag glitch creator colorful
+/nametag display glitch owner white
+/nametag display glitch creator colorful
 ```
 
 The command changes only the effect and keeps the tag's other properties intact. See [docs/GLITCH.md](docs/GLITCH.md) for the effect contract and rendering rules.
@@ -194,7 +195,9 @@ The active NameTag layers can appear in player chat like server rank/prefix comp
 Example:
 
 ```
-[<item icon>OWNER] UltraOP: Hello everyone!
+[OWNER] UltraOP: Hello everyone!
+[<item icon>] UltraOP: Hello everyone!
+[<item icon> OWNER] UltraOP: Hello everyone!
 ```
 
 Chat integration includes:
@@ -203,6 +206,8 @@ Chat integration includes:
 - `nametag.chat` permission.
 - Configurable tag/name/message placement.
 - Native item-icon chat placeholder `{item}`; existing chat formats are backward-compatible and automatically receive the item before `{tag}`/`{tags}` when an item is configured.
+- Icon-only tags use `/nametag tag edit <tag> name none`; the same tag item metadata is reused for chat and in-world item presentation.
+- The player name is emitted exactly once; Fabric uses the content-phase-safe path while Paper owns the complete chat component.
 - Reuse of tag color and supported formatting.
 - The same contextual active-tag resolution used by the in-world nameplate.
 - `{tag}` backward-compatible first-layer rendering.
@@ -288,7 +293,8 @@ A tag should conceptually contain:
 - Effect definition.
 - Priority.
 - Enabled state.
-- Optional metadata.
+- Optional metadata, including item presentation keys `item`, `item-mode`, and `item-speed`.
+- Empty display name is valid for icon-only tags when an item is configured.
 
 Player data should use UUID as the stable identifier and store:
 - Assigned tag(s).
