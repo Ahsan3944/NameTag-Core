@@ -12,6 +12,10 @@ public record TagEffect(
     public static final String RAINBOW_ID = "rainbow";
     public static final String PULSE_ID = "pulse";
     public static final String WAVE_ID = "wave";
+    public static final String NEON_ID = "neon";
+    public static final String BREATH_ID = "breath";
+    public static final String BLINK_ID = "blink";
+    public static final String RGB_ID = "rgb";
     public static final String GLITCH_MODE_KEY = "mode";
     public static final String GLITCH_INTENSITY_KEY = "intensity";
     public static final String GLITCH_SPEED_KEY = "speed-ms";
@@ -46,6 +50,10 @@ public record TagEffect(
     public static TagEffect pulse(int intensity, int speedMs) { return animated(PULSE_ID, intensity, speedMs); }
     public static TagEffect wave() { return wave(45, 80); }
     public static TagEffect wave(int intensity, int speedMs) { return animated(WAVE_ID, intensity, speedMs); }
+    public static TagEffect neon() { return animated(NEON_ID, 65, 70); }
+    public static TagEffect breath() { return animated(BREATH_ID, 55, 110); }
+    public static TagEffect blink() { return animated(BLINK_ID, 100, 180); }
+    public static TagEffect rgb() { return animated(RGB_ID, 100, 45); }
     private static TagEffect animated(String id, int intensity, int speedMs) {
         if (intensity < 0 || intensity > 100) throw new IllegalArgumentException("Animation intensity must be between 0 and 100");
         if (speedMs < 30 || speedMs > 2000) throw new IllegalArgumentException("Animation speed must be between 30 and 2000 ms");
@@ -53,5 +61,6 @@ public record TagEffect(
     }
     public boolean isGlitch() { return GLITCH_ID.equals(id); }
     public boolean isAnimated() { return isAnimated(id); }
-    public static boolean isAnimated(String id) { return RAINBOW_ID.equals(id) || PULSE_ID.equals(id) || WAVE_ID.equals(id); }
+    public static boolean isAnimated(String id) { return RAINBOW_ID.equals(id) || PULSE_ID.equals(id) || WAVE_ID.equals(id)
+                || NEON_ID.equals(id) || BREATH_ID.equals(id) || BLINK_ID.equals(id) || RGB_ID.equals(id); }
 }
