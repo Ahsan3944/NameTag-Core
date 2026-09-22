@@ -10,6 +10,7 @@ import com.ultraop.nametag.core.model.GlitchSettings;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagEffect;
+import com.ultraop.nametag.core.model.TagItemSettings;
 import com.ultraop.nametag.core.model.TagPresentation;
 import com.ultraop.nametag.core.model.TagStyle;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -17,6 +18,11 @@ import net.minecraft.scoreboard.ServerScoreboard;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -40,6 +46,9 @@ public final class Fabric2111NameplateRenderer {
     private final Map<UUID, String> playerTeams = new HashMap<>();
     private final Map<String, List<Tag>> staticVisualTags = new HashMap<>();
     private final Map<String, AnimationState> animations = new HashMap<>();
+    private final Map<UUID, DisplayEntity.ItemDisplayEntity> itemDisplays = new HashMap<>();
+    private final Map<UUID, String> itemDisplaySignatures = new HashMap<>();
+    private final Map<UUID, Float> itemRotations = new HashMap<>();
 
     public Fabric2111NameplateRenderer(TagService tagService) {
         this.tagService = tagService;
@@ -51,7 +60,8 @@ public final class Fabric2111NameplateRenderer {
         for (Team team : new HashSet<>(teams.values())) {
             if (ownedTeamNames.contains(team.getName())) scoreboard.removeTeam(team);
         }
-        teams.clear(); ownedTeamNames.clear(); playerTeams.clear(); staticVisualTags.clear(); animations.clear();
+        for (DisplayEntity.ItemDisplayEntity display : new HashSet<>(itemDisplays.values())) display.discard();
+        teams.clear(); ownedTeamNames.clear(); playerTeams.clear(); staticVisualTags.clear(); animations.clear(); itemDisplays.clear(); itemDisplaySignatures.clear(); itemRotations.clear();
     }
 
     public void refreshPlayer(ServerPlayerEntity player) {
@@ -73,6 +83,13 @@ public final class Fabric2111NameplateRenderer {
         }
         playerTeams.entrySet().removeIf(entry -> server.getPlayerManager().getPlayer(entry.getKey()) == null);
         animations.entrySet().removeIf(entry -> !activeTeamNames.contains(entry.getKey()));
+        itemDisplays.entrySet().removeIf(entry -> {
+            if (server.getPlayerManager().getPlayer(entry.getKey()) != null) return false;
+            entry.getValue().discard();
+            itemDisplaySignatures.remove(entry.getKey());
+            itemRotations.remove(entry.getKey());
+            return true;
+        });
     }
 
     private void renderPlayer(MinecraftServer server, ServerPlayerEntity player, long nowNanos) {
@@ -88,6 +105,7 @@ public final class Fabric2111NameplateRenderer {
         String oldTeamName = playerTeams.get(player.getUuid());
         if (tags.isEmpty()) {
             removePlayer(scoreboard, player, oldTeamName);
+            clearItemDisplay(player.getUuid());
             return;
         }
 
@@ -97,6 +115,79 @@ public final class Fabric2111NameplateRenderer {
         scoreboard.addScoreHolderToTeam(player.getName().getString(), team);
         playerTeams.put(player.getUuid(), teamName);
         updateTeamVisual(team, tags, nowNanos);
+        updateItemDisplay(player, tags);
+    }
+
+    private void updateItemDisplay(ServerPlayerEntity player, List<Tag> tags) {
+        TagItemSettings settings = null;
+        for (Tag tag : tags) {
+            TagItemSettings candidate = TagItemSettings.from(tag);
+            if (candidate != null) { settings = candidate; break; }
+        }
+        if (settings == null) {
+            clearItemDisplay(player.getUuid());
+            return;
+        }
+
+        UUID uuid = player.getUuid();
+        String signature = settings.itemId() + "|" + settings.mode().id() + "|" + settings.speed();
+        DisplayEntity.ItemDisplayEntity display = itemDisplays.get(uuid);
+        if (display == null || display.isRemoved() || !display.getEntityWorld().equals(player.getEntityWorld())) {
+            if (display != null) display.discard();
+            display = new DisplayEntity.ItemDisplayEntity(EntityType.ITEM_DISPLAY, player.getEntityWorld());
+            display.setNoGravity(true);
+            itemDisplays.put(uuid, display);
+            itemDisplaySignatures.remove(uuid);
+            itemRotations.put(uuid, 0.0f);
+        }
+
+        if (!signature.equals(itemDisplaySignatures.get(uuid))) {
+            Identifier id = Identifier.tryParse(settings.itemId());
+            if (id == null || !Registries.ITEM.containsId(id)) {
+                clearItemDisplay(uuid);
+                return;
+            }
+            ItemStack stack = new ItemStack(Registries.ITEM.get(id));
+            var reference = display.getStackReference(0);
+            if (reference == null || !reference.set(stack)) {
+                clearItemDisplay(uuid);
+                return;
+            }
+            itemDisplaySignatures.put(uuid, signature);
+        }
+
+        float yaw = player.getYaw();
+        if (settings.mode() == TagItemSettings.Mode.ROTATE) {
+            float current = itemRotations.getOrDefault(uuid, 0.0f);
+            current += settings.speed() * 3.0f;
+            if (current >= 360.0f) current -= 360.0f;
+            itemRotations.put(uuid, current);
+            display.setYaw(current);
+        } else {
+            display.setYaw(yaw);
+        }
+
+        double yawRadians = Math.toRadians(yaw);
+        double rightX = -Math.cos(yawRadians);
+        double rightZ = -Math.sin(yawRadians);
+        double x = player.getX() + rightX * 0.42;
+        double y = player.getY() + 2.45;
+        double z = player.getZ() + rightZ * 0.42;
+        display.setPosition(x, y, z);
+        if (display.getEntityWorld() == player.getEntityWorld() && display.getId() == 0) {
+            player.getEntityWorld().getServer().getWorld(player.getEntityWorld().getRegistryKey());
+        }
+        if (!display.hasVehicle() && !display.isRemoved() && display.getEntityWorld() == player.getEntityWorld()
+                && display.getEntityWorld().getEntityLookup().get(display.getUuid()) == null) {
+            player.getEntityWorld().spawnEntity(display);
+        }
+    }
+
+    private void clearItemDisplay(UUID uuid) {
+        DisplayEntity.ItemDisplayEntity display = itemDisplays.remove(uuid);
+        if (display != null) display.discard();
+        itemDisplaySignatures.remove(uuid);
+        itemRotations.remove(uuid);
     }
 
     private void removePlayer(ServerScoreboard scoreboard, ServerPlayerEntity player, String teamName) {
