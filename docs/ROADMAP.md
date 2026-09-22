@@ -88,7 +88,7 @@
 - [x] White mode.
 - [x] Colorful RGB mode.
 - [x] Glitch processor/frame engine.
-- [x] `/nametag glitch <tag> <white|colorful>` platform command wiring.
+- [x] `/nametag display glitch <tag> <white|colorful>` platform command wiring.
 - [x] Nameplate frame scheduling.
 - [x] Intensity validation.
 - [x] Speed validation.
