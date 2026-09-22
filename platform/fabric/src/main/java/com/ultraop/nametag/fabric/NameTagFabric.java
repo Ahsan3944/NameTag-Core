@@ -84,9 +84,8 @@ public final class NameTagFabric {
             var createTag = CommandManager.argument("tag", StringArgumentType.word());
 
             var createName = CommandManager.literal("name");
-            var createNameValue = CommandManager.argument("displayName", StringArgumentType.greedyString());
-            createNameValue.then(createStyleFlow(
-                    service, permissions, messages, configuration, "name"));
+            var createNameValue = CommandManager.argument("displayName", StringArgumentType.string());
+            addStyleChoices(createNameValue, service, permissions, messages, configuration, "name");
             createName.then(createNameValue);
 
             var createItem = CommandManager.literal("item");
@@ -732,57 +731,37 @@ public final class NameTagFabric {
         });
     }
 
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createStyleFlow(
+    private static void addStyleChoices(
+            com.mojang.brigadier.builder.ArgumentBuilder<ServerCommandSource, ?> parent,
             TagService service, PermissionService permissions, DefaultMessageService messages,
             DefaultConfigurationService configuration, String flow) {
-        var node = CommandManager.literal("normal");
-
-        // Style is the first value after the display name. "normal" means no style.
         for (String style : List.of(
                 "normal", "bold", "italic", "bold_italic",
                 "underlined", "strikethrough", "obfuscated")) {
             var styleNode = CommandManager.literal(style);
-            styleNode.then(createWizardColorFlow(
-                    service, permissions, messages, configuration, flow, style));
-            node.then(styleNode);
+            addColorChoices(styleNode, service, permissions, messages, configuration, flow, style);
+            parent.then(styleNode);
         }
-        return node;
     }
 
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createWizardColorFlow(
+    private static void addColorChoices(
+            com.mojang.brigadier.builder.ArgumentBuilder<ServerCommandSource, ?> parent,
             TagService service, PermissionService permissions, DefaultMessageService messages,
             DefaultConfigurationService configuration, String flow, String style) {
-        var group = CommandManager.literal("color");
         for (String color : List.of(
                 "black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
                 "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
                 "yellow", "white", "random")) {
             var colorNode = CommandManager.literal(color);
-            colorNode.then(createWizardEffectFlow(
-                    service, permissions, messages, configuration, flow, style, color));
-            group.then(colorNode);
+            addEffectChoices(colorNode, service, permissions, messages, configuration, flow, style, color);
+            parent.then(colorNode);
         }
-
-        // The UI should show the colors directly after the selected style, not
-        // force the user to type a second "color" keyword.
-        var direct = CommandManager.literal("color");
-        for (String color : List.of(
-                "black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
-                "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
-                "yellow", "white", "random")) {
-            var colorNode = CommandManager.literal(color);
-            colorNode.then(createWizardEffectFlow(
-                    service, permissions, messages, configuration, flow, style, color));
-            direct.then(colorNode);
-        }
-        return direct;
     }
 
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createWizardEffectFlow(
+    private static void addEffectChoices(
+            com.mojang.brigadier.builder.ArgumentBuilder<ServerCommandSource, ?> parent,
             TagService service, PermissionService permissions, DefaultMessageService messages,
             DefaultConfigurationService configuration, String flow, String style, String color) {
-        var effectGroup = CommandManager.literal("effect");
-
         var normal = CommandManager.literal("normal");
         for (String effect : List.of(
                 "regular", "neon", "breath", "blink", "rgb", "rainbow", "pulse", "wave")) {
@@ -800,9 +779,8 @@ public final class NameTagFabric {
                             flow, style, color, "glitch", mode)));
         }
 
-        effectGroup.then(normal);
-        effectGroup.then(glitch);
-        return effectGroup;
+        parent.then(normal);
+        parent.then(glitch);
     }
 
     private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createSpinNode(
@@ -858,7 +836,7 @@ public final class NameTagFabric {
             CommandContext<ServerCommandSource> context,
             TagService service,
             PermissionService permissions,
-            DefaultMessageService configurationMessages,
+            DefaultMessageService messages,
             DefaultConfigurationService configuration,
             String flow,
             String style,
@@ -887,7 +865,7 @@ public final class NameTagFabric {
         args.add(effectType);
         args.add(effectValue);
 
-        return execute(context, service, permissions, configurationMessages, configuration, args.toArray(String[]::new));
+        return execute(context, service, permissions, messages, configuration, args.toArray(String[]::new));
     }
 
     private static java.util.concurrent.CompletableFuture<Suggestions> suggestCreateItems(
