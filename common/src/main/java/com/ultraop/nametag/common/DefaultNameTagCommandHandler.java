@@ -387,6 +387,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     return List.of("color", "gradient", "style", "effect", "glitch").stream()
                             .filter(v -> v.startsWith(last)).toList();
                 }
+                if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
                 return createValueSuggestions(values);
             }
             if ("behavior".equals(section)) {
@@ -394,6 +395,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     return List.of("priority", "enabled", "chat").stream()
                             .filter(v -> v.startsWith(last)).toList();
                 }
+                if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
                 return createValueSuggestions(values);
             }
             if ("item".equals(section)) {
@@ -433,11 +435,13 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         if ("appearance".equals(section)) {
             if (values.length == 3) return List.of("color", "gradient", "style", "effect", "glitch").stream()
                     .filter(v -> v.startsWith(last)).toList();
+            if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
             return editValueSuggestions(values);
         }
         if ("behavior".equals(section)) {
             if (values.length == 3) return List.of("priority", "enabled", "chat").stream()
                     .filter(v -> v.startsWith(last)).toList();
+            if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
             return editValueSuggestions(values);
         }
         if ("item".equals(section)) {
