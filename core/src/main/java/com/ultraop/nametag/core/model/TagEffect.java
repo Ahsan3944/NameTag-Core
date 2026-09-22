@@ -12,6 +12,10 @@ public record TagEffect(
     public static final String RAINBOW_ID = "rainbow";
     public static final String PULSE_ID = "pulse";
     public static final String WAVE_ID = "wave";
+    public static final String NEON_ID = "neon";
+    public static final String BREATH_ID = "breath";
+    public static final String BLINK_ID = "blink";
+    public static final String RGB_ID = "rgb";
     public static final String GLITCH_MODE_KEY = "mode";
     public static final String GLITCH_INTENSITY_KEY = "intensity";
     public static final String GLITCH_SPEED_KEY = "speed-ms";
