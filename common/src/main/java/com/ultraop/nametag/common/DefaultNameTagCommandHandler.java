@@ -185,6 +185,10 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         }
 
         String group = input[0].toLowerCase(Locale.ROOT);
+        if ("tag".equals(group) && input.length >= 3) {
+            List<String> grouped = groupedTagSuggestions(context);
+            if (grouped != null) return grouped;
+        }
         if ("help".equals(group) && input.length == 2) {
             String prefix = input[1].toLowerCase(Locale.ROOT);
             return HELP_TOPICS.stream().filter(value -> value.startsWith(prefix)).toList();
@@ -356,6 +360,99 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         }
 
         return List.of();
+    }
+
+    private static List<String> groupedTagSuggestions(CommandContext context) {
+        String[] input = context.args();
+        String command = input[1].toLowerCase(Locale.ROOT);
+        if (!"create".equals(command) && !"edit".equals(command)) return null;
+
+        String[] values = Arrays.copyOfRange(input, 2, input.length);
+        boolean create = "create".equals(command);
+        if (values.length == 1) {
+            return List.of("create".equals(command) ? "name" : "name");
+        }
+
+        if (create) {
+            if (values.length == 2) {
+                String prefix = values[1].toLowerCase(Locale.ROOT);
+                return List.of("name", "item", "appearance", "behavior").stream()
+                        .filter(v -> v.startsWith(prefix)).toList();
+            }
+            String section = values[1].toLowerCase(Locale.ROOT);
+            String last = values[values.length - 1].toLowerCase(Locale.ROOT);
+            boolean trailing = values[values.length - 1].isEmpty();
+            if ("appearance".equals(section)) {
+                if (values.length == 3) {
+                    return List.of("color", "gradient", "style", "effect", "glitch").stream()
+                            .filter(v -> v.startsWith(last)).toList();
+                }
+                return createValueSuggestions(values);
+            }
+            if ("behavior".equals(section)) {
+                if (values.length == 3) {
+                    return List.of("priority", "enabled", "chat").stream()
+                            .filter(v -> v.startsWith(last)).toList();
+                }
+                return createValueSuggestions(values);
+            }
+            if ("item".equals(section)) {
+                if (values.length == 3) {
+                    return context.itemNames().stream()
+                            .map(DefaultNameTagCommandHandler::normalizeItemId)
+                            .filter(v -> v.startsWith(last)).sorted().toList();
+                }
+                if (values.length >= 4 && trailing) return List.of("mode", "speed");
+            }
+            return null;
+        }
+
+        if (values.length == 2) {
+            String prefix = values[1].toLowerCase(Locale.ROOT);
+            return List.of("name", "item", "appearance", "behavior").stream()
+                    .filter(v -> v.startsWith(prefix)).toList();
+        }
+        String section = values[1].toLowerCase(Locale.ROOT);
+        String last = values[values.length - 1].toLowerCase(Locale.ROOT);
+        boolean trailing = values[values.length - 1].isEmpty();
+        if ("appearance".equals(section)) {
+            if (values.length == 3) return List.of("color", "gradient", "style", "effect", "glitch").stream()
+                    .filter(v -> v.startsWith(last)).toList();
+            return editValueSuggestions(values);
+        }
+        if ("behavior".equals(section)) {
+            if (values.length == 3) return List.of("priority", "enabled", "chat").stream()
+                    .filter(v -> v.startsWith(last)).toList();
+            return editValueSuggestions(values);
+        }
+        if ("item".equals(section)) {
+            if (values.length == 3) {
+                List<String> items = new java.util.ArrayList<>();
+                items.add("clear");
+                items.addAll(context.itemNames().stream().map(DefaultNameTagCommandHandler::normalizeItemId).toList());
+                return items.stream().filter(v -> v.startsWith(last)).sorted().toList();
+            }
+            if (values.length >= 4 && trailing) return List.of("mode", "speed");
+        }
+        return null;
+    }
+
+    private static List<String> createValueSuggestions(String[] values) {
+        String property = values[2].toLowerCase(Locale.ROOT);
+        String prefix = values[values.length - 1].toLowerCase(Locale.ROOT);
+        if ("color".equals(property)) return PRESET_COLORS.stream().filter(v -> v.startsWith(prefix)).toList();
+        if ("style".equals(property)) return STYLE_VALUES.stream().filter(v -> v.startsWith(prefix)).toList();
+        if ("effect".equals(property)) return EFFECT_VALUES.stream().filter(v -> v.startsWith(prefix)).toList();
+        if ("glitch".equals(property)) return GLITCH_VALUES.stream().filter(v -> v.startsWith(prefix)).toList();
+        if ("priority".equals(property)) return List.of("0","10","25","50","100","1000").stream().filter(v -> v.startsWith(prefix)).toList();
+        if ("enabled".equals(property) || "chat".equals(property)) return List.of("true","false").stream().filter(v -> v.startsWith(prefix)).toList();
+        if ("item-mode".equals(property) || "mode".equals(property)) return ITEM_MODES.stream().filter(v -> v.startsWith(prefix)).toList();
+        if ("item-speed".equals(property) || "speed".equals(property)) return ITEM_SPEEDS.stream().filter(v -> v.startsWith(prefix)).toList();
+        return List.of();
+    }
+
+    private static List<String> editValueSuggestions(String[] values) {
+        return createValueSuggestions(values);
     }
 
     private static String[] normalizeGroupedArgs(String[] input) {
