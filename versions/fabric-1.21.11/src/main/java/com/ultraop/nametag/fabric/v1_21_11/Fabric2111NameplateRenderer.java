@@ -49,6 +49,7 @@ public final class Fabric2111NameplateRenderer {
     private final Map<UUID, DisplayEntity.ItemDisplayEntity> itemDisplays = new HashMap<>();
     private final Map<UUID, String> itemDisplaySignatures = new HashMap<>();
     private final Map<UUID, Float> itemRotations = new HashMap<>();
+    private final Set<UUID> spawnedItemDisplays = new HashSet<>();
 
     public Fabric2111NameplateRenderer(TagService tagService) {
         this.tagService = tagService;
@@ -61,7 +62,7 @@ public final class Fabric2111NameplateRenderer {
             if (ownedTeamNames.contains(team.getName())) scoreboard.removeTeam(team);
         }
         for (DisplayEntity.ItemDisplayEntity display : new HashSet<>(itemDisplays.values())) display.discard();
-        teams.clear(); ownedTeamNames.clear(); playerTeams.clear(); staticVisualTags.clear(); animations.clear(); itemDisplays.clear(); itemDisplaySignatures.clear(); itemRotations.clear();
+        teams.clear(); ownedTeamNames.clear(); playerTeams.clear(); staticVisualTags.clear(); animations.clear(); itemDisplays.clear(); itemDisplaySignatures.clear(); itemRotations.clear(); spawnedItemDisplays.clear();
     }
 
     public void refreshPlayer(ServerPlayerEntity player) {
@@ -174,12 +175,8 @@ public final class Fabric2111NameplateRenderer {
         double y = player.getY() + 2.45;
         double z = player.getZ() + rightZ * 0.42;
         display.setPosition(x, y, z);
-        if (display.getEntityWorld() == player.getEntityWorld() && display.getId() == 0) {
-            player.getEntityWorld().getServer().getWorld(player.getEntityWorld().getRegistryKey());
-        }
-        if (!display.hasVehicle() && !display.isRemoved() && display.getEntityWorld() == player.getEntityWorld()
-                && display.getEntityWorld().getEntityLookup().get(display.getUuid()) == null) {
-            player.getEntityWorld().spawnEntity(display);
+        if (!spawnedItemDisplays.contains(uuid) && !display.isRemoved()) {
+            if (player.getEntityWorld().spawnEntity(display)) spawnedItemDisplays.add(uuid);
         }
     }
 
@@ -188,6 +185,7 @@ public final class Fabric2111NameplateRenderer {
         if (display != null) display.discard();
         itemDisplaySignatures.remove(uuid);
         itemRotations.remove(uuid);
+        spawnedItemDisplays.remove(uuid);
     }
 
     private void removePlayer(ServerScoreboard scoreboard, ServerPlayerEntity player, String teamName) {
