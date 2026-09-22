@@ -48,6 +48,12 @@ sourceSets.named("gametest") {
 
 tasks.withType(JavaCompile).configureEach { options.release = 21 }
 
+processResources {
+    filesMatching('fabric.mod.json') {
+        expand(version: project.version)
+    }
+}
+
 // Compile the selected version adapter sources in the platform Loom project itself. Nesting the
 // version project's namedElements JAR leaves net.minecraft.* references in named mappings at runtime.
 sourceSets {
