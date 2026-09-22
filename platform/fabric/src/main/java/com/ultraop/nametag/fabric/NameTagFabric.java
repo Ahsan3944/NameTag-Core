@@ -112,60 +112,79 @@ public final class NameTagFabric {
             tag.then(tagCreate);
 
             // EDIT
+            // Edit mirrors the same guided structure without the old flat
+            // appearance/behavior dump. Advanced administrative fields remain
+            // available under one nested node.
             var tagEdit = CommandManager.literal("edit");
             var editTag = CommandManager.argument("tag", StringArgumentType.word())
                     .suggests((context, builder) ->
                             suggestTags(context, builder, service, permissions, configuration, "edit"));
 
             var editName = CommandManager.literal("name");
-            editName.then(CommandManager.argument("displayName", StringArgumentType.word())
+            editName.then(CommandManager.argument("displayName", StringArgumentType.string())
                     .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
                             "name", StringArgumentType.getString(context, "displayName"))));
 
             var editItem = CommandManager.literal("item");
-            var editItemValue = CommandManager.argument("item", StringArgumentType.word())
-                    .suggests((context, builder) -> suggestEditItems(context, builder, permissions))
-                    .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
-                            "item", IdentifierArgumentType.getIdentifier(context, "item").toString()));
-            editItemValue.then(CommandManager.literal("mode")
-                    .then(CommandManager.argument("mode", StringArgumentType.word())
-                            .suggests((context, builder) -> CommandSource.suggestMatching(
-                                    List.of("static", "rotate"), builder))
-                            .executes(context -> executeEditNestedOption(context, service, permissions, messages, configuration,
-                                    "item", "mode", StringArgumentType.getString(context, "mode")))));
-            editItemValue.then(CommandManager.literal("speed")
-                    .then(CommandManager.argument("speed", StringArgumentType.word())
-                            .suggests((context, builder) -> CommandSource.suggestMatching(
-                                    List.of("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"), builder))
-                            .executes(context -> executeEditNestedOption(context, service, permissions, messages, configuration,
-                                    "item", "speed", StringArgumentType.getString(context, "speed")))));
+            var editItemValue = CommandManager.argument("item", IdentifierArgumentType.identifier())
+                    .suggests((context, builder) -> suggestEditItems(context, builder, permissions));
+            editItemValue.then(CommandManager.literal("spin")
+                    .then(CommandManager.argument("spin", BoolArgumentType.bool())
+                            .executes(context -> executeEditSpin(
+                                    context, service, permissions, messages, configuration))));
             editItemValue.then(CommandManager.literal("clear")
                     .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
                             "item", "clear")));
             editItem.then(editItemValue);
 
-            var editAppearance = CommandManager.literal("appearance");
-            editAppearance.then(createEditColorNode(service, permissions, messages, configuration));
-            editAppearance.then(createEditGradientNode(service, permissions, messages, configuration));
-            editAppearance.then(createEditStyleNode(service, permissions, messages, configuration));
-            editAppearance.then(createEditEffectNode(service, permissions, messages, configuration));
-            editAppearance.then(createEditGlitchNode(service, permissions, messages, configuration));
+            var editStyle = CommandManager.literal("style");
+            editStyle.then(CommandManager.argument("style", StringArgumentType.word())
+                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                            List.of("normal", "bold", "italic", "bold_italic", "underlined",
+                                    "strikethrough", "obfuscated"), builder))
+                    .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                            "style", StringArgumentType.getString(context, "style"))));
 
-            var editBehavior = CommandManager.literal("behavior");
-            editBehavior.then(createEditSimpleOptionNode("priority",
+            var editColor = CommandManager.literal("color");
+            editColor.then(CommandManager.argument("color", StringArgumentType.word())
+                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                            List.of("black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
+                                    "gold", "gray", "dark_gray", "blue", "green", "aqua", "red",
+                                    "light_purple", "yellow", "white", "random"), builder))
+                    .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                            "color", StringArgumentType.getString(context, "color"))));
+
+            var editEffect = CommandManager.literal("effect");
+            var editEffectNormal = CommandManager.literal("normal");
+            editEffectNormal.then(CommandManager.argument("normalEffect", StringArgumentType.word())
+                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                            List.of("regular", "neon", "breath", "blink", "rgb"), builder))
+                    .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                            "effect", StringArgumentType.getString(context, "normalEffect"))));
+            var editEffectGlitch = CommandManager.literal("glitch");
+            editEffectGlitch.then(CommandManager.argument("glitchMode", StringArgumentType.word())
+                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                            List.of("white", "colorful"), builder))
+                    .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
+                            "glitch", StringArgumentType.getString(context, "glitchMode"))));
+            editEffect.then(editEffectNormal);
+            editEffect.then(editEffectGlitch);
+
+            var editAdvanced = CommandManager.literal("advanced");
+            editAdvanced.then(createEditSimpleOptionNode("priority",
                     List.of("0", "10", "25", "50", "100", "1000"),
                     service, permissions, messages, configuration));
-            editBehavior.then(createEditSimpleOptionNode("enabled",
-                    List.of("true", "false"),
-                    service, permissions, messages, configuration));
-            editBehavior.then(createEditSimpleOptionNode("chat",
-                    List.of("true", "false"),
-                    service, permissions, messages, configuration));
+            editAdvanced.then(createEditSimpleOptionNode("enabled",
+                    List.of("true", "false"), service, permissions, messages, configuration));
+            editAdvanced.then(createEditSimpleOptionNode("chat",
+                    List.of("true", "false"), service, permissions, messages, configuration));
 
             editTag.then(editName);
             editTag.then(editItem);
-            editTag.then(editAppearance);
-            editTag.then(editBehavior);
+            editTag.then(editStyle);
+            editTag.then(editColor);
+            editTag.then(editEffect);
+            editTag.then(editAdvanced);
             tagEdit.then(editTag);
             tag.then(tagEdit);
 
@@ -649,6 +668,20 @@ public final class NameTagFabric {
         values.add("clear");
         values.addAll(new FabricCommandSource(context.getSource(), permissions).itemNames());
         return CommandSource.suggestMatching(values, builder);
+    }
+
+    private static int executeEditSpin(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        boolean spin = BoolArgumentType.getBool(context, "spin");
+        return execute(context, service, permissions, messages, configuration, new String[]{
+                "tag", "edit",
+                StringArgumentType.getString(context, "tag"),
+                "item-mode", spin ? "rotate" : "static"
+        });
     }
 
     private static int executeEditOption(
