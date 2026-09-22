@@ -88,7 +88,7 @@
 - [x] White mode.
 - [x] Colorful RGB mode.
 - [x] Glitch processor/frame engine.
-- [x] `/nametag glitch <tag> <white|colorful>` platform command wiring.
+- [x] `/nametag display glitch <tag> <white|colorful>` platform command wiring.
 - [x] Nameplate frame scheduling.
 - [x] Intensity validation.
 - [x] Speed validation.
@@ -107,6 +107,9 @@
 - [x] Enable/disable and chat-visibility commands.
 - [x] Fabric and Paper command integration.
 - [x] Command tab completion.
+- [x] Item-based name-tag display commands.
+- [x] Icon-only tag support.
+- [x] Item-first chat composition with exact-once player-name rendering.
 ## Phase 10 — Stability
 - [x] Full unit test suite.
 - [x] Full integration suite.
@@ -117,6 +120,7 @@
 - [x] Performance/stress regression coverage for bounded cache behavior.
 - [x] Documentation audit.
 - [x] Cache behavior documented separately for the 1024-entry legacy active-tag cache and 2048-entry contextual multi-tag cache.
+- [x] Chat regression coverage for duplicate player names, legacy item-placeholder injection, item-before-rank ordering and icon-only tags.
 
 ## Phase 11 — v1.0 Release Preparation
 - [x] Release artifacts uploaded by CI.
@@ -174,3 +178,5 @@ Potential future additions:
 - [x] Audit logs.
 - [x] Tag packs.
 - [x] Generic animated-effect contract and built-in rainbow/pulse/wave effects.
+- [x] Native Minecraft item-atlas chat icons.
+- [x] Icon-only tags and item + rank composition.
