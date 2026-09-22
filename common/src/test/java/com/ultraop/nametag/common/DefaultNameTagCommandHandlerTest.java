@@ -208,7 +208,10 @@ final class DefaultNameTagCommandHandlerTest {
                 handler.suggest(new CommandContext(source, new String[]{""})));
         assertEquals(List.of("create", "edit", "list", "delete"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", ""})));
-        assertEquals(List.of("name", "color", "gradient", "style", "priority", "enabled", "chat"),
+        assertEquals(List.of(
+                        "name", "item", "color", "gradient", "style", "effect", "glitch",
+                        "priority", "enabled", "chat", "item-mode", "item-speed"
+                ),
                 handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", ""})));
         assertEquals(List.of("0", "10", "25", "50", "100", "1000"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", "priority", ""})));
@@ -470,7 +473,10 @@ final class DefaultNameTagCommandHandlerTest {
 
         assertEquals(List.of("owner"),
                 handler.suggest(new CommandContext(source, new String[]{"edit", "ow"})));
-        assertEquals(List.of("name", "color", "gradient", "style", "priority", "enabled", "chat"),
+        assertEquals(List.of(
+                        "name", "item", "color", "gradient", "style", "effect", "glitch",
+                        "priority", "enabled", "chat", "item-mode", "item-speed"
+                ),
                 handler.suggest(new CommandContext(source, new String[]{"edit", "owner", ""})));
         assertEquals(List.of("bold", "bold_italic"),
                 handler.suggest(new CommandContext(source, new String[]{"edit", "owner", "style", "bold"})));
