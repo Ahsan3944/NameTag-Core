@@ -58,7 +58,21 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
                 .filter(Tag::enabled).filter(Tag::chatEnabled).toList();
         if (active.isEmpty()) return defaultChat(sourceDisplayName, message);
 
-        return renderFormat(configuration.current().chatFormat(), active, sourceDisplayName, message);
+        return renderFormat(ensureItemPlaceholder(configuration.current().chatFormat()), active, sourceDisplayName, message);
+    }
+
+    static String ensureItemPlaceholder(String format) {
+        if (format.contains(ITEM_PLACEHOLDER)) return format;
+        int tagIndex = format.indexOf(TAG_PLACEHOLDER);
+        if (tagIndex < 0) tagIndex = format.indexOf("{tags}");
+        if (tagIndex >= 0) {
+            return format.substring(0, tagIndex) + ITEM_PLACEHOLDER + format.substring(tagIndex);
+        }
+        int playerIndex = format.indexOf(PLAYER_PLACEHOLDER);
+        if (playerIndex >= 0) {
+            return format.substring(0, playerIndex) + ITEM_PLACEHOLDER + format.substring(playerIndex);
+        }
+        return format;
     }
 
     static Component renderFormat(
