@@ -398,7 +398,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             }
             if ("item".equals(section)) {
                 if (values.length == 3) {
-                    return context.itemNames().stream()
+                    return context.source().itemNames().stream()
                             .map(DefaultNameTagCommandHandler::normalizeItemId)
                             .filter(v -> v.startsWith(last)).sorted().toList();
                 }
