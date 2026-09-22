@@ -150,6 +150,12 @@ class Paper2111ChatRendererTest {
     }
 
     @Test
+    void injectsItemBeforeExistingTagPlaceholder() {
+        assertEquals("[{item}{tag}] {player}: {message}", Paper2111ChatRenderer.ensureItemPlaceholder("[{tag}] {player}: {message}"));
+        assertEquals("[{item}{tags}] {player}: {message}", Paper2111ChatRenderer.ensureItemPlaceholder("[{tags}] {player}: {message}"));
+    }
+
+    @Test
     void rendersItemIconBeforeTagAndSupportsIconOnly() {
         Tag tagged = new Tag(
                 new TagId("vip"),
