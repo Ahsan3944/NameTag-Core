@@ -73,10 +73,10 @@ final class DefaultNameTagCommandHandlerTest {
                 new DefaultMessageService()
         );
 
-        handler.execute(new CommandContext(source, new String[]{"give", "UltraOP", "owner"}));
+        handler.execute(new CommandContext(source, new String[]{"set", "UltraOP", "owner"}));
 
         assertEquals("owner", service.activeTag(playerUuid).orElseThrow().id().value());
-        assertEquals("Assigned owner to UltraOP", source.lastMessage);
+        assertEquals("Set owner as active for UltraOP", source.lastMessage);
 
         Tag secondTag = new Tag(
                 new TagId("vip"),
@@ -90,8 +90,6 @@ final class DefaultNameTagCommandHandlerTest {
                 Map.of()
         );
         service.create(secondTag);
-
-        handler.execute(new CommandContext(source, new String[]{"give", "UltraOP", "vip"}));
 
         handler.execute(new CommandContext(source, new String[]{"set", "UltraOP", "vip"}));
 
@@ -126,16 +124,61 @@ final class DefaultNameTagCommandHandlerTest {
     }
 
     @Test
-    void giveAcceptsTemporaryDuration() {
+    void setAcceptsTemporaryDuration() {
         InMemoryTagRepository tags=new InMemoryTagRepository();
         InMemoryPlayerAssignmentRepository assignments=new InMemoryPlayerAssignmentRepository();
         DefaultTagService service=new DefaultTagService(tags,assignments);
         service.create(new Tag(new TagId("vip"),"VIP",new TagColor.Preset("white"),TagStyle.plain(),TagEffect.none(),10,true,true,Map.of()));
         UUID playerUuid=UUID.randomUUID(); RecordingSource source=new RecordingSource();
         DefaultNameTagCommandHandler handler=new DefaultNameTagCommandHandler(service,new SinglePlayerResolver(new OnlinePlayer(playerUuid,"UltraOP")),new DefaultMessageService());
-        handler.execute(new CommandContext(source,new String[]{"give","UltraOP","vip","30m"}));
+        handler.execute(new CommandContext(source,new String[]{"set","UltraOP","vip","30m"}));
         assertTrue(assignments.find(playerUuid).orElseThrow().expirationEpochMillis().containsKey(new TagId("vip")));
         assertEquals("Assigned vip to UltraOP for 30m",source.lastMessage);
+    }
+
+    @Test
+    void createWizardCommandShapeCreatesFullyConfiguredTag() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        RecordingSource source = new RecordingSource();
+        source.items = List.of("minecraft:diamond");
+
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{
+                "tag", "create", "vip", "name", "VIP", "bold", "gold", "normal", "neon"
+        }));
+
+        Tag tag = service.find(new TagId("vip")).orElseThrow();
+        assertEquals("VIP", tag.displayName());
+        assertEquals(new TagColor.Preset("gold"), tag.color());
+        assertEquals(new TagStyle(true, false, false, false, false), tag.style());
+        assertEquals(TagEffect.NEON_ID, tag.effect().id());
+    }
+
+    @Test
+    void itemWizardCommandShapeCreatesStaticItemTag() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        RecordingSource source = new RecordingSource();
+        source.items = List.of("minecraft:diamond");
+
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{
+                "tag", "create", "diamond", "item", "minecraft:diamond", "spin", "false"
+        }));
+
+        Tag tag = service.find(new TagId("diamond")).orElseThrow();
+        assertEquals("", tag.displayName());
+        assertEquals("minecraft:diamond", tag.metadata().get(TagItemSettings.ITEM_KEY));
+        assertEquals("static", tag.metadata().get(TagItemSettings.MODE_KEY));
     }
 
     @Test
