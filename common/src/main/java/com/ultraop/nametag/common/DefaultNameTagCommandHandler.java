@@ -866,7 +866,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             case "delete" -> "nametag.delete";
             case "give", "set" -> "nametag.give";
             case "remove", "clear" -> "nametag.remove";
-            case "edit", "glitch", "effect", "role", "scope" -> "nametag.edit";
+            case "edit", "glitch", "effect", "item", "role", "scope" -> "nametag.edit";
             case "reload" -> "nametag.reload";
             case "export", "import" -> "nametag.admin";
             default -> null;
