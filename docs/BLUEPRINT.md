@@ -285,7 +285,6 @@ nametag.use
 nametag.create
 nametag.edit
 nametag.delete
-nametag.give
 nametag.remove
 nametag.reload
 nametag.chat
