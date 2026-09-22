@@ -80,7 +80,7 @@ public final class NameTagFabric {
                                     .suggests((context, builder) -> CommandSource.suggestMatching(
                                             List.of("name", "color", "gradient", "style", "priority", "enabled", "chat"), builder))
                                     .then(CommandManager.argument("value", StringArgumentType.greedyString())
-                                            .suggests((context, builder) -> suggestEditValues(context, builder))
+                                            .suggests((context, builder) -> suggestEditValues(context, builder, service, permissions, configuration))
                                             .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
                                                     "tag", "edit",
                                                     StringArgumentType.getString(context, "tag"),
@@ -192,24 +192,27 @@ public final class NameTagFabric {
 
     private static java.util.concurrent.CompletableFuture<Suggestions> suggestEditValues(
             CommandContext<ServerCommandSource> context,
-            com.mojang.brigadier.suggestion.SuggestionsBuilder builder
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
+            TagService service,
+            PermissionService permissions,
+            DefaultConfigurationService configuration
     ) {
-        String property = StringArgumentType.getString(context, "property").toLowerCase(java.util.Locale.ROOT);
-        return switch (property) {
-            case "color" -> CommandSource.suggestMatching(
-                    List.of("black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
-                            "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
-                            "yellow", "white", "random"),
-                    builder
-            );
-            case "style" -> CommandSource.suggestMatching(
-                    List.of("plain", "bold", "italic", "bold_italic"),
-                    builder
-            );
-            case "enabled", "chat" -> CommandSource.suggestMatching(
-                    List.of("true", "false"),
-                    builder
-            );
-            default -> Suggestions.empty();
-        };
+        String tag = StringArgumentType.getString(context, "tag");
+        String property = StringArgumentType.getString(context, "property");
+        String prefix = builder.getRemaining();
+        NameTagCommandHandler handler = handler(
+                context.getSource(),
+                service,
+                new DefaultMessageService(),
+                configuration
+        );
+        return CommandSource.suggestMatching(
+                handler.suggest(new com.ultraop.nametag.api.CommandContext(
+                        new FabricCommandSource(context.getSource(), permissions),
+                        new String[]{"tag", "edit", tag, property, prefix}
+                )),
+                builder
+        );
     }
+
+
