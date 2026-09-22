@@ -168,17 +168,15 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         String group = input[0].toLowerCase(Locale.ROOT);
         List<String> commands = GROUP_COMMANDS.get(group);
-        if (commands == null) {
-            return List.of();
-        }
-
-        if (input.length == 2) {
+        if (commands != null && input.length == 2) {
             String prefix = input[1].toLowerCase(Locale.ROOT);
             return commands.stream()
                     .filter(value -> value.startsWith(prefix))
                     .toList();
         }
 
+        // Keep legacy completion working for callers that still send the old flat
+        // argument shape; the Fabric command tree itself exposes only grouped nodes.
         String[] args = normalizeGroupedArgs(input);
         if (args.length == 0) {
             return List.of();
