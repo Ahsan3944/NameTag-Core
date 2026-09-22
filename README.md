@@ -99,11 +99,12 @@ Commands are grouped into focused namespaces so the first tab-completion level s
 - `/nametag advanced ...` — role mappings and scopes.
 - `/nametag admin ...` — reload and import/export.
 - `/nametag help <category>` — category-specific command help.
-- `/nametag info` / `/nametag version` — version and platform information.
+- `/nametag info` — consolidated version, platform, creator and feature information.
 
 Implemented commands:
 
-- `/nametag tag create <tag> <displayName>`
+- `/nametag tag create <tag> name <displayName> [item <item>]`
+- `/nametag tag create <tag> item <item> [name <displayName>]`
 - `/nametag tag edit <tag> name <displayName|none>`
 - `/nametag tag edit <tag> color <preset|random|#RRGGBB>`
 - `/nametag tag edit <tag> gradient <startHex> <endHex>`
@@ -131,7 +132,7 @@ Implemented commands:
 - `/nametag admin export <file>`
 - `/nametag admin import <file>`
 
-Tab completion is context-aware at each level. Tag IDs, online players, edit properties, colors, styles, booleans, effects, durations, world names, role examples, item IDs and item rotation speeds are suggested where the command can safely provide a finite list. Free-form values such as new tag IDs, display names, permission nodes and region names remain open text inputs. Item-based icons can be configured independently from tag text. A tag may be text-only, icon-only, or icon + text. In chat the order is always item icon → tag/rank text (if present) → player name → message. The icon is a native Minecraft 1.21.11 atlas sprite, so it is rendered inline without replacing the player name. Registered Minecraft items are supported; a block must have an item form to be rendered as an item icon.
+Tab completion is context-aware at each level. Tag IDs, online players, create options (`name`/`item`), edit properties, colors, styles, booleans, effects, durations, world names, role examples, item IDs and item rotation speeds are suggested where the command can safely provide a finite list. Free-form values such as new tag IDs, display names, permission nodes and region names remain open text inputs. Item-based icons can be configured independently from tag text. A tag may be text-only, icon-only, or icon + text. In chat the order is always item icon → tag/rank text (if present) → player name → message. The icon is a native Minecraft 1.21.11 atlas sprite, so it is rendered inline without replacing the player name. Create-time item selection uses the same registered-item source as `/nametag display item`. Registered Minecraft items are supported; a block must have an item form to be rendered as an item icon.
 
 
 ### Automatic Role Tags
@@ -207,7 +208,7 @@ Chat integration includes:
 - Configurable tag/name/message placement.
 - Native item-icon chat placeholder `{item}`; existing chat formats are backward-compatible and automatically receive the item before `{tag}`/`{tags}` when an item is configured.
 - Icon-only tags use `/nametag tag edit <tag> name none`; the same tag item metadata is reused for chat and in-world item presentation.
-- The player name is emitted exactly once; Fabric uses the content-phase-safe path while Paper owns the complete chat component.
+- The player name is emitted exactly once. Paper owns the complete rendered component. Fabric switches tagged chat to a complete system-chat component because Fabric's content decorator can only modify the message body and cannot move the rank before vanilla's sender decoration.
 - Reuse of tag color and supported formatting.
 - The same contextual active-tag resolution used by the in-world nameplate.
 - `{tag}` backward-compatible first-layer rendering.

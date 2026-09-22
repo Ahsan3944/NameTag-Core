@@ -59,4 +59,40 @@ public final class FabricCommandSource implements CommandSource {
     public void sendMessage(String message) {
         source.sendFeedback(() -> Text.literal(message), false);
     }
+
+    @Override
+    public void sendStyledMessage(String message) {
+        source.sendFeedback(() -> parseLegacyFormatting(message), false);
+    }
+
+    private static Text parseLegacyFormatting(String message) {
+        net.minecraft.text.MutableText result = Text.empty();
+        net.minecraft.text.Style style = net.minecraft.text.Style.EMPTY;
+        StringBuilder literal = new StringBuilder();
+
+        for (int index = 0; index < message.length(); index++) {
+            char current = message.charAt(index);
+            if (current == '§' && index + 1 < message.length()) {
+                if (!literal.isEmpty()) {
+                    result.append(Text.literal(literal.toString()).setStyle(style));
+                    literal.setLength(0);
+                }
+                net.minecraft.util.Formatting formatting = net.minecraft.util.Formatting.byCode(message.charAt(++index));
+                if (formatting == null) {
+                    literal.append('§').append(message.charAt(index));
+                } else if (formatting == net.minecraft.util.Formatting.RESET) {
+                    style = net.minecraft.text.Style.EMPTY;
+                } else {
+                    style = style.withFormatting(formatting);
+                }
+                continue;
+            }
+            literal.append(current);
+        }
+
+        if (!literal.isEmpty()) {
+            result.append(Text.literal(literal.toString()).setStyle(style));
+        }
+        return result;
+    }
 }

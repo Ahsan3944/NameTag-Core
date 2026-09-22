@@ -15,7 +15,7 @@ If any condition is false, NameTag-Core leaves the existing chat renderer untouc
 
 ## Fabric 1.21.11
 
-Fabric uses the server message content decorator. Because vanilla supplies the sender's display name after the content decorator runs, NameTag-Core removes the `{player}` placeholder from the Fabric content-format path. This prevents the player name from appearing twice.
+Fabric 1.21.11 uses ServerMessageEvents.ALLOW_CHAT_MESSAGE for tagged chat. The content decorator is not used for the final tagged line because Fabric's decorator only changes message content; vanilla would otherwise place the sender name around the decorated content. NameTag-Core instead builds the complete component in the allow phase and sends it as a system-chat message, which produces the required order without a second rank or player name.
 
 The same item/rank composition contract is used on Fabric and Paper:
 
@@ -87,3 +87,15 @@ A tag can independently contain:
 The item is always emitted before the tag text, and the player name is emitted exactly once. Fabric achieves this by rendering only the message content and allowing vanilla to add the sender name; Paper owns the complete rendered component. Existing configurations that still use `[{tag}] {player}: {message}` are automatically normalized at render time so the item is inserted before the tag when one is configured.
 
 Use `/nametag tag edit <tag> name none` to make a tag icon-only. The item itself is configured with `/nametag display item <tag> set <item>`.
+
+
+### Fabric signed-chat behavior
+
+For an active NameTag chat composition, Fabric must cancel the vanilla player-chat body and send the fully composed line as a system-chat message. This is required to place the rank/item before the player name without duplicating the vanilla sender decoration. The original player message still passes through Fabric's allow-chat event before the custom line is emitted, but the final displayed line is not a signed player-chat packet. Servers that require native signed-chat/reporting semantics should disable NameTag chat composition for those messages.
+
+Create-time item configuration is available directly through:
+
+`/nametag tag create <tag> name <displayName> [item <item>]`
+`/nametag tag create <tag> item <item> [name <displayName>]`
+
+The item value is validated against the registered Minecraft item IDs exposed by the platform. `name none` is equivalent to an icon-only tag.

@@ -40,7 +40,7 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("error.reload.unavailable", "Configuration reload is not available.");
         defaults.put("error.reload.failed", "Configuration reload failed: {reason}");
         defaults.put("message.reload_success", "Configuration reloaded successfully.");
-        defaults.put("error.usage.create", "Usage: /nametag tag create <tag> <displayName>");
+        defaults.put("error.usage.create", "Usage: /nametag tag create <tag> name <displayName> [item <item>] | item <item> [name <displayName>]");
         defaults.put("error.usage.edit", "Usage: /nametag tag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value>");
         defaults.put("error.usage.delete", "Usage: /nametag tag delete <tag>");
         defaults.put("error.usage.assign", "Usage: /nametag player give <player> <tag> [duration]");

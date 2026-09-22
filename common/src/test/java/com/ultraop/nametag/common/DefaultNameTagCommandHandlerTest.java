@@ -178,7 +178,7 @@ final class DefaultNameTagCommandHandlerTest {
                 new DefaultMessageService()
         );
 
-        assertEquals(List.of("tag", "player", "display", "advanced", "admin", "help", "info", "version"),
+        assertEquals(List.of("tag", "player", "display", "advanced", "admin", "help", "info"),
                 handler.suggest(new CommandContext(source, new String[]{""})));
         assertEquals(List.of("create", "edit", "list", "delete"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", ""})));
@@ -499,7 +499,42 @@ final class DefaultNameTagCommandHandlerTest {
         assertTrue(source.messages.stream().anyMatch(value -> value.contains("/nametag display item <tag> set <item>")));
 
         handler.execute(new CommandContext(source, new String[]{"info"}));
-        assertTrue(source.messages.contains("Version: 0.2"));
+        assertTrue(source.messages.stream().anyMatch(value -> value.contains("Version:")));
+        assertTrue(source.messages.stream().anyMatch(value -> value.contains("Created by:") && value.contains("UltraOP")));
+    }
+
+    @Test
+    void createSupportsNameAndItemOptionsAndItemAutocomplete() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        RecordingSource source = new RecordingSource();
+        source.items = List.of("minecraft:diamond", "minecraft:emerald", "minecraft:iron_block");
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        assertEquals(List.of("name", "item"),
+                handler.suggest(new CommandContext(source, new String[]{"create", ""})));
+        assertEquals(List.of("minecraft:diamond", "minecraft:emerald", "minecraft:iron_block"),
+                handler.suggest(new CommandContext(source, new String[]{"create", "vip", "item", ""})));
+
+        handler.execute(new CommandContext(source, new String[]{
+                "create", "vip", "name", "Noob", "item", "minecraft:diamond"
+        }));
+
+        Tag tag = service.find(new TagId("vip")).orElseThrow();
+        assertEquals("Noob", tag.displayName());
+        assertEquals("minecraft:diamond", tag.metadata().get(TagItemSettings.ITEM_KEY));
+        assertEquals("static", tag.metadata().get(TagItemSettings.MODE_KEY));
+        assertEquals("5", tag.metadata().get(TagItemSettings.SPEED_KEY));
+
+        handler.execute(new CommandContext(source, new String[]{
+                "create", "icon", "item", "minecraft:emerald"
+        }));
+        Tag iconOnly = service.find(new TagId("icon")).orElseThrow();
+        assertEquals("", iconOnly.displayName());
+        assertEquals("minecraft:emerald", iconOnly.metadata().get(TagItemSettings.ITEM_KEY));
     }
 
     @Test

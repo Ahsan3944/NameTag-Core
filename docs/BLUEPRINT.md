@@ -80,7 +80,8 @@ Primary namespace:
 
 Canonical grouped command surface:
 ```
-/nametag tag create <tag> <displayName>
+/nametag tag create <tag> name <displayName> [item <item>]
+/nametag tag create <tag> item <item> [name <displayName>]
 /nametag tag edit <tag> name <displayName|none>
 /nametag tag edit <tag> color <preset|random|#RRGGBB>
 /nametag tag edit <tag> gradient <startHex> <endHex>
@@ -269,9 +270,9 @@ Permissions:
 nametag.chat
 ```
 
-The `{item}` placeholder renders the tag's native Minecraft 1.21.11 item-atlas sprite. It is independent from `{tag}`: text-only, icon-only, and icon+text tags are supported. Fabric's content-phase decorator must not render `{player}` because vanilla supplies the sender name afterward; Paper owns the complete rendered component. Legacy formats that omit `{item}` are normalized at render time by inserting it before `{tag}`/`{tags}`, or before `{player}` when no tag placeholder exists.
+The `{item}` placeholder renders the tag's native Minecraft 1.21.11 item-atlas sprite. It is independent from `{tag}`: text-only, icon-only, and icon+text tags are supported. Fabric cannot move the sender name with a content-phase decorator, so tagged chat is rendered as a complete system-chat component in the allow phase. Paper owns the complete rendered component through Adventure. In both platforms the player name is emitted exactly once. Legacy formats that omit `{item}` are normalized at render time by inserting it before `{tag}`/`{tags}`, or before `{player}` when no tag placeholder exists.
 
-The Fabric/Paper adapter owns native chat event/component handling.
+The Fabric/Paper adapter owns native chat event/component handling. Fabric's exact pre-name layout intentionally uses a system-chat packet for tagged lines; native signed player-chat formatting remains available when NameTag chat composition is inactive.
 
 ## 11. Permissions
 

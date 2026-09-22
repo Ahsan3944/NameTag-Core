@@ -8,7 +8,7 @@ import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagPresentation;
 import com.ultraop.nametag.core.model.TagItemSettings;
 import com.ultraop.nametag.core.model.TagStyle;
-import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
+import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.minecraft.command.DefaultPermissions;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.registry.Registries;
@@ -39,15 +39,26 @@ public final class Fabric2111ChatRenderer {
     }
 
     public void register() {
-        ServerMessageDecoratorEvent.EVENT.register(
-                ServerMessageDecoratorEvent.CONTENT_PHASE,
-                this::decorate
-        );
+        /*
+         * Fabric's message decorator can only replace message content. Vanilla
+         * then adds the sender name around that content, which makes an
+         * item/rank prefix appear after the player name. For NameTag-Core's
+         * contract ([rank] Player: Message), the tagged message must therefore
+         * be rendered as a complete system-chat component after the allow phase.
+         * Returning false prevents vanilla from emitting the duplicate/default
+         * chat line; the original signed message is still validated by the
+         * allow event before we render the final component.
+         */
+        ServerMessageEvents.ALLOW_CHAT_MESSAGE.register(this::allowChatMessage);
     }
 
-    private Text decorate(ServerPlayerEntity sender, Text message) {
-        if (sender == null || !configuration.current().chatEnabled()) return message;
-        if (!sender.getPermissions().hasPermission(DefaultPermissions.GAMEMASTERS)) return message;
+    private boolean allowChatMessage(
+            net.minecraft.network.message.SignedMessage signedMessage,
+            ServerPlayerEntity sender,
+            net.minecraft.network.message.MessageType.Parameters params
+    ) {
+        if (sender == null || !configuration.current().chatEnabled()) return true;
+        if (!sender.getPermissions().hasPermission(DefaultPermissions.GAMEMASTERS)) return true;
 
         TagResolutionContext context = new TagResolutionContext(
                 sender.getEntityWorld().getRegistryKey().getValue().toString(),
@@ -55,13 +66,18 @@ public final class Fabric2111ChatRenderer {
         );
         List<Tag> active = tagService.activeTags(sender.getUuid(), context).stream()
                 .filter(Tag::enabled).filter(Tag::chatEnabled).toList();
-        if (active.isEmpty()) return message;
+        if (active.isEmpty()) return true;
 
-        return renderContentFormat(
+        Text rendered = renderFormat(
                 ensureItemPlaceholder(configuration.current().chatFormat()),
                 active,
-                message
+                sender.getDisplayName(),
+                signedMessage.getContent()
         );
+        for (ServerPlayerEntity recipient : sender.getEntityWorld().getServer().getPlayerManager().getPlayerList()) {
+            recipient.sendMessage(rendered);
+        }
+        return false;
     }
 
     static Text renderFormat(String format, Tag tag, Text playerName, Text message) {

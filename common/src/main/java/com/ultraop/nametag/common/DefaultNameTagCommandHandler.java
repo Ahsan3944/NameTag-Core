@@ -115,7 +115,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         String subcommand = args[0].toLowerCase(Locale.ROOT);
         if ("help".equals(subcommand)) { help(context.source(), args); return; }
-        if ("info".equals(subcommand) || "version".equals(subcommand)) { info(context.source()); return; }
+        if ("info".equals(subcommand)) { info(context.source()); return; }
         if ("list".equals(subcommand)) {
             if (allowed(context.source(), "nametag.use")) {
                 list(context.source());
@@ -170,7 +170,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         if (input.length == 1) {
             String prefix = input[0].toLowerCase(Locale.ROOT);
             List<String> roots = new java.util.ArrayList<>(GROUPS);
-            roots.add("help"); roots.add("info"); roots.add("version");
+            roots.add("help"); roots.add("info");
             return roots.stream()
                     .filter(value -> value.startsWith(prefix))
                     .toList();
@@ -200,6 +200,33 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         if (args.length == 2 && ("delete".equals(subcommand) || "glitch".equals(subcommand) || "edit".equals(subcommand))) {
             return tagNames(args[1]);
+        }
+
+        if (args.length == 2 && "create".equals(subcommand)) {
+            return List.of("name", "item").stream()
+                    .filter(value -> value.startsWith(args[1].toLowerCase(Locale.ROOT)))
+                    .toList();
+        }
+
+        if (args.length >= 3 && "create".equals(subcommand)) {
+            String last = args[args.length - 1].toLowerCase(Locale.ROOT);
+            String previous = args[args.length - 2].toLowerCase(Locale.ROOT);
+            if ("item".equals(previous)) {
+                return context.source().itemNames().stream()
+                        .map(DefaultNameTagCommandHandler::normalizeItemId)
+                        .filter(value -> value.startsWith(last))
+                        .sorted()
+                        .toList();
+            }
+            if ("name".equals(previous)) {
+                return List.of();
+            }
+            if ("item".equals(last) || "name".equals(last)) {
+                return List.of(last);
+            }
+            return List.of("name", "item").stream()
+                    .filter(value -> value.startsWith(last))
+                    .toList();
         }
 
         if (args.length == 2 && List.of("give", "set", "remove", "clear").contains(subcommand)) {
@@ -340,24 +367,77 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         }
 
         TagId id = new TagId(args[1].toLowerCase(Locale.ROOT));
-        String displayName = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-        if ("none".equalsIgnoreCase(displayName) || "clear".equalsIgnoreCase(displayName)) {
-            displayName = "";
-        }
+        CreateTagOptions options = parseCreateTagOptions(source, args);
         Tag tag = new Tag(
                 id,
-                displayName,
+                options.displayName(),
                 new TagColor.Preset("white"),
                 TagStyle.plain(),
                 TagEffect.none(),
                 configuration.current().defaultTagPriority(),
                 configuration.current().defaultTagEnabled(),
                 configuration.current().defaultTagChatEnabled(),
-                Map.of()
+                options.metadata()
         );
         tagService.create(tag);
         source.sendMessage(messages.format("message.created", Map.of("tag", id.value())));
     }
+
+    private CreateTagOptions parseCreateTagOptions(CommandSource source, String[] args) {
+        // Backward-compatible form:
+        // Backward-compatible /nametag tag create <tag> <displayName>
+        if (!"name".equalsIgnoreCase(args[2]) && !"item".equalsIgnoreCase(args[2])) {
+            String displayName = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+            if ("none".equalsIgnoreCase(displayName) || "clear".equalsIgnoreCase(displayName)) {
+                displayName = "";
+            }
+            return new CreateTagOptions(displayName, Map.of());
+        }
+
+        String displayName = "";
+        Map<String, String> metadata = new java.util.LinkedHashMap<>();
+        int index = 2;
+        while (index < args.length) {
+            String option = args[index].toLowerCase(Locale.ROOT);
+            if ("name".equals(option)) {
+                index++;
+                int valueStart = index;
+                while (index < args.length && !"name".equalsIgnoreCase(args[index]) && !"item".equalsIgnoreCase(args[index])) {
+                    index++;
+                }
+                if (valueStart == index) {
+                    throw new IllegalArgumentException("Usage: /nametag tag create <tag> name <displayName> [item <item>]");
+                }
+                displayName = String.join(" ", Arrays.copyOfRange(args, valueStart, index)).trim();
+                if ("none".equalsIgnoreCase(displayName) || "clear".equalsIgnoreCase(displayName)) {
+                    displayName = "";
+                }
+                continue;
+            }
+            if ("item".equals(option)) {
+                if (index + 1 >= args.length || "name".equalsIgnoreCase(args[index + 1]) || "item".equalsIgnoreCase(args[index + 1])) {
+                    throw new IllegalArgumentException("Usage: /nametag tag create <tag> item <item> [name <displayName>]");
+                }
+                String item = normalizeItemId(args[index + 1]);
+                if (!contextItemNames(source).contains(item)) {
+                    throw new IllegalArgumentException("Unknown Minecraft item: " + item);
+                }
+                metadata.put(TagItemSettings.ITEM_KEY, item);
+                metadata.put(TagItemSettings.MODE_KEY, "static");
+                metadata.put(TagItemSettings.SPEED_KEY, "5");
+                index += 2;
+                continue;
+            }
+            throw new IllegalArgumentException("Unknown create option: " + args[index] + ". Use name or item.");
+        }
+
+        if (displayName.isBlank() && !metadata.containsKey(TagItemSettings.ITEM_KEY)) {
+            throw new IllegalArgumentException("A NameTag needs a name or an item. Use: /nametag tag create <tag> name <displayName> or item <item>");
+        }
+        return new CreateTagOptions(displayName, Map.copyOf(metadata));
+    }
+
+    private record CreateTagOptions(String displayName, Map<String, String> metadata) {}
 
     private void edit(CommandSource source, String[] args) {
         if (args.length < 4) {
@@ -678,7 +758,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         }
         String topic = args[1].toLowerCase(Locale.ROOT);
         switch (topic) {
-            case "tag" -> { source.sendMessage("/nametag tag create <tag> <displayName>"); source.sendMessage("/nametag tag edit <tag> name|color|gradient|style|priority|enabled|chat <value>"); source.sendMessage("/nametag tag list"); source.sendMessage("/nametag tag delete <tag>"); }
+            case "tag" -> { source.sendMessage("/nametag tag create <tag> name <displayName> [item <item>]"); source.sendMessage("/nametag tag create <tag> item <item> [name <displayName>]"); source.sendMessage("/nametag tag edit <tag> name|color|gradient|style|priority|enabled|chat <value>"); source.sendMessage("/nametag tag list"); source.sendMessage("/nametag tag delete <tag>"); }
             case "player" -> { source.sendMessage("/nametag player give <player> <tag> [duration]"); source.sendMessage("/nametag player set <player> <tag>"); source.sendMessage("/nametag player remove <player>"); source.sendMessage("/nametag player clear <player>"); source.sendMessage("Duration units: s, m, h, d, w; maximum 365d."); }
             case "display" -> { source.sendMessage("/nametag display glitch <tag> <white|colorful>"); source.sendMessage("/nametag display effect <tag> <none|rainbow|pulse|wave>"); source.sendMessage("/nametag display item <tag> set <item>"); source.sendMessage("/nametag display item <tag> mode <static|rotate>"); source.sendMessage("/nametag display item <tag> speed <1-10>"); source.sendMessage("/nametag display item <tag> clear"); source.sendMessage("Chat order: item icon, tag/rank (if present), player name, message."); source.sendMessage("Use /nametag tag edit <tag> name none for icon-only."); }
             case "advanced" -> { source.sendMessage("/nametag advanced role <tag> <permission|clear>"); source.sendMessage("/nametag advanced scope <tag> clear"); source.sendMessage("/nametag advanced scope <tag> world <world>"); source.sendMessage("/nametag advanced scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>"); }
@@ -688,10 +768,16 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     }
 
     private void info(CommandSource source) {
-        source.sendMessage("NameTag-Core");
-        source.sendMessage("Version: " + VERSION);
-        source.sendMessage("Minecraft: 1.21.11");
-        source.sendMessage("Platforms: Fabric Server + Paper Server");
+        source.sendStyledMessage("§8━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        source.sendStyledMessage("§b§lNameTag-Core §8• §fCore Information");
+        source.sendStyledMessage("§8━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        source.sendStyledMessage("§7Version: §f" + VERSION);
+        source.sendStyledMessage("§7Minecraft: §f1.21.11");
+        source.sendStyledMessage("§7Platforms: §fFabric Server + Paper Server");
+        source.sendStyledMessage("§7Created by: §b§lUltraOP");
+        source.sendStyledMessage("§7Purpose: §fAdvanced NameTag, rank, role, chat and item-icon system.");
+        source.sendStyledMessage("§7Features: §fTags • Assignments • Roles • Item Icons • Chat • Effects");
+        source.sendStyledMessage("§8━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     }
 
     private void effect(CommandSource source, String[] args) {
