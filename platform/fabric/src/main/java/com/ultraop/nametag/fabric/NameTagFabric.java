@@ -86,9 +86,7 @@ public final class NameTagFabric {
 
             var createItem = CommandManager.literal("item");
             var createItemValue = CommandManager.argument("item", StringArgumentType.word())
-                    .suggests((context, builder) -> suggestCreateItems(context, builder, permissions))
-                    .executes(context -> executeCreateItemStatic(
-                            context, service, permissions, messages, configuration));
+                    .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
             createItemValue.then(createSpinNode(
                     service, permissions, messages, configuration, false));
             createItem.then(createItemValue);
@@ -810,35 +808,23 @@ public final class NameTagFabric {
             TagService service, PermissionService permissions, DefaultMessageService messages,
             DefaultConfigurationService configuration, boolean nameAndItem) {
         var spin = CommandManager.literal("spin");
-        var spinValue = CommandManager.argument("spin", BoolArgumentType.bool())
-                .suggests((context, builder) ->
-                        CommandSource.suggestMatching(List.of("true", "false"), builder))
-                .executes(context -> executeCreateItemWizard(
-                        context, service, permissions, messages, configuration, nameAndItem, false));
 
+        var spinTrue = CommandManager.literal("true");
         var speed = CommandManager.argument("speed", IntegerArgumentType.integer(1, 10))
                 .suggests((context, builder) ->
                         CommandSource.suggestMatching(
                                 List.of("1","2","3","4","5","6","7","8","9","10"), builder))
                 .executes(context -> executeCreateItemWizard(
-                        context, service, permissions, messages, configuration, nameAndItem, true));
-        spinValue.then(speed);
-        spin.then(spinValue);
-        return spin;
-    }
+                        context, service, permissions, messages, configuration, nameAndItem, true, true));
+        spinTrue.then(speed);
 
-    private static int executeCreateItemStatic(
-            CommandContext<ServerCommandSource> context,
-            TagService service,
-            PermissionService permissions,
-            DefaultMessageService messages,
-            DefaultConfigurationService configuration) {
-        return execute(context, service, permissions, messages, configuration, new String[]{
-                "tag", "create",
-                StringArgumentType.getString(context, "tag"),
-                "item", StringArgumentType.getString(context, "item"),
-                "item-mode", "static"
-        });
+        var spinFalse = CommandManager.literal("false")
+                .executes(context -> executeCreateItemWizard(
+                        context, service, permissions, messages, configuration, nameAndItem, false, false));
+
+        spin.then(spinTrue);
+        spin.then(spinFalse);
+        return spin;
     }
 
     private static int executeCreateItemWizard(
@@ -848,8 +834,8 @@ public final class NameTagFabric {
             DefaultMessageService messages,
             DefaultConfigurationService configuration,
             boolean nameAndItem,
+            boolean spin,
             boolean withSpeed) {
-        boolean spin = BoolArgumentType.getBool(context, "spin");
         List<String> args = new java.util.ArrayList<>();
         args.add("tag");
         args.add("create");
