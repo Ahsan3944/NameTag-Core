@@ -9,6 +9,7 @@ import net.minecraft.text.Text;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -85,6 +86,29 @@ class Fabric2111ChatRendererTest {
         );
 
         assertEquals("{unknown} MEMBER: Hi", result.getString());
+    }
+
+    @Test
+    void contentDecoratorDoesNotRenderPlayerTwice() {
+        Tag tag = new Tag(
+                new TagId("noob"),
+                "Noob",
+                new TagColor.Preset("aqua"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of()
+        );
+
+        Text rendered = Fabric2111ChatRenderer.renderContentFormat(
+                "[{tag}] {player}: {message}",
+                List.of(tag),
+                Text.literal("yoo")
+        );
+
+        assertEquals("[Noob] yoo", rendered.getString());
     }
 
     @Test
