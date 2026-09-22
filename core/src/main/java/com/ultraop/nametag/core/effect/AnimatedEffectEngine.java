@@ -18,7 +18,10 @@ public final class AnimatedEffectEngine {
             int rgb = switch (settings.effectId()) {
                 case TagEffect.RAINBOW_ID -> rainbowColor(index, length, frameIndex, settings.intensity());
                 case TagEffect.PULSE_ID -> pulseColor(safeBase(baseColorResolver.apply(index)), frameIndex, settings.intensity());
-                case TagEffect.WAVE_ID -> waveColor(safeBase(baseColorResolver.apply(index)), index, frameIndex, settings.intensity());
+                case TagEffect.WAVE_ID, TagEffect.NEON_ID -> waveColor(safeBase(baseColorResolver.apply(index)), index, frameIndex, settings.intensity());
+                case TagEffect.BREATH_ID -> pulseColor(safeBase(baseColorResolver.apply(index)), frameIndex, settings.intensity());
+                case TagEffect.BLINK_ID -> blinkColor(safeBase(baseColorResolver.apply(index)), frameIndex, settings.intensity());
+                case TagEffect.RGB_ID -> rainbowColor(index, length, frameIndex, settings.intensity());
                 default -> throw new IllegalArgumentException("Unsupported animated effect: " + settings.effectId());
             };
             rendered.append(character);
@@ -34,6 +37,9 @@ public final class AnimatedEffectEngine {
     private static int pulseColor(int base, long frameIndex, int intensity) {
         double amplitude = 0.75 * intensity / 100.0;
         return scaleRgb(base, 1.0 - amplitude * (0.5 + 0.5 * Math.sin(frameIndex * 0.20)));
+    }
+    private static int blinkColor(int base, long frameIndex, int intensity) {
+        return (frameIndex / 3) % 2 == 0 ? base : scaleRgb(base, Math.max(0.05, 1.0 - intensity / 100.0));
     }
     private static int waveColor(int base, int index, long frameIndex, int intensity) {
         double amplitude = 0.75 * intensity / 100.0;
