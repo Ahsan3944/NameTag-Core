@@ -559,7 +559,7 @@ final class DefaultNameTagCommandHandlerTest {
                 handler.suggest(new CommandContext(source, new String[]{"edit", "ow"})));
         assertEquals(List.of("name", "item", "style", "color", "effect", "advanced"),
                 handler.suggest(new CommandContext(source, new String[]{"edit", "owner", ""})));
-        List<String> styleSuggestions = handler.suggest(
+        Collection<String> styleSuggestions = handler.suggest(
                 new CommandContext(source, new String[]{"edit", "owner", "style", "bold"}));
         assertTrue(styleSuggestions.contains("bold"));
         assertTrue(styleSuggestions.contains("bold_italic"));
