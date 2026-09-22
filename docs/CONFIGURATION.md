@@ -24,7 +24,7 @@ A missing configuration file is created with these defaults:
 schemaVersion: 1
 nameplateEnabled: true
 chatEnabled: true
-chatFormat: "[{tag}] {player}: {message}"
+chatFormat: "[{item}{tag}] {player}: {message}"
 defaultTagPriority: 0
 defaultTagEnabled: true
 defaultTagChatEnabled: true
@@ -49,7 +49,7 @@ Invalid typed values are rejected rather than silently coerced.
 
 ### Chat placeholders
 
-`chatFormat` supports `{tag}`, `{player}` and `{message}`. Unknown placeholders remain literal text. The Paper adapter applies the active tag's supported color and text style to the `{tag}` component. See [CHAT.md](CHAT.md) for platform rendering details.
+`chatFormat` supports `{item}`, `{tag}`, `{tags}`, `{tag_id}`, `{tag_priority}`, `{tag_prefix}`, `{tag_suffix}`, `{tag_meta:key}`, `{player}` and `{message}`. Unknown placeholders remain literal text. `{item}` renders the configured Minecraft item sprite before the tag text; if an existing configuration omits `{item}`, the platform chat renderers inject it before `{tag}`/`{tags}` automatically. The Paper adapter applies the active tag's supported color and text style to the `{tag}` component. See [CHAT.md](CHAT.md) for platform rendering details.
 
 ## Persistence and recovery
 
