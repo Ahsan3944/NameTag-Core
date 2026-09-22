@@ -11,6 +11,7 @@ import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagEffect;
 import com.ultraop.nametag.core.model.TagId;
+import com.ultraop.nametag.core.model.TagItemSettings;
 import com.ultraop.nametag.core.model.TagStyle;
 import org.junit.jupiter.api.Test;
 
@@ -177,7 +178,7 @@ final class DefaultNameTagCommandHandlerTest {
                 new DefaultMessageService()
         );
 
-        assertEquals(List.of("tag", "player", "display", "advanced", "admin"),
+        assertEquals(List.of("tag", "player", "display", "advanced", "admin", "help", "info", "version"),
                 handler.suggest(new CommandContext(source, new String[]{""})));
         assertEquals(List.of("create", "edit", "list", "delete"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", ""})));
@@ -226,6 +227,7 @@ final class DefaultNameTagCommandHandlerTest {
         private boolean allowed = true;
         private String lastMessage;
         private final List<String> messages = new ArrayList<>();
+        private Collection<String> items = List.of();
 
         @Override
         public String name() {
@@ -240,6 +242,11 @@ final class DefaultNameTagCommandHandlerTest {
         @Override
         public boolean hasPermission(String permission) {
             return allowed;
+        }
+
+        @Override
+        public Collection<String> itemNames() {
+            return items;
         }
 
         @Override
@@ -473,6 +480,54 @@ final class DefaultNameTagCommandHandlerTest {
                 handler.suggest(new CommandContext(source, new String[]{"role", ""})));
         assertEquals(List.of("vip"),
                 handler.suggest(new CommandContext(source, new String[]{"role", "v"})));
+    }
+
+    @Test
+    void helpAndInfoCommandsExposeCategoryAndVersionInformation() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        RecordingSource source = new RecordingSource();
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        assertEquals(List.of("tag", "player", "display", "advanced", "admin"),
+                handler.suggest(new CommandContext(source, new String[]{"help", ""})));
+
+        handler.execute(new CommandContext(source, new String[]{"help", "display"}));
+        assertTrue(source.messages.stream().anyMatch(value -> value.contains("/nametag display item <tag> set <item>")));
+
+        handler.execute(new CommandContext(source, new String[]{"info"}));
+        assertTrue(source.messages.contains("Version: 0.2"));
+    }
+
+    @Test
+    void itemNametagStoresItemModeAndSpeed() {
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(), new InMemoryPlayerAssignmentRepository()
+        );
+        service.create(new Tag(
+                new TagId("dirt"), "DIRT", new TagColor.Preset("white"),
+                TagStyle.plain(), TagEffect.none(), 0, true, true, Map.of()
+        ));
+        RecordingSource source = new RecordingSource();
+        source.items = List.of("minecraft:dirt", "minecraft:iron_block", "minecraft:gold_ingot");
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service, new EmptyPlayerResolver(), new DefaultMessageService()
+        );
+
+        assertEquals(List.of("minecraft:dirt", "minecraft:gold_ingot", "minecraft:iron_block"),
+                handler.suggest(new CommandContext(source, new String[]{"display", "item", "dirt", "set", ""})));
+
+        handler.execute(new CommandContext(source, new String[]{"display", "item", "dirt", "set", "minecraft:dirt"}));
+        handler.execute(new CommandContext(source, new String[]{"display", "item", "dirt", "mode", "rotate"}));
+        handler.execute(new CommandContext(source, new String[]{"display", "item", "dirt", "speed", "10"}));
+
+        Tag tag = service.find(new TagId("dirt")).orElseThrow();
+        assertEquals("minecraft:dirt", tag.metadata().get(TagItemSettings.ITEM_KEY));
+        assertEquals("rotate", tag.metadata().get(TagItemSettings.MODE_KEY));
+        assertEquals("10", tag.metadata().get(TagItemSettings.SPEED_KEY));
     }
 
 }
