@@ -86,7 +86,7 @@ public final class NameTagFabric {
             createName.then(createNameValue);
 
             var createItem = CommandManager.literal("item");
-            var createItemValue = CommandManager.argument("item", IdentifierArgumentType.identifier())
+            var createItemValue = CommandManager.argument("item", StringArgumentType.word())
                     .suggests((context, builder) -> suggestCreateItems(context, builder, permissions))
                     .executes(context -> executeCreateItemStatic(
                             context, service, permissions, messages, configuration));
@@ -123,7 +123,7 @@ public final class NameTagFabric {
                             "name", StringArgumentType.getString(context, "displayName"))));
 
             var editItem = CommandManager.literal("item");
-            var editItemValue = CommandManager.argument("item", IdentifierArgumentType.identifier())
+            var editItemValue = CommandManager.argument("item", StringArgumentType.word())
                     .suggests((context, builder) -> suggestEditItems(context, builder, permissions));
             var editSpin = CommandManager.literal("spin");
             var editSpinValue = CommandManager.argument("spin", BoolArgumentType.bool())
@@ -837,7 +837,7 @@ public final class NameTagFabric {
         return execute(context, service, permissions, messages, configuration, new String[]{
                 "tag", "create",
                 StringArgumentType.getString(context, "tag"),
-                "item", IdentifierArgumentType.getIdentifier(context, "item").toString(),
+                "item", StringArgumentType.getString(context, "item"),
                 "item-mode", "static"
         });
     }
