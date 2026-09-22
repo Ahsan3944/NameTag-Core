@@ -100,7 +100,7 @@ public final class NameTagFabric {
             var createNameItem = CommandManager.literal("name+item");
             var createNameItemValue = CommandManager.argument("item", IdentifierArgumentType.identifier())
                     .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
-            var createNameItemName = CommandManager.argument("displayName", StringArgumentType.greedyString());
+            var createNameItemName = CommandManager.argument("displayName", StringArgumentType.string());
             createNameItemName.then(createStyleFlow(
                     service, permissions, messages, configuration, "name+item"));
             createNameItemValue.then(createNameItemName);
@@ -131,8 +131,16 @@ public final class NameTagFabric {
                     .suggests((context, builder) -> suggestEditItems(context, builder, permissions));
             editItemValue.then(CommandManager.literal("spin")
                     .then(CommandManager.argument("spin", BoolArgumentType.bool())
+                            .suggests((context, builder) ->
+                                    CommandSource.suggestMatching(List.of("true", "false"), builder))
                             .executes(context -> executeEditSpin(
-                                    context, service, permissions, messages, configuration))));
+                                    context, service, permissions, messages, configuration))
+                            .then(CommandManager.argument("speed", IntegerArgumentType.integer(1, 10))
+                                    .suggests((context, builder) ->
+                                            CommandSource.suggestMatching(
+                                                    List.of("1","2","3","4","5","6","7","8","9","10"), builder))
+                                    .executes(context -> executeEditSpin(
+                                            context, service, permissions, messages, configuration))));
             editItemValue.then(CommandManager.literal("clear")
                     .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
                             "item", "clear")));
@@ -159,7 +167,7 @@ public final class NameTagFabric {
             var editEffectNormal = CommandManager.literal("normal");
             editEffectNormal.then(CommandManager.argument("normalEffect", StringArgumentType.word())
                     .suggests((context, builder) -> CommandSource.suggestMatching(
-                            List.of("regular", "neon", "breath", "blink", "rgb"), builder))
+                            List.of("regular", "neon", "breath", "blink", "rgb", "rainbow", "pulse", "wave"), builder))
                     .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
                             "effect", StringArgumentType.getString(context, "normalEffect"))));
             var editEffectGlitch = CommandManager.literal("glitch");
@@ -184,6 +192,15 @@ public final class NameTagFabric {
             editTag.then(editItem);
             editTag.then(editStyle);
             editTag.then(editColor);
+
+            var editGradient = CommandManager.literal("gradient");
+            var gradientStart = CommandManager.argument("startHex", StringArgumentType.word());
+            gradientStart.then(CommandManager.argument("endHex", StringArgumentType.word())
+                    .executes(context -> executeEditGradient(
+                            context, service, permissions, messages, configuration)));
+            editGradient.then(gradientStart);
+
+            editTag.then(editGradient);
             editTag.then(editEffect);
             editTag.then(editAdvanced);
             tagEdit.then(editTag);
@@ -678,11 +695,17 @@ public final class NameTagFabric {
             DefaultMessageService messages,
             DefaultConfigurationService configuration) {
         boolean spin = BoolArgumentType.getBool(context, "spin");
-        return execute(context, service, permissions, messages, configuration, new String[]{
-                "tag", "edit",
-                StringArgumentType.getString(context, "tag"),
-                "item-mode", spin ? "rotate" : "static"
-        });
+        List<String> args = new java.util.ArrayList<>();
+        args.add("tag");
+        args.add("edit");
+        args.add(StringArgumentType.getString(context, "tag"));
+        args.add("item-mode");
+        args.add(spin ? "rotate" : "static");
+        if (spin && context.getNodes().stream().anyMatch(node -> "speed".equals(node.getNode().getName()))) {
+            args.add("item-speed");
+            args.add(Integer.toString(IntegerArgumentType.getInteger(context, "speed")));
+        }
+        return execute(context, service, permissions, messages, configuration, args.toArray(String[]::new));
     }
 
     private static int executeEditOption(
