@@ -467,16 +467,37 @@ final class DefaultNameTagCommandHandlerTest {
         RecordingSource source = new RecordingSource();
         source.items = List.of("minecraft:diamond", "minecraft:apple");
 
-        assertEquals(List.of("name", "item", "appearance", "behavior"),
+        assertEquals(List.of("name", "item", "name+item"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", ""})));
-        assertEquals(List.of("color", "gradient", "style", "effect", "glitch"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "appearance", ""})));
-        assertEquals(List.of("gold", "gray"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "appearance", "color", "g"})));
+        assertEquals(List.of(),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", ""})));
+        assertEquals(List.of("style"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", ""})));
+        assertEquals(List.of("normal", "bold", "italic", "underlined", "strikethrough", "obfuscated",
+                        "bold_italic", "bold_underlined", "italic_underlined"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", "style", ""})));
+        assertEquals(List.of("black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple",
+                        "gold", "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple",
+                        "yellow", "white", "random"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", "style", "bold", "color", ""})));
+        assertEquals(List.of("normal", "glitch"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", "style", "bold", "color", "gold", "effect", ""})));
+        assertEquals(List.of("regular", "neon", "breath", "blink", "rgb"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", "style", "bold", "color", "gold", "effect", "normal", ""})));
+        assertEquals(List.of("white", "colorful"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name", "VIP", "style", "bold", "color", "gold", "effect", "glitch", ""})));
         assertEquals(List.of("minecraft:apple", "minecraft:diamond"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", ""})));
-        assertEquals(List.of("mode", "speed"),
+        assertEquals(List.of("spin"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", ""})));
+        assertEquals(List.of("true", "false"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", "spin", ""})));
+        assertEquals(List.of("speed"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", "spin", "true", ""})));
+        assertEquals(List.of("1","2","3","4","5","6","7","8","9","10"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "item", "minecraft:diamond", "spin", "true", "speed", ""})));
+        assertEquals(List.of("name"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "create", "vip", "name+item", "minecraft:diamond", ""})));
     }
 
     @Test
@@ -496,10 +517,7 @@ final class DefaultNameTagCommandHandlerTest {
 
         assertEquals(List.of("owner"),
                 handler.suggest(new CommandContext(source, new String[]{"edit", "ow"})));
-        assertEquals(List.of(
-                        "name", "item", "color", "gradient", "style", "effect", "glitch",
-                        "priority", "enabled", "chat", "item-mode", "item-speed"
-                ),
+        assertEquals(List.of("name", "item", "style", "color", "effect", "advanced"),
                 handler.suggest(new CommandContext(source, new String[]{"edit", "owner", ""})));
         List<String> styleSuggestions = handler.suggest(
                 new CommandContext(source, new String[]{"edit", "owner", "style", "bold"}));
