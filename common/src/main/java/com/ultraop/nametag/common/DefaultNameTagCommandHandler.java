@@ -41,7 +41,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     private static final String VERSION = "0.2";
     private static final Map<String, List<String>> GROUP_COMMANDS = Map.of(
             "tag", List.of("create", "edit", "list", "delete"),
-            "player", List.of("give", "set", "remove", "clear"),
+            "player", List.of("set", "remove", "clear"),
             "display", List.of("glitch", "effect", "item"),
             "advanced", List.of("role", "scope"),
             "admin", List.of("reload", "export", "import")
@@ -60,7 +60,9 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             "plain", "bold", "italic", "underlined", "strikethrough", "obfuscated",
             "bold_italic", "bold_underlined", "italic_underlined"
     );
-    private static final List<String> EFFECT_VALUES = List.of("none", "rainbow", "pulse", "wave");
+    private static final List<String> EFFECT_VALUES = List.of(
+            "regular", "neon", "breath", "blink", "rgb", "rainbow", "pulse", "wave", "none"
+    );
     private static final List<String> GLITCH_VALUES = List.of("none", "white", "colorful");
 
     private final TagService tagService;
@@ -152,7 +154,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 case "create" -> create(context.source(), args);
                 case "edit" -> edit(context.source(), args);
                 case "delete" -> delete(context.source(), args);
-                case "give", "set" -> assign(context.source(), args);
+                case "set" -> assign(context.source(), args);
                 case "remove", "clear" -> clear(context.source(), args);
                 case "glitch" -> glitch(context.source(), args);
                 case "effect" -> effect(context.source(), args);
@@ -236,11 +238,11 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             return CREATE_OPTIONS.stream().filter(value -> value.startsWith(last)).toList();
         }
 
-        if (args.length == 2 && List.of("give", "set", "remove", "clear").contains(subcommand)) {
+        if (args.length == 2 && List.of("set", "remove", "clear").contains(subcommand)) {
             return playerNames(args[1]);
         }
 
-        if (args.length == 3 && List.of("give", "set").contains(subcommand)) {
+        if (args.length == 3 && "set".equals(subcommand)) {
             return tagNames(args[2]);
         }
 
@@ -326,7 +328,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     .stream().filter(value -> value.startsWith(prefix)).toList();
         }
 
-        if (args.length == 3 && "give".equals(subcommand)) {
+        if (args.length == 3 && "set".equals(subcommand)) {
             String prefix = args[2].toLowerCase(Locale.ROOT);
             return List.of("30m", "1h", "1d", "7d")
                     .stream().filter(value -> value.startsWith(prefix)).toList();
@@ -363,125 +365,115 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     }
 
     private static List<String> groupedTagSuggestions(CommandContext context) {
-        String[] input = context.args();
-        String command = input[1].toLowerCase(Locale.ROOT);
-        if (!"create".equals(command) && !"edit".equals(command)) return null;
-
-        String[] values = Arrays.copyOfRange(input, 2, input.length);
-        boolean create = "create".equals(command);
-        if (values.length == 1) {
-            return List.of("create".equals(command) ? "name" : "name");
+        String[] values = context.args();
+        if (values.length < 3 || !"create".equalsIgnoreCase(values[1])) return null;
+        if (values.length == 3) {
+            return prefix(List.of("name", "item", "name+item"), values[2]);
         }
 
-        if (create) {
-            if (values.length == 2) {
-                String prefix = values[1].toLowerCase(Locale.ROOT);
-                return List.of("name", "item", "appearance", "behavior").stream()
-                        .filter(v -> v.startsWith(prefix)).toList();
+        String flow = values[2].toLowerCase(Locale.ROOT);
+        if ("item".equals(flow)) {
+            if (values.length == 4) {
+                return context.source().itemNames().stream()
+                        .map(DefaultNameTagCommandHandler::normalizeItemId)
+                        .filter(v -> v.startsWith(values[3].toLowerCase(Locale.ROOT)))
+                        .sorted().toList();
             }
-            String section = values[1].toLowerCase(Locale.ROOT);
-            String last = values[values.length - 1].toLowerCase(Locale.ROOT);
-            boolean trailing = values[values.length - 1].isEmpty();
-            if ("appearance".equals(section)) {
-                if (values.length == 3) {
-                    return List.of("color", "gradient", "style", "effect", "glitch").stream()
-                            .filter(v -> v.startsWith(last)).toList();
-                }
-                if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
-                return createValueSuggestions(values);
+            if (values.length == 5) return prefix(List.of("spin"), values[4]);
+            if (values.length == 6 && "spin".equalsIgnoreCase(values[4])) {
+                return prefix(List.of("true", "false"), values[5]);
             }
-            if ("behavior".equals(section)) {
-                if (values.length == 3) {
-                    return List.of("priority", "enabled", "chat").stream()
-                            .filter(v -> v.startsWith(last)).toList();
-                }
-                if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
-                return createValueSuggestions(values);
+            if (values.length == 7 && "spin".equalsIgnoreCase(values[4]) && "true".equalsIgnoreCase(values[5])) {
+                return prefix(ITEM_SPEEDS, values[6]);
             }
-            if ("item".equals(section)) {
-                if (values.length == 3) {
-                    return context.source().itemNames().stream()
-                            .map(DefaultNameTagCommandHandler::normalizeItemId)
-                            .filter(v -> v.startsWith(last)).sorted().toList();
-                }
-                if (values.length == 5 && trailing) {
-                    String nested = values[3].toLowerCase(Locale.ROOT);
-                    if ("mode".equals(nested)) return ITEM_MODES;
-                    if ("speed".equals(nested)) return ITEM_SPEEDS;
-                }
-                if (values.length == 4 && trailing) return List.of("mode", "speed");
-                if (values.length >= 6 && trailing) return List.of("name", "item", "appearance", "behavior");
-            }
-            if ("appearance".equals(section) && values.length >= 5 && trailing) {
-                return List.of("name", "item", "appearance", "behavior");
-            }
-            if ("behavior".equals(section) && values.length >= 5 && trailing) {
-                return List.of("name", "item", "appearance", "behavior");
-            }
-            if ("name".equals(section) && values.length >= 4 && trailing) {
-                return List.of("name", "item", "appearance", "behavior");
-            }
-            return null;
+            return List.of();
         }
 
+        if ("name".equals(flow)) {
+            if (values.length == 4) return List.of();
+            return createWizardValueSuggestions(values, 4);
+        }
+
+        if ("name+item".equals(flow)) {
+            if (values.length == 4) {
+                return context.source().itemNames().stream()
+                        .map(DefaultNameTagCommandHandler::normalizeItemId)
+                        .filter(v -> v.startsWith(values[3].toLowerCase(Locale.ROOT)))
+                        .sorted().toList();
+            }
+            if (values.length == 5) return List.of();
+            return createWizardValueSuggestions(values, 5);
+        }
+
+        return List.of();
+    }
+
+    private static List<String> createWizardValueSuggestions(String[] values, int styleIndex) {
+        int n = values.length;
+        if (n == styleIndex + 2) {
+            return prefix(List.of("normal", "bold", "italic", "bold_italic",
+                    "underlined", "strikethrough", "obfuscated"), values[n - 1]);
+        }
+        if (n == styleIndex + 3) {
+            return prefix(PRESET_COLORS, values[n - 1]);
+        }
+        if (n == styleIndex + 4) {
+            return prefix(List.of("normal", "glitch"), values[n - 1]);
+        }
+        if (n == styleIndex + 5) {
+            String effectKind = values[styleIndex + 3].toLowerCase(Locale.ROOT);
+            if ("normal".equals(effectKind)) {
+                return prefix(List.of("regular", "neon", "breath", "blink", "rgb", "rainbow", "pulse", "wave"), values[n - 1]);
+            }
+            if ("glitch".equals(effectKind)) {
+                return prefix(List.of("white", "colorful"), values[n - 1]);
+            }
+        }
+        return List.of();
+    }
+
+    private static List<String> editWizardSuggestions(CommandContext context, String[] values) {
+        if (values.length == 1) return tagNames(values[0]);
         if (values.length == 2) {
-            String prefix = values[1].toLowerCase(Locale.ROOT);
-            return List.of("name", "item", "appearance", "behavior").stream()
-                    .filter(v -> v.startsWith(prefix)).toList();
+            return prefix(List.of("name", "item", "style", "color", "effect", "glitch"), values[1]);
         }
-        String section = values[1].toLowerCase(Locale.ROOT);
-        String last = values[values.length - 1].toLowerCase(Locale.ROOT);
-        boolean trailing = values[values.length - 1].isEmpty();
-        if ("appearance".equals(section)) {
-            if (values.length == 3) return List.of("color", "gradient", "style", "effect", "glitch").stream()
-                    .filter(v -> v.startsWith(last)).toList();
-            if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
-            return editValueSuggestions(values);
-        }
-        if ("behavior".equals(section)) {
-            if (values.length == 3) return List.of("priority", "enabled", "chat").stream()
-                    .filter(v -> v.startsWith(last)).toList();
-            if (values.length >= 5 && trailing) return List.of("name", "item", "appearance", "behavior");
-            return editValueSuggestions(values);
-        }
-        if ("item".equals(section)) {
+        String property = values[1].toLowerCase(Locale.ROOT);
+        String prefix = values[values.length - 1].toLowerCase(Locale.ROOT);
+        if ("item".equals(property)) {
             if (values.length == 3) {
                 List<String> items = new java.util.ArrayList<>();
                 items.add("clear");
-                items.addAll(context.source().itemNames().stream().map(DefaultNameTagCommandHandler::normalizeItemId).toList());
-                return items.stream().filter(v -> v.startsWith(last)).sorted().toList();
+                items.addAll(context.source().itemNames().stream()
+                        .map(DefaultNameTagCommandHandler::normalizeItemId).sorted().toList());
+                return prefix(items, prefix);
             }
-            if (values.length == 5 && trailing) {
-                String nested = values[3].toLowerCase(Locale.ROOT);
-                if ("mode".equals(nested)) return ITEM_MODES;
-                if ("speed".equals(nested)) return ITEM_SPEEDS;
+            if (values.length == 4 && "spin".equalsIgnoreCase(values[2])) {
+                return prefix(List.of("true", "false"), prefix);
             }
-            if (values.length == 4 && trailing) return List.of("mode", "speed");
-            if (values.length >= 6 && trailing) return List.of("name", "item", "appearance", "behavior");
         }
-        if ("appearance".equals(section) && values.length >= 5 && trailing) {
-            return List.of("name", "item", "appearance", "behavior");
-        }
-        if ("behavior".equals(section) && values.length >= 5 && trailing) {
-            return List.of("name", "item", "appearance", "behavior");
-        }
-        if ("name".equals(section) && values.length >= 4 && trailing) {
-            return List.of("name", "item", "appearance", "behavior");
-        }
-        return null;
+        if ("style".equals(property)) return prefix(STYLE_VALUES, prefix);
+        if ("color".equals(property)) return prefix(PRESET_COLORS, prefix);
+        if ("effect".equals(property)) return prefix(List.of("normal", "glitch"), prefix);
+        if ("glitch".equals(property)) return prefix(GLITCH_VALUES, prefix);
+        return List.of();
+    }
+
+    private static List<String> prefix(List<String> values, String prefix) {
+        String normalized = prefix == null ? "" : prefix.toLowerCase(Locale.ROOT);
+        return values.stream()
+                .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(normalized))
+                .toList();
     }
 
     private static List<String> createValueSuggestions(String[] values) {
-        String property = values[2].toLowerCase(Locale.ROOT);
-        String prefix = values[values.length - 1].toLowerCase(Locale.ROOT);
-        if ("color".equals(property)) return PRESET_COLORS.stream().filter(v -> v.startsWith(prefix)).toList();
-        if ("style".equals(property)) return STYLE_VALUES.stream().filter(v -> v.startsWith(prefix)).toList();
-        if ("effect".equals(property)) return EFFECT_VALUES.stream().filter(v -> v.startsWith(prefix)).toList();
-        if ("glitch".equals(property)) return GLITCH_VALUES.stream().filter(v -> v.startsWith(prefix)).toList();
-        if ("priority".equals(property)) return List.of("0","10","25","50","100","1000").stream().filter(v -> v.startsWith(prefix)).toList();
-        if ("enabled".equals(property) || "chat".equals(property)) return List.of("true","false").stream().filter(v -> v.startsWith(prefix)).toList();
-        if ("item-mode".equals(property) || "mode".equals(property)) return ITEM_MODES.stream().filter(v -> v.startsWith(prefix)).toList();
-        if ("item-speed".equals(property) || "speed".equals(property)) return ITEM_SPEEDS.stream().filter(v -> v.startsWith(prefix)).toList();
+        String property = values.length >= 3 ? values[2].toLowerCase(Locale.ROOT) : "";
+        String prefix = values.length == 0 ? "" : values[values.length - 1].toLowerCase(Locale.ROOT);
+        if ("color".equals(property)) return prefix(PRESET_COLORS, prefix);
+        if ("style".equals(property)) return prefix(STYLE_VALUES, prefix);
+        if ("effect".equals(property)) return prefix(List.of("normal", "glitch"), prefix);
+        if ("glitch".equals(property)) return prefix(GLITCH_VALUES, prefix);
+        if ("item-mode".equals(property)) return prefix(ITEM_MODES, prefix);
+        if ("item-speed".equals(property)) return prefix(ITEM_SPEEDS, prefix);
         return List.of();
     }
 
@@ -491,16 +483,13 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
     private static String[] normalizeGroupedArgs(String[] input) {
         if (input.length == 0) return input;
-
         String group = input[0].toLowerCase(Locale.ROOT);
         if (!GROUP_COMMANDS.containsKey(group)) return input;
         if (input.length == 1) return new String[0];
 
         String[] args = Arrays.copyOfRange(input, 1, input.length);
-        if (args.length < 1) return args;
         if ("edit".equalsIgnoreCase(args[0])) return normalizeEditGroupedArgs(args);
-        if (!"create".equalsIgnoreCase(args[0])) return args;
-        if (args.length < 2) return args;
+        if (!"create".equalsIgnoreCase(args[0]) || args.length < 2) return args;
 
         List<String> normalized = new java.util.ArrayList<>();
         normalized.add("create");
@@ -510,61 +499,41 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         while (index < args.length) {
             String token = args[index].toLowerCase(Locale.ROOT);
             switch (token) {
-                case "appearance" -> {
-                    index++;
-                    if (index >= args.length) return normalized.toArray(String[]::new);
-                    String property = args[index].toLowerCase(Locale.ROOT);
-                    if (!List.of("color", "gradient", "style", "effect", "glitch").contains(property)) {
-                        normalized.add(property);
+                case "name", "item", "name+item" -> {
+                    if ("name+item".equals(token)) {
+                        normalized.add("item");
                         index++;
-                        continue;
-                    }
-                    normalized.add(property);
-                    index++;
-                    int values = "gradient".equals(property) ? 2 : 1;
-                    for (int i = 0; i < values && index < args.length; i++, index++) normalized.add(args[index]);
-                }
-                case "behavior" -> {
-                    index++;
-                    if (index >= args.length) return normalized.toArray(String[]::new);
-                    String property = args[index].toLowerCase(Locale.ROOT);
-                    if (!List.of("priority", "enabled", "chat").contains(property)) {
-                        normalized.add(property);
+                        if (index < args.length) normalized.add(args[index++]);
+                        if (index < args.length && "name".equalsIgnoreCase(args[index])) index++;
+                        if (index < args.length) normalized.add("name");
+                        if (index < args.length) normalized.add(args[index++]);
+                    } else {
+                        normalized.add(token);
                         index++;
-                        continue;
+                        if (index < args.length) normalized.add(args[index++]);
                     }
-                    normalized.add(property);
-                    index++;
-                    if (index < args.length) normalized.add(args[index++]);
                 }
-                case "item" -> {
-                    normalized.add("item");
+                case "spin" -> {
                     index++;
-                    if (index < args.length) normalized.add(args[index++]);
-                    while (index < args.length) {
-                        String nested = args[index].toLowerCase(Locale.ROOT);
-                        if ("mode".equals(nested)) {
-                            normalized.add("item-mode");
+                    if (index < args.length) {
+                        boolean spin = Boolean.parseBoolean(args[index++]);
+                        normalized.add("item-mode");
+                        normalized.add(spin ? "rotate" : "static");
+                        if (spin && index < args.length && "speed".equalsIgnoreCase(args[index])) {
                             index++;
-                            if (index < args.length) normalized.add(args[index++]);
-                        } else if ("speed".equals(nested)) {
-                            normalized.add("item-speed");
-                            index++;
-                            if (index < args.length) normalized.add(args[index++]);
-                        } else {
-                            break;
+                            if (index < args.length) {
+                                normalized.add("item-speed");
+                                normalized.add(args[index++]);
+                            }
                         }
                     }
                 }
-                default -> {
-                    normalized.add(args[index++]);
-                    if (isCreateOption(token) && !"name".equals(token) && index < args.length) {
-                        int values = "gradient".equals(token) ? 2 : 1;
-                        for (int i = 0; i < values && index < args.length && !isCreateOption(args[index]); i++) {
-                            normalized.add(args[index++]);
-                        }
-                    }
+                case "style", "color", "effect", "glitch", "priority", "enabled", "chat", "item-mode", "item-speed" -> {
+                    normalized.add(token);
+                    index++;
+                    if (index < args.length) normalized.add(args[index++]);
                 }
+                default -> normalized.add(args[index++]);
             }
         }
         return normalized.toArray(String[]::new);
@@ -575,47 +544,19 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         List<String> normalized = new java.util.ArrayList<>();
         normalized.add("edit");
         normalized.add(args[1]);
-
         int index = 2;
         while (index < args.length) {
             String token = args[index].toLowerCase(Locale.ROOT);
-            switch (token) {
-                case "appearance" -> {
-                    index++;
-                    if (index >= args.length) return normalized.toArray(String[]::new);
-                    normalized.add(args[index++]);
-                    int values = "gradient".equalsIgnoreCase(normalized.get(normalized.size() - 1)) ? 2 : 1;
-                    for (int i = 0; i < values && index < args.length; i++) normalized.add(args[index++]);
+            if ("spin".equals(token)) {
+                index++;
+                if (index < args.length) {
+                    normalized.add("item-mode");
+                    normalized.add(Boolean.parseBoolean(args[index++]) ? "rotate" : "static");
                 }
-                case "behavior" -> {
-                    index++;
-                    if (index >= args.length) return normalized.toArray(String[]::new);
-                    normalized.add(args[index++]);
-                    if (index < args.length) normalized.add(args[index++]);
-                }
-                case "item" -> {
-                    normalized.add("item");
-                    index++;
-                    if (index < args.length) normalized.add(args[index++]);
-                    while (index < args.length) {
-                        String nested = args[index].toLowerCase(Locale.ROOT);
-                        if ("mode".equals(nested)) {
-                            normalized.add("item-mode");
-                            index++;
-                            if (index < args.length) normalized.add(args[index++]);
-                        } else if ("speed".equals(nested)) {
-                            normalized.add("item-speed");
-                            index++;
-                            if (index < args.length) normalized.add(args[index++]);
-                        } else {
-                            break;
-                        }
-                    }
-                }
-                default -> {
-                    normalized.add(args[index++]);
-                    if (index < args.length) normalized.add(args[index++]);
-                }
+            } else {
+                normalized.add(token);
+                index++;
+                if (index < args.length) normalized.add(args[index++]);
             }
         }
         return normalized.toArray(String[]::new);
@@ -848,11 +789,17 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
     private static TagEffect parseEffect(String value) {
         return switch(value.toLowerCase(Locale.ROOT)){
-            case "none" -> TagEffect.none();
+            case "none", "regular", "normal" -> TagEffect.none();
             case "rainbow" -> TagEffect.rainbow();
+            case "rgb" -> TagEffect.rgb();
             case "pulse" -> TagEffect.pulse();
+            case "breath" -> TagEffect.breath();
             case "wave" -> TagEffect.wave();
-            default -> throw new IllegalArgumentException("Invalid effect: "+value+". Use none, rainbow, pulse or wave.");
+            case "neon" -> TagEffect.neon();
+            case "blink" -> TagEffect.blink();
+            default -> throw new IllegalArgumentException(
+                    "Invalid effect: " + value + ". Use regular, neon, breath, blink or rgb."
+            );
         };
     }
 
@@ -897,9 +844,17 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         TagId id = new TagId(args[2].toLowerCase(Locale.ROOT));
         if ("set".equalsIgnoreCase(args[0])) {
-            if (args.length != 3) throw new IllegalArgumentException(messages.message("error.usage.assign"));
+            if (args.length == 4) {
+                Duration duration = parseDuration(args[3]);
+                tagService.assignUntil(player.uuid(), id, Instant.now().plus(duration));
+            }
             tagService.setActive(player.uuid(), id);
-            source.sendMessage(messages.format("message.set_active", Map.of("tag", id.value(), "player", player.name())));
+            if (args.length == 4) {
+                source.sendMessage(messages.format("message.set_active", Map.of("tag", id.value(), "player", player.name()))
+                        + " (" + args[3] + ")");
+            } else {
+                source.sendMessage(messages.format("message.set_active", Map.of("tag", id.value(), "player", player.name())));
+            }
             return;
         }
         if (args.length == 4) {
@@ -1033,12 +988,20 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         String topic = args[1].toLowerCase(Locale.ROOT);
         switch (topic) {
             case "tag" -> {
-                source.sendMessage("/nametag tag create <tag> [name <displayName>] [item <item>] [color <color>] [gradient <startHex> <endHex>] [style <style>] [effect <effect>] [glitch <white|colorful>] [priority <number>] [enabled <true|false>] [chat <true|false>] [item-mode <static|rotate>] [item-speed <1-10>]");
-                source.sendMessage("/nametag tag edit <tag> <name|item|color|gradient|style|effect|glitch|priority|enabled|chat|item-mode|item-speed> <value>");
+                source.sendMessage("/nametag tag create <tag> <name|item|name+item>");
+                source.sendMessage("  name <displayName> -> style -> color -> effect -> normal|glitch -> effect value");
+                source.sendMessage("  item <item> -> spin <true|false> -> [speed <1-10> when true]");
+                source.sendMessage("  name+item <item> -> name <displayName> -> style -> color -> effect -> value");
+                source.sendMessage("/nametag tag edit <tag> <name|item|style|color|effect|advanced>");
                 source.sendMessage("/nametag tag list");
                 source.sendMessage("/nametag tag delete <tag>");
             }
-            case "player" -> { source.sendMessage("/nametag player give <player> <tag> [duration]"); source.sendMessage("/nametag player set <player> <tag>"); source.sendMessage("/nametag player remove <player>"); source.sendMessage("/nametag player clear <player>"); source.sendMessage("Duration units: s, m, h, d, w; maximum 365d."); }
+            case "player" -> {
+                source.sendMessage("/nametag player set <player> <tag> [duration]");
+                source.sendMessage("/nametag player remove <player>");
+                source.sendMessage("/nametag player clear <player>");
+                source.sendMessage("set directly assigns and activates the tag. Duration units: s, m, h, d, w; maximum 365d.");
+            }
             case "display" -> { source.sendMessage("/nametag display glitch <tag> <white|colorful>"); source.sendMessage("/nametag display effect <tag> <none|rainbow|pulse|wave>"); source.sendMessage("/nametag display item <tag> set <item>"); source.sendMessage("/nametag display item <tag> mode <static|rotate>"); source.sendMessage("/nametag display item <tag> speed <1-10>"); source.sendMessage("/nametag display item <tag> clear"); source.sendMessage("Chat order: item icon, tag/rank (if present), player name, message."); source.sendMessage("Use /nametag tag edit <tag> name none for icon-only."); }
             case "advanced" -> { source.sendMessage("/nametag advanced role <tag> <permission|clear>"); source.sendMessage("/nametag advanced scope <tag> clear"); source.sendMessage("/nametag advanced scope <tag> world <world>"); source.sendMessage("/nametag advanced scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>"); }
             case "admin" -> { source.sendMessage("/nametag admin reload"); source.sendMessage("/nametag admin export <file>"); source.sendMessage("/nametag admin import <file>"); }
@@ -1238,7 +1201,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         return switch (subcommand) {
             case "create" -> "nametag.create";
             case "delete" -> "nametag.delete";
-            case "give", "set" -> "nametag.give";
+            case "set" -> "nametag.give";
             case "remove", "clear" -> "nametag.remove";
             case "edit", "glitch", "effect", "item", "role", "scope" -> "nametag.edit";
             case "reload" -> "nametag.reload";
