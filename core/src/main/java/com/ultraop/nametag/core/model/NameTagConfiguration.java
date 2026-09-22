@@ -17,7 +17,7 @@ public record NameTagConfiguration(
         int defaultGlitchIntensity,
         int defaultGlitchSpeedMs
 ) {
-    public static final String DEFAULT_CHAT_FORMAT = "[{tag}] {player}: {message}";
+    public static final String DEFAULT_CHAT_FORMAT = "[{item}{tag}] {player}: {message}";
 
     public NameTagConfiguration {
         Objects.requireNonNull(chatFormat, "chatFormat");

@@ -32,6 +32,7 @@ public final class DefaultChatTagRenderer implements ChatTagRenderer {
         Objects.requireNonNull(activeTag, "activeTag");
 
         String format = configuration.current().chatFormat()
+                .replace("{item}", "")
                 .replace("{tag}", TagPresentation.displayText(activeTag))
                 .replace("{tag_id}", activeTag.id().value())
                 .replace("{tag_priority}", String.valueOf(activeTag.priority()))

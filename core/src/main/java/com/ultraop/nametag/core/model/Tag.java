@@ -20,7 +20,8 @@ public record Tag(
         Objects.requireNonNull(color, "color");
         Objects.requireNonNull(style, "style");
         Objects.requireNonNull(effect, "effect");
-        if (displayName.isBlank()) throw new IllegalArgumentException("Tag display name cannot be blank");
+        // An icon-only tag is valid when the tag has no text label. The item/icon
+        // metadata is resolved by the platform chat renderer.
         metadata = Map.copyOf(metadata == null ? Map.of() : metadata);
     }
 }

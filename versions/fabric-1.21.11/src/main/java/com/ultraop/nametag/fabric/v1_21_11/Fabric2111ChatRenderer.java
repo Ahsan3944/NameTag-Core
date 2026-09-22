@@ -6,12 +6,17 @@ import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagPresentation;
+import com.ultraop.nametag.core.model.TagItemSettings;
 import com.ultraop.nametag.core.model.TagStyle;
 import net.fabricmc.fabric.api.message.v1.ServerMessageDecoratorEvent;
 import net.minecraft.command.DefaultPermissions;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Atlases;
+import net.minecraft.util.Identifier;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
+import net.minecraft.text.object.AtlasTextObjectContents;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 
@@ -20,6 +25,7 @@ import java.util.Objects;
 
 public final class Fabric2111ChatRenderer {
     private static final String TAG_PLACEHOLDER = "{tag}";
+    private static final String ITEM_PLACEHOLDER = "{item}";
     private static final String PLAYER_PLACEHOLDER = "{player}";
     private static final String MESSAGE_PLACEHOLDER = "{message}";
     private static final String TAG_META_PREFIX = "{tag_meta:";
@@ -51,16 +57,50 @@ public final class Fabric2111ChatRenderer {
                 .filter(Tag::enabled).filter(Tag::chatEnabled).toList();
         if (active.isEmpty()) return message;
 
-        return renderFormat(
-                configuration.current().chatFormat(),
+        return renderContentFormat(
+                ensureItemPlaceholder(configuration.current().chatFormat()),
                 active,
-                Text.literal(sender.getName().getString()),
                 message
         );
     }
 
     static Text renderFormat(String format, Tag tag, Text playerName, Text message) {
         return renderFormat(format, List.of(tag), playerName, message);
+    }
+
+    static String ensureItemPlaceholder(String format) {
+        if (format.contains(ITEM_PLACEHOLDER)) return format;
+        int tagIndex = format.indexOf(TAG_PLACEHOLDER);
+        if (tagIndex < 0) tagIndex = format.indexOf("{tags}");
+        if (tagIndex >= 0) {
+            return format.substring(0, tagIndex) + ITEM_PLACEHOLDER + format.substring(tagIndex);
+        }
+        int playerIndex = format.indexOf(PLAYER_PLACEHOLDER);
+        if (playerIndex >= 0) {
+            return format.substring(0, playerIndex) + ITEM_PLACEHOLDER + format.substring(playerIndex);
+        }
+        return format;
+    }
+
+    static Text renderContentFormat(String format, List<Tag> tags, Text message) {
+        return renderFormat(removePlayerPlaceholderForContent(format), tags, Text.empty(), message);
+    }
+
+    private static String removePlayerPlaceholderForContent(String format) {
+        int playerIndex = format.indexOf(PLAYER_PLACEHOLDER);
+        if (playerIndex < 0) {
+            return format;
+        }
+
+        String before = format.substring(0, playerIndex);
+        String after = format.substring(playerIndex + PLAYER_PLACEHOLDER.length());
+
+        // Fabric's message decorator only replaces message content. Vanilla
+        // applies the sender decoration afterward, so rendering {player} here
+        // would display the player name twice. Remove the sender placeholder
+        // together with its following separator when present.
+        after = after.replaceFirst("^\\s*[:|>-]\\s*", "");
+        return before + after;
     }
 
     static Text renderFormat(String format, List<Tag> tags, Text playerName, Text message) {
@@ -76,6 +116,7 @@ public final class Fabric2111ChatRenderer {
 
             Text replacement = switch (match.placeholder()) {
                 case TAG_PLACEHOLDER -> styledTag(tags.get(0));
+                case ITEM_PLACEHOLDER -> itemIcon(tags.get(0));
                 case "{tags}" -> styledTags(tags);
                 case "{tag_id}" -> Text.literal(tags.get(0).id().value());
                 case "{tag_priority}" -> Text.literal(String.valueOf(tags.get(0).priority()));
@@ -89,6 +130,26 @@ public final class Fabric2111ChatRenderer {
             cursor = match.end();
         }
         return result;
+    }
+
+    static Text itemIcon(Tag tag) {
+        TagItemSettings settings = TagItemSettings.from(tag);
+        if (settings == null) return Text.empty();
+        Identifier sprite = itemSpriteId(tag);
+        if (sprite == null) return Text.empty();
+        Identifier itemId = Identifier.tryParse(TagItemSettings.from(tag).itemId());
+        if (itemId == null || !Registries.ITEM.containsId(itemId)) return Text.empty();
+        MutableText icon = Text.object(new AtlasTextObjectContents(Atlases.ITEMS, sprite));
+        if (!TagPresentation.displayText(tag).isBlank()) icon.append(Text.literal(" "));
+        return icon;
+    }
+
+    static Identifier itemSpriteId(Tag tag) {
+        TagItemSettings settings = TagItemSettings.from(tag);
+        if (settings == null) return null;
+        Identifier itemId = Identifier.tryParse(settings.itemId());
+        if (itemId == null) return null;
+        return Identifier.of(itemId.getNamespace(), "item/" + itemId.getPath());
     }
 
     static Text styledTags(List<Tag> tags) {
@@ -164,6 +225,7 @@ public final class Fabric2111ChatRenderer {
 
     private static PlaceholderMatch nextPlaceholder(String format, int fromIndex) {
         int tag = format.indexOf(TAG_PLACEHOLDER, fromIndex);
+        int item = format.indexOf(ITEM_PLACEHOLDER, fromIndex);
         int tags = format.indexOf("{tags}", fromIndex);
         int player = format.indexOf(PLAYER_PLACEHOLDER, fromIndex);
         int message = format.indexOf(MESSAGE_PLACEHOLDER, fromIndex);
@@ -183,6 +245,7 @@ public final class Fabric2111ChatRenderer {
             if (end >= 0) { start = tagMeta; placeholder = format.substring(tagMeta, end + 1); }
         }
         if (tags >= 0 && tags < start) { start = tags; placeholder = "{tags}"; }
+        if (item >= 0 && item < start) { start = item; placeholder = ITEM_PLACEHOLDER; }
         if (tag >= 0 && tag < start) { start = tag; placeholder = TAG_PLACEHOLDER; }
         if (player >= 0 && player < start) { start = player; placeholder = PLAYER_PLACEHOLDER; }
         if (message >= 0 && message < start) { start = message; placeholder = MESSAGE_PLACEHOLDER; }

@@ -17,7 +17,8 @@ If any condition is false, NameTag-Core leaves the existing chat renderer untouc
 
 The configured `chatFormat` supports these placeholders:
 
-- `{tag}` — active tag display name.
+- `{item}` — the active tag item icon, rendered from Minecraft 1.21.11's items atlas; empty when no item is configured.
+- `{tag}` — active tag display name; it may be empty for an icon-only tag.
 - `{player}` — the normal Paper player display-name component.
 - `{message}` — the original chat message component.
 - `{tag_meta:key}` — a tag metadata value; unknown keys remain literal.
@@ -27,13 +28,13 @@ Unknown placeholders remain literal text.
 Default:
 
 ```yaml
-chatFormat: "[{tag}] {player}: {message}"
+chatFormat: "[{item}{tag}] {player}: {message}"
 ```
 
 Example:
 
 ```text
-[OWNER] UltraOP: Hello everyone!
+[<item icon>OWNER] UltraOP: Hello everyone!
 ```
 
 ## Styling
@@ -62,3 +63,15 @@ The Paper adapter registers the chat listener during `start()` and unregisters i
 ## Platform boundary
 
 The common API remains platform-neutral. Paper's Adventure `Component`, `AsyncChatEvent` and `ChatRenderer` types are isolated inside the Paper 1.21.11 version adapter.
+
+## Item + rank composition
+
+A tag can independently contain:
+
+- text only: `[OWNER] Player: Message`
+- item/icon only: `[<item icon>] Player: Message`
+- item/icon + text: `[<item icon>OWNER] Player: Message`
+
+The item is always emitted before the tag text, and the player name is emitted exactly once by the platform chat renderer. Existing configurations that still use `[{tag}] {player}: {message}` are automatically normalized at render time so the item is inserted before the tag when one is configured.
+
+Use `/nametag tag edit <tag> name none` to make a tag icon-only. The item itself is configured with `/nametag display item <tag> set <item>`.

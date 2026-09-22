@@ -9,6 +9,7 @@ import net.minecraft.text.Text;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -88,6 +89,29 @@ class Fabric2111ChatRendererTest {
     }
 
     @Test
+    void contentDecoratorDoesNotRenderPlayerTwice() {
+        Tag tag = new Tag(
+                new TagId("noob"),
+                "Noob",
+                new TagColor.Preset("aqua"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of()
+        );
+
+        Text rendered = Fabric2111ChatRenderer.renderContentFormat(
+                "[{tag}] {player}: {message}",
+                List.of(tag),
+                Text.literal("yoo")
+        );
+
+        assertEquals("[Noob] yoo", rendered.getString());
+    }
+
+    @Test
     void preservesOriginalMessageComponentAsMessagePlaceholder() {
         Tag tag = new Tag(
                 new TagId("owner"),
@@ -161,4 +185,41 @@ class Fabric2111ChatRendererTest {
         assertEquals(0xFFFFFF, nameplate.getSiblings().get(2).getStyle().getColor().getRgb());
     }
 
+
+    @Test
+    void injectsItemBeforeExistingTagPlaceholder() {
+        assertEquals("[{item}{tag}] {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("[{tag}] {player}: {message}"));
+        assertEquals("[{item}{tags}] {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("[{tags}] {player}: {message}"));
+    }
+
+    @Test
+    void rendersItemIconBeforeTagAndSupportsIconOnly() {
+        Tag tagged = new Tag(
+                new TagId("vip"),
+                "VIP",
+                new TagColor.Preset("gold"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of("item", "minecraft:diamond")
+        );
+        assertEquals("minecraft:item/diamond", Fabric2111ChatRenderer.itemSpriteId(tagged).toString());
+
+        Tag iconOnly = new Tag(
+                new TagId("icon_only"),
+                "",
+                new TagColor.Preset("white"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of("item", "minecraft:diamond")
+        );
+        assertEquals("", iconOnly.displayName());
+        assertEquals("{item}{tag} {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("{tag} {player}: {message}"));
+        assertEquals("minecraft:item/diamond", Fabric2111ChatRenderer.itemSpriteId(iconOnly).toString());
+    }
 }

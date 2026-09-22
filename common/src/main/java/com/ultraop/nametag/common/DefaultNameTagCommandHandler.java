@@ -219,11 +219,15 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             String property = args[2].toLowerCase(Locale.ROOT);
             String prefix = args[3].toLowerCase(Locale.ROOT);
             if ("name".equals(property)) {
-                return tagService.find(new TagId(args[1].toLowerCase(Locale.ROOT)))
+                List<String> nameSuggestions = new java.util.ArrayList<>();
+                nameSuggestions.add("none");
+                tagService.find(new TagId(args[1].toLowerCase(Locale.ROOT)))
                         .map(Tag::displayName)
+                        .filter(value -> !value.isBlank())
+                        .ifPresent(nameSuggestions::add);
+                return nameSuggestions.stream()
                         .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(prefix))
-                        .map(List::of)
-                        .orElse(List.of());
+                        .toList();
             }
             if ("color".equals(property)) {
                 return PRESET_COLORS.stream().filter(value -> value.startsWith(prefix)).toList();
@@ -337,6 +341,9 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         TagId id = new TagId(args[1].toLowerCase(Locale.ROOT));
         String displayName = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+        if ("none".equalsIgnoreCase(displayName) || "clear".equalsIgnoreCase(displayName)) {
+            displayName = "";
+        }
         Tag tag = new Tag(
                 id,
                 displayName,
@@ -355,7 +362,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     private void edit(CommandSource source, String[] args) {
         if (args.length < 4) {
             throw new IllegalArgumentException(
-                    "Usage: /nametag tag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value>"
+                    "Usage: /nametag tag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value> (name may be none)"
             );
         }
 
@@ -369,7 +376,9 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         switch (property) {
             case "name" -> {
-                if (value.isBlank()) throw new IllegalArgumentException("Tag display name cannot be blank.");
+                if ("none".equalsIgnoreCase(value) || "clear".equalsIgnoreCase(value)) {
+                    value = "";
+                }
                 updated = copyTag(current, value, current.color(), current.style(), current.priority(), current.enabled(), current.chatEnabled());
             }
             case "color" -> {
@@ -671,7 +680,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         switch (topic) {
             case "tag" -> { source.sendMessage("/nametag tag create <tag> <displayName>"); source.sendMessage("/nametag tag edit <tag> name|color|gradient|style|priority|enabled|chat <value>"); source.sendMessage("/nametag tag list"); source.sendMessage("/nametag tag delete <tag>"); }
             case "player" -> { source.sendMessage("/nametag player give <player> <tag> [duration]"); source.sendMessage("/nametag player set <player> <tag>"); source.sendMessage("/nametag player remove <player>"); source.sendMessage("/nametag player clear <player>"); source.sendMessage("Duration units: s, m, h, d, w; maximum 365d."); }
-            case "display" -> { source.sendMessage("/nametag display glitch <tag> <white|colorful>"); source.sendMessage("/nametag display effect <tag> <none|rainbow|pulse|wave>"); source.sendMessage("/nametag display item <tag> set <item>"); source.sendMessage("/nametag display item <tag> mode <static|rotate>"); source.sendMessage("/nametag display item <tag> speed <1-10>"); source.sendMessage("/nametag display item <tag> clear"); source.sendMessage("Item model appears beside the existing text name."); }
+            case "display" -> { source.sendMessage("/nametag display glitch <tag> <white|colorful>"); source.sendMessage("/nametag display effect <tag> <none|rainbow|pulse|wave>"); source.sendMessage("/nametag display item <tag> set <item>"); source.sendMessage("/nametag display item <tag> mode <static|rotate>"); source.sendMessage("/nametag display item <tag> speed <1-10>"); source.sendMessage("/nametag display item <tag> clear"); source.sendMessage("Chat order: item icon, tag/rank (if present), player name, message."); source.sendMessage("Use /nametag tag edit <tag> name none for icon-only."); }
             case "advanced" -> { source.sendMessage("/nametag advanced role <tag> <permission|clear>"); source.sendMessage("/nametag advanced scope <tag> clear"); source.sendMessage("/nametag advanced scope <tag> world <world>"); source.sendMessage("/nametag advanced scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>"); }
             case "admin" -> { source.sendMessage("/nametag admin reload"); source.sendMessage("/nametag admin export <file>"); source.sendMessage("/nametag admin import <file>"); }
             default -> source.sendMessage("Unknown help category: " + topic + ". Use /nametag help <TAB>.");

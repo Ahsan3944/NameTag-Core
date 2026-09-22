@@ -103,7 +103,7 @@ Commands are grouped into focused namespaces so the first tab-completion level s
 Implemented commands:
 
 - `/nametag tag create <tag> <displayName>`
-- `/nametag tag edit <tag> name <displayName>`
+- `/nametag tag edit <tag> name <displayName|none>`
 - `/nametag tag edit <tag> color <preset|random|#RRGGBB>`
 - `/nametag tag edit <tag> gradient <startHex> <endHex>`
 - `/nametag tag edit <tag> style <plain|bold|italic|bold_italic>`
@@ -130,7 +130,7 @@ Implemented commands:
 - `/nametag admin export <file>`
 - `/nametag admin import <file>`
 
-Tab completion is context-aware at each level. Tag IDs, online players, edit properties, colors, styles, booleans, effects, durations, world names, role examples, item IDs and item rotation speeds are suggested where the command can safely provide a finite list. Free-form values such as new tag IDs, display names, permission nodes and region names remain open text inputs. Item-based name icons use the Minecraft item model and remain an additional visual beside the existing text name. Registered Minecraft items are supported; a block must have an item form to be rendered as an inventory-style icon.
+Tab completion is context-aware at each level. Tag IDs, online players, edit properties, colors, styles, booleans, effects, durations, world names, role examples, item IDs and item rotation speeds are suggested where the command can safely provide a finite list. Free-form values such as new tag IDs, display names, permission nodes and region names remain open text inputs. Item-based icons can be configured independently from tag text. A tag may be text-only, icon-only, or icon + text. In chat the order is always item icon → tag/rank text (if present) → player name → message. The icon is a native Minecraft 1.21.11 atlas sprite, so it is rendered inline without replacing the player name. Registered Minecraft items are supported; a block must have an item form to be rendered as an item icon.
 
 
 ### Automatic Role Tags
@@ -150,7 +150,7 @@ The message layer is also platform-neutral and currently provides default Englis
 
 ## Configuration
 
-The common configuration service provides an immutable typed runtime snapshot backed by `configuration.yml`. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the schema, defaults, validation rules and platform file locations. Installation is documented in [docs/INSTALLATION.md](docs/INSTALLATION.md), supported versions in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), and public contracts in [docs/API.md](docs/API.md). Chat placeholder and rendering rules are documented in [docs/CHAT.md](docs/CHAT.md). Supported chat placeholders include `{tag}`, `{tags}`, `{tag_id}`, `{tag_priority}`, `{tag_prefix}`, `{tag_suffix}`, `{tag_meta:key}`, `{player}`, and `{message}`. Paper player lifecycle behavior is documented in [docs/PAPER_PLAYER_LIFECYCLE.md](docs/PAPER_PLAYER_LIFECYCLE.md). Paper plugin integration coverage is documented in [docs/PAPER_INTEGRATION_TESTS.md](docs/PAPER_INTEGRATION_TESTS.md). Fabric chat behavior is documented in [docs/FABRIC_CHAT.md](docs/FABRIC_CHAT.md). Fabric player lifecycle behavior is documented in [docs/FABRIC_PLAYER_LIFECYCLE.md](docs/FABRIC_PLAYER_LIFECYCLE.md).
+The common configuration service provides an immutable typed runtime snapshot backed by `configuration.yml`. See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for the schema, defaults, validation rules and platform file locations. Installation is documented in [docs/INSTALLATION.md](docs/INSTALLATION.md), supported versions in [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), and public contracts in [docs/API.md](docs/API.md). Chat placeholder and rendering rules are documented in [docs/CHAT.md](docs/CHAT.md). Supported chat placeholders include `{item}`, `{tag}`, `{tags}`, `{tag_id}`, `{tag_priority}`, `{tag_prefix}`, `{tag_suffix}`, `{tag_meta:key}`, `{player}`, and `{message}`. Paper player lifecycle behavior is documented in [docs/PAPER_PLAYER_LIFECYCLE.md](docs/PAPER_PLAYER_LIFECYCLE.md). Paper plugin integration coverage is documented in [docs/PAPER_INTEGRATION_TESTS.md](docs/PAPER_INTEGRATION_TESTS.md). Fabric chat behavior is documented in [docs/FABRIC_CHAT.md](docs/FABRIC_CHAT.md). Fabric player lifecycle behavior is documented in [docs/FABRIC_PLAYER_LIFECYCLE.md](docs/FABRIC_PLAYER_LIFECYCLE.md).
 
 ## Caching
 
@@ -194,7 +194,7 @@ The active NameTag layers can appear in player chat like server rank/prefix comp
 Example:
 
 ```
-[OWNER] UltraOP: Hello everyone!
+[<item icon>OWNER] UltraOP: Hello everyone!
 ```
 
 Chat integration includes:
@@ -202,6 +202,7 @@ Chat integration includes:
 - Per-tag chat visibility.
 - `nametag.chat` permission.
 - Configurable tag/name/message placement.
+- Native item-icon chat placeholder `{item}`; existing chat formats are backward-compatible and automatically receive the item before `{tag}`/`{tags}` when an item is configured.
 - Reuse of tag color and supported formatting.
 - The same contextual active-tag resolution used by the in-world nameplate.
 - `{tag}` backward-compatible first-layer rendering.
