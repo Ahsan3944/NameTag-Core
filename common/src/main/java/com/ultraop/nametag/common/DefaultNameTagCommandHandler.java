@@ -413,6 +413,8 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         boolean enabled = configuration.current().defaultTagEnabled();
         boolean chatEnabled = configuration.current().defaultTagChatEnabled();
         Map<String,String> metadata = new java.util.LinkedHashMap<>();
+        String pendingItemMode = null;
+        Integer pendingItemSpeed = null;
 
         int index=2;
         while(index<args.length){
@@ -456,20 +458,22 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     requireValue(args,index,option);
                     String mode=args[index+1].toLowerCase(Locale.ROOT);
                     if(!ITEM_MODES.contains(mode)) throw new IllegalArgumentException("Invalid item mode: "+mode);
-                    if(!metadata.containsKey(TagItemSettings.ITEM_KEY)) throw new IllegalArgumentException("Set item before item-mode.");
-                    metadata.put(TagItemSettings.MODE_KEY,mode); index+=2;
+                    pendingItemMode=mode; index+=2;
                 }
                 case "item-speed" -> {
                     requireValue(args,index,option);
-                    int speed=parseItemSpeed(args[index+1]);
-                    if(!metadata.containsKey(TagItemSettings.ITEM_KEY)) throw new IllegalArgumentException("Set item before item-speed.");
-                    metadata.put(TagItemSettings.SPEED_KEY,Integer.toString(speed)); index+=2;
+                    pendingItemSpeed=parseItemSpeed(args[index+1]);
+                    index+=2;
                 }
                 default -> throw new IllegalArgumentException("Unknown create option: "+args[index]);
             }
         }
         if(displayName.isBlank() && !metadata.containsKey(TagItemSettings.ITEM_KEY))
             throw new IllegalArgumentException("A NameTag needs a name or an item. Use name <displayName> or item <item>.");
+        if ((pendingItemMode != null || pendingItemSpeed != null) && !metadata.containsKey(TagItemSettings.ITEM_KEY))
+            throw new IllegalArgumentException("item-mode and item-speed require an item.");
+        if (pendingItemMode != null) metadata.put(TagItemSettings.MODE_KEY, pendingItemMode);
+        if (pendingItemSpeed != null) metadata.put(TagItemSettings.SPEED_KEY, Integer.toString(pendingItemSpeed));
         return new CreateTagOptions(displayName,color,style,effect,priority,enabled,chatEnabled,Map.copyOf(metadata));
     }
 
