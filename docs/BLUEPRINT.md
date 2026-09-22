@@ -80,10 +80,9 @@ Primary namespace:
 
 Canonical grouped command surface:
 ```
-/nametag tag create <tag> name <displayName>
-/nametag tag create <tag> item <item> [mode <static|rotate>] [speed <1-10>]
-/nametag tag create <tag> appearance color|gradient|style|effect|glitch ...
-/nametag tag create <tag> behavior priority|enabled|chat ...
+/nametag tag create <tag> name <displayName> style <style> color <color> effect <normal|glitch> ...
+/nametag tag create <tag> item <item> spin <true|false> [speed <1-10>]
+/nametag tag create <tag> name+item <item> name <displayName> style <style> color <color> effect <normal|glitch> ...
 
 The command tree is grouped for TAB completion: group -> sub-group/option -> valid values.
 /nametag tag edit <tag> name <displayName|none>
@@ -95,8 +94,7 @@ The command tree is grouped for TAB completion: group -> sub-group/option -> val
 /nametag tag edit <tag> chat <true|false>
 /nametag tag list
 /nametag tag delete <tag>
-/nametag player give <player> <tag> [duration]
-/nametag player set <player> <tag>
+/nametag player set <player> <tag> [duration]
 
 `give` grants/adds a tag; `set` activates a tag and also assigns it when necessary.
 /nametag player remove <player>
