@@ -174,9 +174,6 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             return roots.stream()
                     .filter(value -> value.startsWith(prefix))
                     .toList();
-
-                    .filter(value -> value.startsWith(prefix))
-                    .toList();
         }
 
         String group = input[0].toLowerCase(Locale.ROOT);
