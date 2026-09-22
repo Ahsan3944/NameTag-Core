@@ -112,6 +112,30 @@ class Fabric2111ChatRendererTest {
     }
 
     @Test
+    void rendersCompleteChatWithRankBeforePlayerName() {
+        Tag tag = new Tag(
+                new TagId("noob"),
+                "Noob",
+                new TagColor.Preset("aqua"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of()
+        );
+
+        Text result = Fabric2111ChatRenderer.renderFormat(
+                "[{tag}] {player}: {message}",
+                tag,
+                Text.literal("UltraOP"),
+                Text.literal("hi")
+        );
+
+        assertEquals("[Noob] UltraOP: hi", result.getString());
+    }
+
+    @Test
     void preservesOriginalMessageComponentAsMessagePlaceholder() {
         Tag tag = new Tag(
                 new TagId("owner"),
