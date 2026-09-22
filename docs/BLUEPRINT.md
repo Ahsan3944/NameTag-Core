@@ -80,8 +80,7 @@ Primary namespace:
 
 Canonical grouped command surface:
 ```
-/nametag tag create <tag> name <displayName> [item <item>]
-/nametag tag create <tag> item <item> [name <displayName>]
+/nametag tag create <tag> [name <displayName>] [item <item>] [color <color>] [gradient <startHex> <endHex>] [style <style>] [effect <effect>] [glitch <white|colorful>] [priority <number>] [enabled <true|false>] [chat <true|false>] [item-mode <static|rotate>] [item-speed <1-10>]
 /nametag tag edit <tag> name <displayName|none>
 /nametag tag edit <tag> color <preset|random|#RRGGBB>
 /nametag tag edit <tag> gradient <startHex> <endHex>
