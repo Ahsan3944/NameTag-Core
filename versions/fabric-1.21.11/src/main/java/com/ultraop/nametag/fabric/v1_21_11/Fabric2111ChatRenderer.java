@@ -137,6 +137,8 @@ public final class Fabric2111ChatRenderer {
         if (settings == null) return Text.empty();
         Identifier sprite = itemSpriteId(tag);
         if (sprite == null) return Text.empty();
+        Identifier itemId = Identifier.tryParse(TagItemSettings.from(tag).itemId());
+        if (itemId == null || !Registries.ITEM.containsId(itemId)) return Text.empty();
         MutableText icon = Text.object(new AtlasTextObjectContents(Atlases.ITEMS, sprite));
         if (!TagPresentation.displayText(tag).isBlank()) icon.append(Text.literal(" "));
         return icon;
@@ -146,7 +148,7 @@ public final class Fabric2111ChatRenderer {
         TagItemSettings settings = TagItemSettings.from(tag);
         if (settings == null) return null;
         Identifier itemId = Identifier.tryParse(settings.itemId());
-        if (itemId == null || !Registries.ITEM.containsId(itemId)) return null;
+        if (itemId == null) return null;
         return Identifier.of(itemId.getNamespace(), "item/" + itemId.getPath());
     }
 
