@@ -10,12 +10,17 @@ import com.ultraop.nametag.core.model.GlitchSettings;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagColor;
 import com.ultraop.nametag.core.model.TagEffect;
+import com.ultraop.nametag.core.model.TagItemSettings;
 import com.ultraop.nametag.core.model.TagPresentation;
 import com.ultraop.nametag.core.model.TagStyle;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.ItemDisplay;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.Material;
+import org.bukkit.Location;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
@@ -42,6 +47,9 @@ public final class Paper2111NameplateRenderer {
     private final Map<String, List<Tag>> staticVisualTags = new HashMap<>();
     private final Map<String, AnimationState> animations = new HashMap<>();
     private BukkitTask task;
+    private final Map<UUID, ItemDisplay> itemDisplays = new HashMap<>();
+    private final Map<UUID, String> itemDisplaySignatures = new HashMap<>();
+    private final Map<UUID, Float> itemRotations = new HashMap<>();
 
     public Paper2111NameplateRenderer(Plugin plugin, TagService tagService) {
         this.plugin = plugin;
@@ -62,7 +70,8 @@ public final class Paper2111NameplateRenderer {
             if (!ownedTeamNames.contains(team.getName())) continue;
             try { team.getEntries().forEach(team::removeEntry); team.unregister(); } catch (IllegalStateException ignored) {}
         }
-        teams.clear(); ownedTeamNames.clear(); staticVisualTags.clear(); animations.clear(); playerTeams.clear();
+        for (ItemDisplay display : new HashSet<>(itemDisplays.values())) display.remove();
+        teams.clear(); ownedTeamNames.clear(); staticVisualTags.clear(); animations.clear(); playerTeams.clear(); itemDisplays.clear(); itemDisplaySignatures.clear(); itemRotations.clear();
     }
 
     public void refreshPlayer(Player player) {
@@ -100,6 +109,7 @@ public final class Paper2111NameplateRenderer {
         String currentTeamName = playerTeams.get(player.getUniqueId());
         if (tags.isEmpty()) {
             removePlayerFromTeam(player, currentTeamName);
+            clearItemDisplay(player.getUniqueId());
             return;
         }
 
@@ -109,6 +119,67 @@ public final class Paper2111NameplateRenderer {
         if (!team.hasEntry(player.getName())) team.addEntry(player.getName());
         playerTeams.put(player.getUniqueId(), teamName);
         updateTeamVisual(team, tags, now);
+        updateItemDisplay(player, tags);
+    }
+
+    private void updateItemDisplay(Player player, List<Tag> tags) {
+        TagItemSettings settings = null;
+        for (Tag tag : tags) {
+            TagItemSettings candidate = TagItemSettings.from(tag);
+            if (candidate != null) { settings = candidate; break; }
+        }
+        if (settings == null) {
+            clearItemDisplay(player.getUniqueId());
+            return;
+        }
+
+        UUID uuid = player.getUniqueId();
+        String signature = settings.itemId() + "|" + settings.mode().id() + "|" + settings.speed();
+        ItemDisplay display = itemDisplays.get(uuid);
+        if (display == null || !display.isValid() || !display.getWorld().equals(player.getWorld())) {
+            if (display != null) display.remove();
+            display = player.getWorld().spawn(player.getLocation(), ItemDisplay.class);
+            display.setItemDisplayTransform(ItemDisplay.ItemDisplayTransform.FIXED);
+            display.setTeleportDuration(1);
+            display.setInterpolationDuration(1);
+            itemDisplays.put(uuid, display);
+            itemDisplaySignatures.remove(uuid);
+            itemRotations.put(uuid, 0.0f);
+        }
+
+        if (!signature.equals(itemDisplaySignatures.get(uuid))) {
+            Material material = Material.matchMaterial(settings.itemId());
+            if (material == null || !material.isItem()) {
+                clearItemDisplay(uuid);
+                return;
+            }
+            display.setItemStack(new ItemStack(material));
+            itemDisplaySignatures.put(uuid, signature);
+        }
+
+        float playerYaw = player.getYaw();
+        if (settings.mode() == TagItemSettings.Mode.ROTATE) {
+            display.setBillboard(org.bukkit.entity.Display.Billboard.FIXED);
+            float rotation = itemRotations.getOrDefault(uuid, 0.0f) + settings.speed() * 3.0f;
+            if (rotation >= 360.0f) rotation -= 360.0f;
+            itemRotations.put(uuid, rotation);
+            display.setRotation(rotation, 0.0f);
+        } else {
+            display.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
+            display.setRotation(playerYaw, 0.0f);
+        }
+
+        Location location = player.getLocation().clone();
+        double yaw = Math.toRadians(playerYaw);
+        location.add(-Math.cos(yaw) * 0.42, 2.45, -Math.sin(yaw) * 0.42);
+        display.teleport(location);
+    }
+
+    private void clearItemDisplay(UUID uuid) {
+        ItemDisplay display = itemDisplays.remove(uuid);
+        if (display != null) display.remove();
+        itemDisplaySignatures.remove(uuid);
+        itemRotations.remove(uuid);
     }
 
     private void removePlayerFromTeam(Player player, String teamName) {
