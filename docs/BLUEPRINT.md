@@ -78,9 +78,8 @@ Primary namespace:
 
 `/nametag`
 
-Initial contract:
-```
 Canonical grouped command surface:
+```
 /nametag tag create <tag> <displayName>
 /nametag tag edit <tag> name <displayName|none>
 /nametag tag edit <tag> color <preset|random|#RRGGBB>
