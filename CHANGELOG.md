@@ -6,6 +6,10 @@
 - Finalized the command-first 1.0 feature scope, persistence providers, contextual/layered resolution, effects, chat integration and release documentation.
 
 ## Unreleased
+- Fixed Fabric tagged chat ordering: item/rank now renders before the player name without the duplicated Noob/UltraOP content-decoration artifact.
+- Added direct tag creation with name and/or item options, including item-ID autocomplete and icon-only creation.
+- Removed the standalone /nametag version command; /nametag info is now the single consolidated information command with creator, purpose, platform and feature details.
+- Added styled cross-platform command output support for the consolidated info screen.
 - Added item-first chat composition for Fabric and Paper 1.21.11 using native Minecraft atlas sprite object components.
 - Added independent text/icon modes: text-only, icon-only, and icon + rank.
 - Added `{item}` chat placeholder with automatic insertion for legacy formats that omit it.
