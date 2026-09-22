@@ -902,28 +902,20 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         );
 
         TagId id = new TagId(args[2].toLowerCase(Locale.ROOT));
-        if ("set".equalsIgnoreCase(args[0])) {
-            if (args.length == 4) {
-                Duration duration = parseDuration(args[3]);
-                tagService.assignUntil(player.uuid(), id, Instant.now().plus(duration));
-            }
-            tagService.setActive(player.uuid(), id);
-            if (args.length == 4) {
-                source.sendMessage(messages.format("message.set_active", Map.of("tag", id.value(), "player", player.name()))
-                        + " (" + args[3] + ")");
-            } else {
-                source.sendMessage(messages.format("message.set_active", Map.of("tag", id.value(), "player", player.name())));
-            }
-            return;
-        }
         if (args.length == 4) {
             Duration duration = parseDuration(args[3]);
             tagService.assignUntil(player.uuid(), id, Instant.now().plus(duration));
-            source.sendMessage(messages.format("message.assigned_temporary", Map.of("tag", id.value(), "player", player.name(), "duration", args[3])));
+            tagService.setActive(player.uuid(), id);
+            source.sendMessage(messages.format("message.set_active", Map.of(
+                    "tag", id.value(), "player", player.name()
+            )) + " (" + args[3] + ")");
             return;
         }
-        tagService.assign(player.uuid(), id);
-        source.sendMessage(messages.format("message.assigned", Map.of("tag", id.value(), "player", player.name())));
+
+        tagService.setActive(player.uuid(), id);
+        source.sendMessage(messages.format("message.set_active", Map.of(
+                "tag", id.value(), "player", player.name()
+        )));
     }
 
     private static Duration parseDuration(String input) {
