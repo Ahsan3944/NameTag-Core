@@ -104,9 +104,9 @@ Commands are grouped into focused namespaces so the first tab-completion level s
 Implemented commands:
 
 `/nametag tag create <tag> <name|item|name+item>`
-  - `name <displayName>` → style → color → effect → normal/glitch → effect value.
+  - `name <displayName>` → style → color → normal|glitch → effect value.
   - `item <item>` → spin <true|false> → speed when spin is true.
-  - `name+item <item>` → name <displayName> → style → color → effect → value.
+  - `name+item <item> <displayName>` → style → color → normal|glitch → effect value.
   - TAB is sequential: each stage exposes only the next valid choices and item IDs are registry-backed/validated.
   - Legacy `/nametag tag create <tag> <displayName>` remains supported.
 - `/nametag tag edit <tag> name <displayName|none>`
