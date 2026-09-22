@@ -60,7 +60,9 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             "plain", "bold", "italic", "underlined", "strikethrough", "obfuscated",
             "bold_italic", "bold_underlined", "italic_underlined"
     );
-    private static final List<String> EFFECT_VALUES = List.of("none", "rainbow", "pulse", "wave");
+    private static final List<String> EFFECT_VALUES = List.of(
+            "regular", "neon", "breath", "blink", "rgb", "rainbow", "pulse", "wave", "none"
+    );
     private static final List<String> GLITCH_VALUES = List.of("none", "white", "colorful");
 
     private final TagService tagService;
@@ -1225,7 +1227,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         return switch (subcommand) {
             case "create" -> "nametag.create";
             case "delete" -> "nametag.delete";
-            case "give", "set" -> "nametag.give";
+            case "set" -> "nametag.give";
             case "remove", "clear" -> "nametag.remove";
             case "edit", "glitch", "effect", "item", "role", "scope" -> "nametag.edit";
             case "reload" -> "nametag.reload";
