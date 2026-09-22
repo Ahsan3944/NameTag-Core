@@ -385,7 +385,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
     private CreateTagOptions parseCreateTagOptions(CommandSource source, String[] args) {
         // Backward-compatible form:
-        // /nametag tag create <tag> <displayName>
+        // Backward-compatible /nametag tag create <tag> <displayName>
         if (!"name".equalsIgnoreCase(args[2]) && !"item".equalsIgnoreCase(args[2])) {
             String displayName = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
             if ("none".equalsIgnoreCase(displayName) || "clear".equalsIgnoreCase(displayName)) {
