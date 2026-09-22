@@ -16,6 +16,9 @@
 - Reworked Fabric tagged chat rendering so the player name is rendered exactly once in the final composed line.
 - Added regression coverage for duplicate player names, item-before-rank ordering, icon-only tags, legacy placeholder injection and Paper sprite identity.
 - Synchronized the master blueprint, README, chat documentation and roadmap with the grouped v0.2 command surface.
+- Expanded `/nametag tag create` so all presentation and behavior properties can be configured in one command.
+- Added create-time live item autocomplete and item-only tag creation.
+- Clarified `player give` versus `player set`; `set` now assigns and activates an unassigned tag.
 - Completed common tab-completion for tag arguments of the effect and automatic-role commands, with regression coverage.
 - Clarified the two bounded resolution caches: 1024-entry legacy active-tag cache and 2048-entry contextual multi-tag cache.
 

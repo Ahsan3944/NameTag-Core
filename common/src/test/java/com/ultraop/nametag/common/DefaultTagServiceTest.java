@@ -42,14 +42,16 @@ class DefaultTagServiceTest {
     }
 
     @Test
-    void setActiveRequiresAssignment() {
+    void setActiveAssignsAndActivatesWhenMissing() {
         DefaultTagService service = newService();
         UUID player = UUID.randomUUID();
 
         service.create(tag("owner", "OWNER", 10, true));
 
-        assertThrows(IllegalArgumentException.class,
-                () -> service.setActive(player, new TagId("owner")));
+        PlayerAssignmentSnapshot result = snapshot(service.setActive(player, new TagId("owner")));
+
+        assertEquals(new TagId("owner"), result.active());
+        assertEquals(1, result.assignedCount());
     }
 
     @Test

@@ -209,20 +209,20 @@ public final class DefaultTagService implements TagService {
                 new IllegalArgumentException("Tag not found: " + tagId.value()));
 
         PlayerAssignment current = assignments.find(playerUuid)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Player has no assigned tags: " + playerUuid));
+                .orElse(new PlayerAssignment(playerUuid, List.of(), null));
 
-        if (!current.assignedTagIds().contains(tagId)) {
-            throw new IllegalArgumentException(
-                    "Tag is not assigned to player: " + tagId.value());
-        }
         if (current.isExpired(tagId, clock.millis())) {
             throw new IllegalArgumentException("Tag assignment has expired: " + tagId.value());
         }
 
+        ArrayList<TagId> ids = new ArrayList<>(current.assignedTagIds());
+        if (!ids.contains(tagId)) {
+            ids.add(tagId);
+        }
+
         PlayerAssignment updated = new PlayerAssignment(
                 playerUuid,
-                current.assignedTagIds(),
+                ids,
                 tagId,
                 current.expirationEpochMillis()
         );

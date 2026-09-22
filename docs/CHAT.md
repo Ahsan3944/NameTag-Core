@@ -93,9 +93,8 @@ Use `/nametag tag edit <tag> name none` to make a tag icon-only. The item itself
 
 For an active NameTag chat composition, Fabric must cancel the vanilla player-chat body and send the fully composed line as a system-chat message. This is required to place the rank/item before the player name without duplicating the vanilla sender decoration. The original player message still passes through Fabric's allow-chat event before the custom line is emitted, but the final displayed line is not a signed player-chat packet. Servers that require native signed-chat/reporting semantics should disable NameTag chat composition for those messages.
 
-Create-time item configuration is available directly through:
+Create-time configuration is available directly through:
 
-`/nametag tag create <tag> name <displayName> [item <item>]`
-`/nametag tag create <tag> item <item> [name <displayName>]`
+`/nametag tag create <tag> [name <displayName>] [item <item>] [color <color>] [gradient <startHex> <endHex>] [style <style>] [effect <effect>] [glitch <white|colorful>] [priority <number>] [enabled <true|false>] [chat <true|false>] [item-mode <static|rotate>] [item-speed <1-10>]`
 
-The item value is validated against the registered Minecraft item IDs exposed by the platform. `name none` is equivalent to an icon-only tag.
+All presentation and behavior settings can be supplied in the same create command. Item values are validated and tab-completed from the platform's registered Minecraft item IDs. Omitting the name while supplying an item creates an icon-only tag.
