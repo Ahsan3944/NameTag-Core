@@ -62,152 +62,133 @@ public final class NameTagFabric {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             var root = CommandManager.literal("nametag");
 
-            root.then(CommandManager.literal("list")
-                    .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{"list"})));
-
-            root.then(CommandManager.literal("reload")
-                    .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{"reload"})));
-
-            root.then(CommandManager.literal("create")
+            var tag = CommandManager.literal("tag");
+            tag.then(CommandManager.literal("list")
+                    .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{"tag", "list"})));
+            tag.then(CommandManager.literal("create")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
                             .then(CommandManager.argument("displayName", StringArgumentType.greedyString())
                                     .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
-                                            "create",
+                                            "tag", "create",
                                             StringArgumentType.getString(context, "tag"),
                                             StringArgumentType.getString(context, "displayName")
                                     })))));
-
-            root.then(CommandManager.literal("edit")
+            tag.then(CommandManager.literal("edit")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
-                            .suggests((context, builder) ->
-                                    suggestTags(context, builder, service, permissions, configuration, "edit"))
+                            .suggests((context, builder) -> suggestTags(context, builder, service, permissions, configuration, "edit"))
                             .then(CommandManager.argument("property", StringArgumentType.word())
-                                    .suggests((context, builder) ->
-                                            CommandSource.suggestMatching(
-                                                    List.of("name", "color", "gradient", "style", "priority", "enabled", "chat"),
-                                                    builder
-                                            ))
+                                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                                            List.of("name", "color", "gradient", "style", "priority", "enabled", "chat"), builder))
                                     .then(CommandManager.argument("value", StringArgumentType.greedyString())
                                             .suggests((context, builder) -> suggestEditValues(context, builder))
                                             .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
-                                                    "edit",
+                                                    "tag", "edit",
                                                     StringArgumentType.getString(context, "tag"),
                                                     StringArgumentType.getString(context, "property"),
                                                     StringArgumentType.getString(context, "value")
-                                            }))))));
-
-            root.then(CommandManager.literal("delete")
+                                            })))));
+            tag.then(CommandManager.literal("delete")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
-                            .suggests((context, builder) ->
-                                    suggestTags(context, builder, service, permissions, configuration, "delete"))
+                            .suggests((context, builder) -> suggestTags(context, builder, service, permissions, configuration, "delete"))
                             .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
-                                    "delete",
-                                    StringArgumentType.getString(context, "tag")
-                            }))));
+                                    "tag", "delete", StringArgumentType.getString(context, "tag")
+                            })));
+            root.then(tag);
 
-            root.then(CommandManager.literal("give")
+            var player = CommandManager.literal("player");
+            player.then(CommandManager.literal("give")
                     .then(CommandManager.argument("player", EntityArgumentType.player())
                             .then(CommandManager.argument("tag", StringArgumentType.word())
-                                    .suggests((context, builder) ->
-                                            suggestTags(context, builder, service, permissions, configuration, "give"))
-                                    .executes(context -> executeTarget(
-                                            context, service, permissions, messages, configuration, false
-                                    ))
+                                    .suggests((context, builder) -> suggestTags(context, builder, service, permissions, configuration, "give"))
+                                    .executes(context -> executeTarget(context, service, permissions, messages, configuration, false))
                                     .then(CommandManager.argument("duration", StringArgumentType.word())
-                                            .executes(context -> executeTarget(
-                                                    context, service, permissions, messages, configuration, false
-                                            ))))));
-
-            root.then(CommandManager.literal("set")
+                                            .suggests((context, builder) -> CommandSource.suggestMatching(
+                                                    List.of("30m", "1h", "1d", "7d"), builder))
+                                            .executes(context -> executeTarget(context, service, permissions, messages, configuration, false))))));
+            player.then(CommandManager.literal("set")
                     .then(CommandManager.argument("player", EntityArgumentType.player())
                             .then(CommandManager.argument("tag", StringArgumentType.word())
-                                    .suggests((context, builder) ->
-                                            suggestTags(context, builder, service, permissions, configuration, "set"))
-                                    .executes(context -> executeTarget(
-                                            context, service, permissions, messages, configuration, true
-                                    )))));
-
-            root.then(CommandManager.literal("remove")
+                                    .suggests((context, builder) -> suggestTags(context, builder, service, permissions, configuration, "set"))
+                                    .executes(context -> executeTarget(context, service, permissions, messages, configuration, true)))));
+            player.then(CommandManager.literal("remove")
                     .then(CommandManager.argument("player", EntityArgumentType.player())
-                            .executes(context -> executeTargetClear(
-                                    context, service, permissions, messages, configuration, "remove"
-                            ))));
-
-            root.then(CommandManager.literal("clear")
+                            .executes(context -> executeTargetClear(context, service, permissions, messages, configuration, "remove"))));
+            player.then(CommandManager.literal("clear")
                     .then(CommandManager.argument("player", EntityArgumentType.player())
-                            .executes(context -> executeTargetClear(
-                                    context, service, permissions, messages, configuration, "clear"
-                            ))));
+                            .executes(context -> executeTargetClear(context, service, permissions, messages, configuration, "clear"))));
+            root.then(player);
 
-            root.then(CommandManager.literal("export")
-                    .then(CommandManager.argument("file", StringArgumentType.word())
-                            .suggests((context, builder) -> CommandSource.suggestMatching(List.of("tags.yml"), builder))
-                            .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
-                                    "export", StringArgumentType.getString(context, "file")
-                            }))));
-
-            root.then(CommandManager.literal("import")
-                    .then(CommandManager.argument("file", StringArgumentType.word())
-                            .suggests((context, builder) -> CommandSource.suggestMatching(List.of("tags.yml"), builder))
-                            .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
-                                    "import", StringArgumentType.getString(context, "file")
-                            }))));
-
-            root.then(CommandManager.literal("glitch")
+            var display = CommandManager.literal("display");
+            display.then(CommandManager.literal("glitch")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
-                            .suggests((context, builder) ->
-                                    suggestTags(context, builder, service, permissions, configuration, "glitch"))
+                            .suggests((context, builder) -> suggestTags(context, builder, service, permissions, configuration, "glitch"))
                             .then(CommandManager.argument("mode", StringArgumentType.word())
-                                    .suggests((context, builder) ->
-                                            CommandSource.suggestMatching(List.of("white", "colorful"), builder))
+                                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                                            List.of("white", "colorful"), builder))
                                     .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
-                                            "glitch",
+                                            "display", "glitch",
                                             StringArgumentType.getString(context, "tag"),
                                             StringArgumentType.getString(context, "mode")
                                     })))));
-
-            root.then(CommandManager.literal("effect")
+            display.then(CommandManager.literal("effect")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
-                            .suggests((context, builder) ->
-                                    suggestTags(context, builder, service, permissions, configuration, "effect"))
+                            .suggests((context, builder) -> suggestTags(context, builder, service, permissions, configuration, "effect"))
                             .then(CommandManager.argument("effect", StringArgumentType.word())
-                                    .suggests((context, builder) ->
-                                            CommandSource.suggestMatching(List.of("none", "rainbow", "pulse", "wave"), builder))
+                                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                                            List.of("none", "rainbow", "pulse", "wave"), builder))
                                     .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
-                                            "effect",
+                                            "display", "effect",
                                             StringArgumentType.getString(context, "tag"),
                                             StringArgumentType.getString(context, "effect")
                                     })))));
+            root.then(display);
 
-            root.then(CommandManager.literal("scope")
+            var advanced = CommandManager.literal("advanced");
+            advanced.then(CommandManager.literal("role")
                     .then(CommandManager.argument("tag", StringArgumentType.word())
-                            .suggests((context, builder) ->
-                                    suggestTags(context, builder, service, permissions, configuration, "scope"))
+                            .suggests((context, builder) -> suggestTags(context, builder, service, permissions, configuration, "role"))
+                            .then(CommandManager.argument("permission", StringArgumentType.word())
+                                    .suggests((context, builder) -> CommandSource.suggestMatching(
+                                            List.of("clear"), builder))
+                                    .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
+                                            "advanced", "role",
+                                            StringArgumentType.getString(context, "tag"),
+                                            StringArgumentType.getString(context, "permission")
+                                    })))));
+            advanced.then(CommandManager.literal("scope")
+                    .then(CommandManager.argument("tag", StringArgumentType.word())
+                            .suggests((context, builder) -> suggestTags(context, builder, service, permissions, configuration, "scope"))
                             .then(CommandManager.argument("settings", StringArgumentType.greedyString())
                                     .suggests((context, builder) -> CommandSource.suggestMatching(
                                             List.of("clear", "world", "region"), builder))
                                     .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
-                                            "scope",
+                                            "advanced", "scope",
                                             StringArgumentType.getString(context, "tag"),
                                             StringArgumentType.getString(context, "settings")
                                     })))));
- 
-            root.then(CommandManager.literal("role")
-                    .then(CommandManager.argument("tag", StringArgumentType.word())
-                            .suggests((context, builder) ->
-                                    suggestTags(context, builder, service, permissions, configuration, "role"))
-                            .then(CommandManager.argument("permission", StringArgumentType.word())
-                                    .suggests((context, builder) ->
-                                            CommandSource.suggestMatching(List.of("clear"), builder))
-                                    .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
-                                            "role",
-                                            StringArgumentType.getString(context, "tag"),
-                                            StringArgumentType.getString(context, "permission")
-                                    })))));
+            root.then(advanced);
+
+            var admin = CommandManager.literal("admin");
+            admin.then(CommandManager.literal("reload")
+                    .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{"admin", "reload"})));
+            admin.then(CommandManager.literal("export")
+                    .then(CommandManager.argument("file", StringArgumentType.word())
+                            .suggests((context, builder) -> CommandSource.suggestMatching(List.of("tags.yml"), builder))
+                            .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
+                                    "admin", "export", StringArgumentType.getString(context, "file")
+                            }))));
+            admin.then(CommandManager.literal("import")
+                    .then(CommandManager.argument("file", StringArgumentType.word())
+                            .suggests((context, builder) -> CommandSource.suggestMatching(List.of("tags.yml"), builder))
+                            .executes(context -> execute(context, service, permissions, messages, configuration, new String[]{
+                                    "admin", "import", StringArgumentType.getString(context, "file")
+                            }))));
+            root.then(admin);
 
             dispatcher.register(root);
         });
     }
+
 
     private static java.util.concurrent.CompletableFuture<Suggestions> suggestEditValues(
             CommandContext<ServerCommandSource> context,
@@ -232,113 +213,3 @@ public final class NameTagFabric {
             default -> Suggestions.empty();
         };
     }
-
-    private static int execute(
-            CommandContext<ServerCommandSource> context,
-            TagService service,
-            PermissionService permissions,
-            DefaultMessageService messages,
-            DefaultConfigurationService configuration,
-            String[] args
-    ) {
-        handler(context.getSource(), service, messages, configuration)
-                .execute(new com.ultraop.nametag.api.CommandContext(
-                        new FabricCommandSource(context.getSource(), permissions),
-                        args
-                ));
-        return 1;
-    }
-
-    private static int executeTarget(
-            CommandContext<ServerCommandSource> context,
-            TagService service,
-            PermissionService permissions,
-            DefaultMessageService messages,
-            DefaultConfigurationService configuration,
-            boolean setActive
-    ) {
-        try {
-            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
-            String subcommand = setActive ? "set" : "give";
-            String tag = StringArgumentType.getString(context, "tag");
-            boolean hasDuration = context.getNodes().stream()
-                    .anyMatch(node -> node.getNode().getName().equals("duration"));
-            String[] args = hasDuration
-                    ? new String[]{subcommand, player.getName().getString(), tag, StringArgumentType.getString(context, "duration")}
-                    : new String[]{subcommand, player.getName().getString(), tag};
-            return execute(context, service, permissions, messages, configuration, args);
-        } catch (CommandSyntaxException exception) {
-            context.getSource().sendError(Text.literal(exception.getMessage()));
-            return 0;
-        }
-    }
-
-    private static int executeTargetClear(
-            CommandContext<ServerCommandSource> context,
-            TagService service,
-            PermissionService permissions,
-            DefaultMessageService messages,
-            DefaultConfigurationService configuration,
-            String subcommand
-    ) {
-        try {
-            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
-            return execute(
-                    context,
-                    service,
-                    permissions,
-                    messages,
-                    configuration,
-                    new String[]{subcommand, player.getName().getString()}
-            );
-        } catch (CommandSyntaxException exception) {
-            context.getSource().sendError(Text.literal(exception.getMessage()));
-            return 0;
-        }
-    }
-
-    private static java.util.concurrent.CompletableFuture<Suggestions> suggestTags(
-            CommandContext<ServerCommandSource> context,
-            com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
-            TagService service,
-            PermissionService permissions,
-            DefaultConfigurationService configuration,
-            String subcommand
-    ) {
-        String prefix = builder.getRemaining();
-        NameTagCommandHandler handler = handler(
-                context.getSource(),
-                service,
-                new DefaultMessageService(),
-                configuration
-        );
-        return CommandSource.suggestMatching(
-                handler.suggest(new com.ultraop.nametag.api.CommandContext(
-                        new FabricCommandSource(context.getSource(), permissions),
-                        subcommand.equals("give") || subcommand.equals("set")
-                                ? new String[]{subcommand, "", prefix}
-                                : new String[]{subcommand, prefix}
-                )),
-                builder
-        );
-    }
-
-    private static NameTagCommandHandler handler(
-            ServerCommandSource source,
-            TagService service,
-            DefaultMessageService messages,
-            DefaultConfigurationService configuration
-    ) {
-        java.nio.file.Path dataDirectory = FabricLoader.getInstance()
-                .getConfigDir()
-                .resolve("nametag-core");
-        return new DefaultNameTagCommandHandler(
-                service,
-                new FabricPlayerResolver(source.getServer()),
-                messages,
-                configuration,
-                configuration,
-                dataDirectory
-        );
-    }
-}
