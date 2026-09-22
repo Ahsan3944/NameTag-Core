@@ -125,18 +125,21 @@ public final class NameTagFabric {
             var editItem = CommandManager.literal("item");
             var editItemValue = CommandManager.argument("item", IdentifierArgumentType.identifier())
                     .suggests((context, builder) -> suggestEditItems(context, builder, permissions));
-            editItemValue.then(CommandManager.literal("spin")
-                    .then(CommandManager.argument("spin", BoolArgumentType.bool())
-                            .suggests((context, builder) ->
-                                    CommandSource.suggestMatching(List.of("true", "false"), builder))
-                            .executes(context -> executeEditSpin(
-                                    context, service, permissions, messages, configuration))
-                            .then(CommandManager.argument("speed", IntegerArgumentType.integer(1, 10))
-                                    .suggests((context, builder) ->
-                                            CommandSource.suggestMatching(
-                                                    List.of("1","2","3","4","5","6","7","8","9","10"), builder))
-                                    .executes(context -> executeEditSpin(
-                                            context, service, permissions, messages, configuration))));
+            var editSpin = CommandManager.literal("spin");
+            var editSpinValue = CommandManager.argument("spin", BoolArgumentType.bool())
+                    .suggests((context, builder) ->
+                            CommandSource.suggestMatching(List.of("true", "false"), builder))
+                    .executes(context -> executeEditSpin(
+                            context, service, permissions, messages, configuration));
+            var editSpinSpeed = CommandManager.argument("speed", IntegerArgumentType.integer(1, 10))
+                    .suggests((context, builder) ->
+                            CommandSource.suggestMatching(
+                                    List.of("1","2","3","4","5","6","7","8","9","10"), builder))
+                    .executes(context -> executeEditSpin(
+                            context, service, permissions, messages, configuration));
+            editSpinValue.then(editSpinSpeed);
+            editSpin.then(editSpinValue);
+            editItemValue.then(editSpin);
             editItemValue.then(CommandManager.literal("clear")
                     .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
                             "item", "clear")));
