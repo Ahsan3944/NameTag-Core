@@ -67,7 +67,7 @@ Supported nodes include:
 - `nametag.create`
 - `nametag.edit`
 - `nametag.delete`
-- `nametag.give`
+- `nametag.set`
 - `nametag.remove`
 - `nametag.reload`
 - `nametag.admin`
