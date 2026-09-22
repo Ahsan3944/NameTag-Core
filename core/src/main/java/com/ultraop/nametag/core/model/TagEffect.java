@@ -65,5 +65,8 @@ public record TagEffect(
     }
     public boolean isGlitch() { return GLITCH_ID.equals(id); }
     public boolean isAnimated() { return isAnimated(id); }
-    public static boolean isAnimated(String id) { return RAINBOW_ID.equals(id) || PULSE_ID.equals(id) || WAVE_ID.equals(id); }
+    public static boolean isAnimated(String id) {
+        return RAINBOW_ID.equals(id) || PULSE_ID.equals(id) || WAVE_ID.equals(id)
+                || NEON_ID.equals(id) || BREATH_ID.equals(id) || BLINK_ID.equals(id) || RGB_ID.equals(id);
+    }
 }
