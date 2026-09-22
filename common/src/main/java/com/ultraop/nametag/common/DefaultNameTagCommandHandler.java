@@ -410,17 +410,13 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
     private static List<String> createWizardValueSuggestions(String[] values, int styleIndex) {
         int n = values.length;
-        if (n == styleIndex) {
+        if (n == styleIndex + 2) {
             return prefix(List.of("normal", "bold", "italic", "bold_italic",
                     "underlined", "strikethrough", "obfuscated"), values[n - 1]);
         }
-        if (n == styleIndex + 1) return List.of();
-
-        if (n == styleIndex + 2) {
+        if (n == styleIndex + 3) {
             return prefix(PRESET_COLORS, values[n - 1]);
         }
-        if (n == styleIndex + 3) return List.of();
-
         if (n == styleIndex + 4) {
             return prefix(List.of("normal", "glitch"), values[n - 1]);
         }
