@@ -316,7 +316,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
     private void edit(CommandSource source, String[] args) {
         if (args.length < 4) {
             throw new IllegalArgumentException(
-                    "Usage: /nametag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value>"
+                    "Usage: /nametag tag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value>"
             );
         }
 
@@ -616,7 +616,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             args = expanded;
         }
         if (args.length < 3) {
-            throw new IllegalArgumentException("Usage: /nametag scope <tag> clear|world <world>|region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>");
+            throw new IllegalArgumentException("Usage: /nametag advanced scope <tag> clear|world <world>|region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>");
         }
         TagId id = new TagId(args[1].toLowerCase(Locale.ROOT));
         Tag current = tagService.find(id).orElseThrow(() ->
@@ -626,15 +626,15 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 || key.startsWith("region."));
         switch (args[2].toLowerCase(Locale.ROOT)) {
             case "clear" -> {
-                if (args.length != 3) throw new IllegalArgumentException("Usage: /nametag scope <tag> clear");
+                if (args.length != 3) throw new IllegalArgumentException("Usage: /nametag advanced scope <tag> clear");
             }
             case "world" -> {
-                if (args.length != 4 || args[3].isBlank()) throw new IllegalArgumentException("Usage: /nametag scope <tag> world <world>");
+                if (args.length != 4 || args[3].isBlank()) throw new IllegalArgumentException("Usage: /nametag advanced scope <tag> world <world>");
                 metadata.put("world", args[3]);
             }
             case "region" -> {
                 if (args.length != 10) throw new IllegalArgumentException(
-                        "Usage: /nametag scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>");
+                        "Usage: /nametag advanced scope <tag> region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ>");
                 metadata.put("region", args[3]);
                 metadata.put("world", args[4]);
                 String[] keys = {"region.minX", "region.minY", "region.minZ", "region.maxX", "region.maxY", "region.maxZ"};
