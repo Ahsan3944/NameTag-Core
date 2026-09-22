@@ -2,6 +2,7 @@ package com.ultraop.nametag.paper;
 
 import com.ultraop.nametag.api.CommandSource;
 import org.bukkit.command.CommandSender;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 import java.util.Objects;
@@ -30,6 +31,14 @@ public final class PaperCommandSource implements CommandSource {
     @Override
     public boolean hasPermission(String permission) {
         return sender.isOp() || sender.hasPermission(permission);
+    }
+
+    @Override
+    public java.util.Collection<String> worldNames() {
+        return Bukkit.getWorlds().stream()
+                .map(world -> world.getName())
+                .sorted()
+                .toList();
     }
 
     @Override
