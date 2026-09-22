@@ -432,32 +432,6 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         return List.of();
     }
 
-    private static List<String> editWizardSuggestions(CommandContext context, String[] values) {
-        if (values.length == 1) return tagNames(values[0]);
-        if (values.length == 2) {
-            return prefix(List.of("name", "item", "style", "color", "effect", "glitch"), values[1]);
-        }
-        String property = values[1].toLowerCase(Locale.ROOT);
-        String prefix = values[values.length - 1].toLowerCase(Locale.ROOT);
-        if ("item".equals(property)) {
-            if (values.length == 3) {
-                List<String> items = new java.util.ArrayList<>();
-                items.add("clear");
-                items.addAll(context.source().itemNames().stream()
-                        .map(DefaultNameTagCommandHandler::normalizeItemId).sorted().toList());
-                return prefix(items, prefix);
-            }
-            if (values.length == 4 && "spin".equalsIgnoreCase(values[2])) {
-                return prefix(List.of("true", "false"), prefix);
-            }
-        }
-        if ("style".equals(property)) return prefix(STYLE_VALUES, prefix);
-        if ("color".equals(property)) return prefix(PRESET_COLORS, prefix);
-        if ("effect".equals(property)) return prefix(List.of("normal", "glitch"), prefix);
-        if ("glitch".equals(property)) return prefix(GLITCH_VALUES, prefix);
-        return List.of();
-    }
-
     private static List<String> prefix(List<String> values, String prefix) {
         String normalized = prefix == null ? "" : prefix.toLowerCase(Locale.ROOT);
         return values.stream()
