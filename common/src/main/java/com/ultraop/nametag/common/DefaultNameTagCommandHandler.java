@@ -1238,7 +1238,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         return switch (subcommand) {
             case "create" -> "nametag.create";
             case "delete" -> "nametag.delete";
-            case "set" -> "nametag.give";
+            case "set" -> "nametag.set";
             case "remove", "clear" -> "nametag.remove";
             case "edit", "glitch", "effect", "item", "role", "scope" -> "nametag.edit";
             case "reload" -> "nametag.reload";
