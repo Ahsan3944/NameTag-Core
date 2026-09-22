@@ -409,7 +409,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             }
             if (values.length < 4) return List.of();
             String property = values[3].toLowerCase(Locale.ROOT);
-            String prefix = values[values.length - 1];
+            String inputPrefix = values[values.length - 1];
 
             if ("item".equals(property)) {
                 if (values.length == 5) {
@@ -417,34 +417,34 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     items.add("clear");
                     items.addAll(context.source().itemNames().stream()
                             .map(DefaultNameTagCommandHandler::normalizeItemId).sorted().toList());
-                    return prefix(items, prefix);
+                    return prefix(items, inputPrefix);
                 }
                 if (values.length == 6 && "spin".equalsIgnoreCase(values[4])) {
-                    return prefix(List.of("true", "false"), prefix);
+                    return prefix(List.of("true", "false"), inputPrefix);
                 }
                 if (values.length == 7 && "spin".equalsIgnoreCase(values[4]) && "true".equalsIgnoreCase(values[5])) {
-                    return prefix(ITEM_SPEEDS, prefix);
+                    return prefix(ITEM_SPEEDS, inputPrefix);
                 }
                 return List.of();
             }
             if ("style".equals(property)) {
-                return values.length == 5 ? prefix(STYLE_VALUES.stream().map(v -> "plain".equals(v) ? "normal" : v).toList(), prefix) : List.of();
+                return values.length == 5 ? prefix(STYLE_VALUES.stream().map(v -> "plain".equals(v) ? "normal" : v).toList(), inputPrefix) : List.of();
             }
-            if ("color".equals(property)) return values.length == 5 ? prefix(PRESET_COLORS, prefix) : List.of();
+            if ("color".equals(property)) return values.length == 5 ? prefix(PRESET_COLORS, inputPrefix) : List.of();
             if ("gradient".equals(property)) return List.of();
             if ("effect".equals(property)) {
-                if (values.length == 5) return prefix(List.of("normal", "glitch"), prefix);
+                if (values.length == 5) return prefix(List.of("normal", "glitch"), inputPrefix);
                 if (values.length == 6 && "normal".equalsIgnoreCase(values[4])) {
-                    return prefix(List.of("regular", "neon", "breath", "blink", "rgb", "rainbow", "pulse", "wave"), prefix);
+                    return prefix(List.of("regular", "neon", "breath", "blink", "rgb", "rainbow", "pulse", "wave"), inputPrefix);
                 }
                 if (values.length == 6 && "glitch".equalsIgnoreCase(values[4])) {
-                    return prefix(List.of("white", "colorful"), prefix);
+                    return prefix(List.of("white", "colorful"), inputPrefix);
                 }
                 return List.of();
             }
             if ("advanced".equals(property)) {
-                if (values.length == 5) return prefix(List.of("priority", "enabled", "chat"), prefix);
-                if (values.length == 6 && "priority".equalsIgnoreCase(values[4])) return prefix(List.of("0","10","25","50","100","1000"), prefix);
+                if (values.length == 5) return prefix(List.of("priority", "enabled", "chat"), inputPrefix);
+                if (values.length == 6 && "priority".equalsIgnoreCase(values[4])) return prefix(List.of("0","10","25","50","100","1000"), inputPrefix);
                 if (values.length == 6 && ("enabled".equalsIgnoreCase(values[4]) || "chat".equalsIgnoreCase(values[4]))) return prefix(List.of("true","false"), prefix);
             }
         }
