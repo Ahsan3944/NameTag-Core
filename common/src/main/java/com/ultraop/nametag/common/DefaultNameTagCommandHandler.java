@@ -260,16 +260,31 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     .stream().filter(value -> value.startsWith(prefix)).toList();
         }
 
-        if (args.length >= 3 && "scope".equals(subcommand)) {
+        if (args.length == 3 && "scope".equals(subcommand)) {
             String prefix = args[2].toLowerCase(Locale.ROOT);
             return List.of("clear", "world", "region").stream()
                     .filter(value -> value.startsWith(prefix))
                     .toList();
         }
 
+        if (args.length == 4 && "scope".equals(subcommand) && "world".equalsIgnoreCase(args[2])) {
+            String prefix = args[3].toLowerCase(Locale.ROOT);
+            return context.source().worldNames().stream()
+                    .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(prefix))
+                    .toList();
+        }
+
+        if (args.length == 5 && "scope".equals(subcommand) && "region".equalsIgnoreCase(args[2])) {
+            String prefix = args[4].toLowerCase(Locale.ROOT);
+            return context.source().worldNames().stream()
+                    .filter(value -> value.toLowerCase(Locale.ROOT).startsWith(prefix))
+                    .toList();
+        }
+
         if (args.length == 3 && "role".equals(subcommand)) {
             String prefix = args[2].toLowerCase(Locale.ROOT);
-            return List.of("clear").stream().filter(value -> value.startsWith(prefix)).toList();
+            return List.of("clear", "nametag.admin", "nametag.chat", "group.admin", "group.vip", "group.moderator")
+                    .stream().filter(value -> value.startsWith(prefix)).toList();
         }
 
         return List.of();
