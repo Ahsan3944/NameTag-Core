@@ -392,7 +392,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             }
             if ("name".equals(flow)) {
                 if (values.length == 5) return List.of();
-                return createWizardValueSuggestions(values, 5);
+                return createWizardValueSuggestions(values, 4);
             }
             if ("name+item".equals(flow)) {
                 if (values.length == 5) {
@@ -402,7 +402,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                             .sorted().toList();
                 }
                 if (values.length == 6) return List.of();
-                return createWizardValueSuggestions(values, 6);
+                return createWizardValueSuggestions(values, 5);
             }
             return List.of();
         }
