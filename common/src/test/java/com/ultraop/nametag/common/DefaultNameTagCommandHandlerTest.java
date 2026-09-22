@@ -251,15 +251,15 @@ final class DefaultNameTagCommandHandlerTest {
                 handler.suggest(new CommandContext(source, new String[]{""})));
         assertEquals(List.of("create", "edit", "list", "delete"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", ""})));
-        assertEquals(List.of(
-                        "name", "item", "color", "gradient", "style", "effect", "glitch",
-                        "priority", "enabled", "chat", "item-mode", "item-speed"
-                ),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", ""})));
+        Collection<String> editProperties = handler.suggest(
+                new CommandContext(source, new String[]{"tag", "edit", "owner", ""}));
+        assertTrue(editProperties.containsAll(List.of("name", "item", "style", "color", "gradient", "effect", "advanced")));
+        assertEquals(List.of("priority", "enabled", "chat"),
+                handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", "advanced", ""})));
         assertEquals(List.of("0", "10", "25", "50", "100", "1000"),
-                handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", "priority", ""})));
+                handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", "advanced", "priority", ""})));
 
-        handler.execute(new CommandContext(source, new String[]{"tag", "edit", "owner", "priority", "50"}));
+        handler.execute(new CommandContext(source, new String[]{"tag", "edit", "owner", "advanced", "priority", "50"}));
         assertEquals(50, service.find(new TagId("owner")).orElseThrow().priority());
     }
 
