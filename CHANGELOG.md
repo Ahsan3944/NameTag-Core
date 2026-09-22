@@ -21,6 +21,7 @@
 - Added create-time live item autocomplete and item-only tag creation.
 - Reworked create/edit grouping to remove flat property dumps and expose only the next valid nested choices.
 - Removed `player give`; `player set` is now the single direct assignment and activation command.
+- Reworked Fabric create/edit completion into nested, sequential choices: name/item/name+item, style, color, effect kind and effect value; item spin now exposes true/false and speed only when enabled.
 - Completed common tab-completion for tag arguments of the effect and automatic-role commands, with regression coverage.
 - Clarified the two bounded resolution caches: 1024-entry legacy active-tag cache and 2048-entry contextual multi-tag cache.
 
