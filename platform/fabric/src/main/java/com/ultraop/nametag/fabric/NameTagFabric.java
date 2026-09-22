@@ -856,7 +856,7 @@ public final class NameTagFabric {
         args.add("create");
         args.add(StringArgumentType.getString(context, "tag"));
         args.add("item");
-        args.add(IdentifierArgumentType.getIdentifier(context, "item").toString());
+        args.add(StringArgumentType.getString(context, "item"));
         args.add("item-mode");
         args.add(spin ? "rotate" : "static");
         if (withSpeed) {
