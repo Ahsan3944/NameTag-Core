@@ -80,7 +80,12 @@ Primary namespace:
 
 Canonical grouped command surface:
 ```
-/nametag tag create <tag> [name <displayName>] [item <item>] [color <color>] [gradient <startHex> <endHex>] [style <style>] [effect <effect>] [glitch <white|colorful>] [priority <number>] [enabled <true|false>] [chat <true|false>] [item-mode <static|rotate>] [item-speed <1-10>]
+/nametag tag create <tag> name <displayName>
+/nametag tag create <tag> item <item> [mode <static|rotate>] [speed <1-10>]
+/nametag tag create <tag> appearance color|gradient|style|effect|glitch ...
+/nametag tag create <tag> behavior priority|enabled|chat ...
+
+The command tree is grouped for TAB completion: group -> sub-group/option -> valid values.
 /nametag tag edit <tag> name <displayName|none>
 /nametag tag edit <tag> color <preset|random|#RRGGBB>
 /nametag tag edit <tag> gradient <startHex> <endHex>
