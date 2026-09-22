@@ -58,7 +58,7 @@ public final class Fabric2111ChatRenderer {
         if (active.isEmpty()) return message;
 
         return renderContentFormat(
-                configuration.current().chatFormat(),
+                ensureItemPlaceholder(configuration.current().chatFormat()),
                 active,
                 message
         );
@@ -66,6 +66,20 @@ public final class Fabric2111ChatRenderer {
 
     static Text renderFormat(String format, Tag tag, Text playerName, Text message) {
         return renderFormat(format, List.of(tag), playerName, message);
+    }
+
+    static String ensureItemPlaceholder(String format) {
+        if (format.contains(ITEM_PLACEHOLDER)) return format;
+        int tagIndex = format.indexOf(TAG_PLACEHOLDER);
+        if (tagIndex < 0) tagIndex = format.indexOf("{tags}");
+        if (tagIndex >= 0) {
+            return format.substring(0, tagIndex) + ITEM_PLACEHOLDER + format.substring(tagIndex);
+        }
+        int playerIndex = format.indexOf(PLAYER_PLACEHOLDER);
+        if (playerIndex >= 0) {
+            return format.substring(0, playerIndex) + ITEM_PLACEHOLDER + format.substring(playerIndex);
+        }
+        return format;
     }
 
     static Text renderContentFormat(String format, List<Tag> tags, Text message) {
