@@ -181,7 +181,7 @@ final class DefaultNameTagCommandHandlerTest {
                 handler.suggest(new CommandContext(source, new String[]{""})));
         assertEquals(List.of("create", "edit", "list", "delete"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", ""})));
-        assertEquals(List.of("color", "gradient", "style", "priority", "enabled", "chat"),
+        assertEquals(List.of("name", "color", "gradient", "style", "priority", "enabled", "chat"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", ""})));
         assertEquals(List.of("0", "10", "25", "50", "100", "1000"),
                 handler.suggest(new CommandContext(source, new String[]{"tag", "edit", "owner", "priority", ""})));
