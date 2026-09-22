@@ -473,19 +473,27 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         while (index < args.length) {
             String token = args[index].toLowerCase(Locale.ROOT);
             switch (token) {
-                case "name", "item", "name+item" -> {
-                    if ("name+item".equals(token)) {
-                        normalized.add("item");
-                        index++;
-                        if (index < args.length) normalized.add(args[index++]);
-                        if (index < args.length && "name".equalsIgnoreCase(args[index])) index++;
-                        if (index < args.length) normalized.add("name");
-                        if (index < args.length) normalized.add(args[index++]);
-                    } else {
-                        normalized.add(token);
-                        index++;
-                        if (index < args.length) normalized.add(args[index++]);
+                case "name" -> {
+                    normalized.add("name");
+                    index++;
+                    if (index < args.length) normalized.add(args[index++]);
+                    index = appendDirectPresentation(args, index, normalized);
+                }
+                case "name+item" -> {
+                    normalized.add("item");
+                    index++;
+                    if (index < args.length) normalized.add(args[index++]);
+                    if (index < args.length && "name".equalsIgnoreCase(args[index])) index++;
+                    if (index < args.length) {
+                        normalized.add("name");
+                        normalized.add(args[index++]);
                     }
+                    index = appendDirectPresentation(args, index, normalized);
+                }
+                case "item" -> {
+                    normalized.add("item");
+                    index++;
+                    if (index < args.length) normalized.add(args[index++]);
                 }
                 case "spin" -> {
                     index++;
@@ -493,8 +501,8 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                         boolean spin = Boolean.parseBoolean(args[index++]);
                         normalized.add("item-mode");
                         normalized.add(spin ? "rotate" : "static");
-                        if (spin && index < args.length && "speed".equalsIgnoreCase(args[index])) {
-                            index++;
+                        if (spin && index < args.length) {
+                            if ("speed".equalsIgnoreCase(args[index])) index++;
                             if (index < args.length) {
                                 normalized.add("item-speed");
                                 normalized.add(args[index++]);
@@ -507,10 +515,43 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     index++;
                     if (index < args.length) normalized.add(args[index++]);
                 }
+                case "gradient" -> {
+                    normalized.add("gradient");
+                    index++;
+                    if (index < args.length) normalized.add(args[index++]);
+                    if (index < args.length) normalized.add(args[index++]);
+                }
                 default -> normalized.add(args[index++]);
             }
         }
         return normalized.toArray(String[]::new);
+    }
+
+    private static int appendDirectPresentation(String[] args, int index, List<String> normalized) {
+        if (index >= args.length || isCreateOption(args[index])) return index;
+
+        String style = args[index++];
+        normalized.add("style");
+        normalized.add("normal".equalsIgnoreCase(style) ? "plain" : style);
+        if (index >= args.length || isCreateOption(args[index])) return index;
+
+        normalized.add("color");
+        normalized.add(args[index++]);
+        if (index >= args.length || isCreateOption(args[index])) return index;
+
+        String effectKind = args[index++].toLowerCase(Locale.ROOT);
+        if ("normal".equals(effectKind)) {
+            if (index < args.length) {
+                normalized.add("effect");
+                normalized.add(args[index++]);
+            }
+        } else if ("glitch".equals(effectKind)) {
+            if (index < args.length) {
+                normalized.add("glitch");
+                normalized.add(args[index++]);
+            }
+        }
+        return index;
     }
 
     private static String[] normalizeEditGroupedArgs(String[] args) {
