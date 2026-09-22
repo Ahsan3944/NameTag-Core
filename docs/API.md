@@ -35,7 +35,6 @@ Implemented command families:
 
 - `create`
 - `list`
-- `give`
 - `set`
 - `remove`
 - `clear`
@@ -85,7 +84,6 @@ The command layer uses permission nodes such as:
 - `nametag.create`
 - `nametag.edit`
 - `nametag.delete`
-- `nametag.give`
 - `nametag.remove`
 - `nametag.reload`
 - `nametag.admin`
