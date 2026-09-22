@@ -369,8 +369,10 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         if (input.length < 2) return null;
         String command = input[1].toLowerCase(Locale.ROOT);
         if (!"create".equals(command) && !"edit".equals(command)) return null;
+        if (input.length < 3) return null;
 
-        String[] values = Arrays.copyOfRange(input, 2, input.length);
+        // input = [tag, create|edit, <tag-id>, ...wizard values]
+        String[] values = Arrays.copyOfRange(input, 3, input.length);
         if (values.length == 0) return List.of();
         if ("create".equals(command)) return createWizardSuggestions(context, values);
         return editWizardSuggestions(context, values);
