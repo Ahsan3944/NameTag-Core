@@ -39,7 +39,6 @@ public final class FabricCommandSource implements CommandSource {
     }
 
     @Override
-    @Override
     public Collection<String> worldNames() {
         return source.getWorldKeys().stream()
                 .map(key -> key.getValue().toString())
