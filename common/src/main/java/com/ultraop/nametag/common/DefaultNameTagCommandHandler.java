@@ -429,7 +429,7 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             if (values.length == 3) {
                 List<String> items = new java.util.ArrayList<>();
                 items.add("clear");
-                items.addAll(context.itemNames().stream().map(DefaultNameTagCommandHandler::normalizeItemId).toList());
+                items.addAll(context.source().itemNames().stream().map(DefaultNameTagCommandHandler::normalizeItemId).toList());
                 return items.stream().filter(v -> v.startsWith(last)).sorted().toList();
             }
             if (values.length >= 4 && trailing) return List.of("mode", "speed");
