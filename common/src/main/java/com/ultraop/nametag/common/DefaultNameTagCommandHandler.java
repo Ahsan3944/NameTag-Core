@@ -408,6 +408,16 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                     if ("speed".equals(nested)) return ITEM_SPEEDS;
                 }
                 if (values.length == 4 && trailing) return List.of("mode", "speed");
+                if (values.length >= 6 && trailing) return List.of("name", "item", "appearance", "behavior");
+            }
+            if ("appearance".equals(section) && values.length >= 5 && trailing) {
+                return List.of("name", "item", "appearance", "behavior");
+            }
+            if ("behavior".equals(section) && values.length >= 5 && trailing) {
+                return List.of("name", "item", "appearance", "behavior");
+            }
+            if ("name".equals(section) && values.length >= 4 && trailing) {
+                return List.of("name", "item", "appearance", "behavior");
             }
             return null;
         }
@@ -443,6 +453,16 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 if ("speed".equals(nested)) return ITEM_SPEEDS;
             }
             if (values.length == 4 && trailing) return List.of("mode", "speed");
+            if (values.length >= 6 && trailing) return List.of("name", "item", "appearance", "behavior");
+        }
+        if ("appearance".equals(section) && values.length >= 5 && trailing) {
+            return List.of("name", "item", "appearance", "behavior");
+        }
+        if ("behavior".equals(section) && values.length >= 5 && trailing) {
+            return List.of("name", "item", "appearance", "behavior");
+        }
+        if ("name".equals(section) && values.length >= 4 && trailing) {
+            return List.of("name", "item", "appearance", "behavior");
         }
         return null;
     }
