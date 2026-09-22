@@ -103,8 +103,9 @@ Commands are grouped into focused namespaces so the first tab-completion level s
 
 Implemented commands:
 
-- `/nametag tag create <tag> name <displayName> [item <item>]`
-- `/nametag tag create <tag> item <item> [name <displayName>]`
+- `/nametag tag create <tag> [name <displayName>] [item <item>] [color <color>] [gradient <startHex> <endHex>] [style <style>] [effect <effect>] [glitch <white|colorful>] [priority <number>] [enabled <true|false>] [chat <true|false>] [item-mode <static|rotate>] [item-speed <1-10>]`
+  - All tag presentation settings can be supplied during creation; item IDs are tab-completed from the live Minecraft item registry.
+  - Legacy `/nametag tag create <tag> <displayName>` remains supported.
 - `/nametag tag edit <tag> name <displayName|none>`
 - `/nametag tag edit <tag> color <preset|random|#RRGGBB>`
 - `/nametag tag edit <tag> gradient <startHex> <endHex>`
@@ -114,8 +115,8 @@ Implemented commands:
 - `/nametag tag edit <tag> chat <true|false>`
 - `/nametag tag list`
 - `/nametag tag delete <tag>`
-- `/nametag player give <player> <tag> [duration]`
-- `/nametag player set <player> <tag>`
+- `/nametag player give <player> <tag> [duration]` — adds/grants a tag; with no active tag it becomes active automatically.
+- `/nametag player set <player> <tag>` — makes the tag active and now also assigns it when it is not already assigned.
 - `/nametag player remove <player>`
 - `/nametag player clear <player>`
 - `/nametag display glitch <tag> <white|colorful>`
