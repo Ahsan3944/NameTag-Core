@@ -441,6 +441,8 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         String property = values[2].toLowerCase(Locale.ROOT);
         String prefix = values[values.length - 1].toLowerCase(Locale.ROOT);
         if ("color".equals(property)) return PRESET_COLORS.stream().filter(v -> v.startsWith(prefix)).toList();
+        if ("gradient".equals(property)) return List.of("#FFFFFF #000000", "#FF0000 #00FFFF", "#FFD700 #8A2BE2")
+                .stream().filter(v -> v.toLowerCase(Locale.ROOT).startsWith(prefix)).toList();
         if ("style".equals(property)) return STYLE_VALUES.stream().filter(v -> v.startsWith(prefix)).toList();
         if ("effect".equals(property)) return EFFECT_VALUES.stream().filter(v -> v.startsWith(prefix)).toList();
         if ("glitch".equals(property)) return GLITCH_VALUES.stream().filter(v -> v.startsWith(prefix)).toList();
