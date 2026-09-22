@@ -561,6 +561,142 @@ public final class NameTagFabric {
         );
     }
 
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createColorNode(
+            TagService service, PermissionService permissions, DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        var node = CommandManager.literal("color");
+        node.then(CommandManager.argument("color", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(
+                        List.of("black", "dark_blue", "dark_green", "dark_aqua", "dark_red",
+                                "dark_purple", "gold", "gray", "dark_gray", "blue", "green",
+                                "aqua", "red", "light_purple", "yellow", "white", "random"),
+                        builder))
+                .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
+                        "color", StringArgumentType.getString(context, "color"))));
+        return node;
+    }
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createGradientNode(
+            TagService service, PermissionService permissions, DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        var node = CommandManager.literal("gradient");
+        var start = CommandManager.argument("startHex", StringArgumentType.word());
+        var end = CommandManager.argument("endHex", StringArgumentType.word())
+                .executes(context -> executeCreateGradient(context, service, permissions, messages, configuration));
+        start.then(end);
+        node.then(start);
+        return node;
+    }
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createStyleNode(
+            TagService service, PermissionService permissions, DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        var node = CommandManager.literal("style");
+        node.then(CommandManager.argument("style", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(
+                        List.of("plain", "bold", "italic", "underlined", "strikethrough", "obfuscated",
+                                "bold_italic", "bold_underlined", "italic_underlined"),
+                        builder))
+                .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
+                        "style", StringArgumentType.getString(context, "style"))));
+        return node;
+    }
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createEffectNode(
+            TagService service, PermissionService permissions, DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        var node = CommandManager.literal("effect");
+        node.then(CommandManager.argument("effect", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(
+                        List.of("none", "rainbow", "pulse", "wave"), builder))
+                .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
+                        "effect", StringArgumentType.getString(context, "effect"))));
+        return node;
+    }
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createGlitchNode(
+            TagService service, PermissionService permissions, DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        var node = CommandManager.literal("glitch");
+        node.then(CommandManager.argument("glitch", StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(
+                        List.of("none", "white", "colorful"), builder))
+                .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
+                        "glitch", StringArgumentType.getString(context, "glitch"))));
+        return node;
+    }
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createSimpleOptionNode(
+            String property,
+            List<String> values,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        var node = CommandManager.literal(property);
+        node.then(CommandManager.argument(property, StringArgumentType.word())
+                .suggests((context, builder) -> CommandSource.suggestMatching(values, builder))
+                .executes(context -> executeCreateOption(context, service, permissions, messages, configuration,
+                        property, StringArgumentType.getString(context, property))));
+        return node;
+    }
+
+    private static java.util.concurrent.CompletableFuture<Suggestions> suggestCreateItems(
+            CommandContext<ServerCommandSource> context,
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
+            PermissionService permissions) {
+        FabricCommandSource source = new FabricCommandSource(context.getSource(), permissions);
+        return CommandSource.suggestMatching(source.itemNames(), builder);
+    }
+
+    private static int executeCreateOption(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration,
+            String property,
+            String value) {
+        return execute(context, service, permissions, messages, configuration, new String[]{
+                "tag", "create",
+                StringArgumentType.getString(context, "tag"),
+                property, value
+        });
+    }
+
+    private static int executeCreateNestedOption(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration,
+            String group,
+            String property,
+            String value) {
+        return execute(context, service, permissions, messages, configuration, new String[]{
+                "tag", "create",
+                StringArgumentType.getString(context, "tag"),
+                group,
+                StringArgumentType.getString(context, "item"),
+                property, value
+        });
+    }
+
+    private static int executeCreateGradient(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration) {
+        return execute(context, service, permissions, messages, configuration, new String[]{
+                "tag", "create",
+                StringArgumentType.getString(context, "tag"),
+                "appearance", "gradient",
+                StringArgumentType.getString(context, "startHex"),
+                StringArgumentType.getString(context, "endHex")
+        });
+    }
+
     private static int execute(
             CommandContext<ServerCommandSource> context,
             TagService service,
