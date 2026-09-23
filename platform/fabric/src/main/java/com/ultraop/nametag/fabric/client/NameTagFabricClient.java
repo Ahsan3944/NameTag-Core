@@ -2,6 +2,7 @@ package com.ultraop.nametag.fabric.client;
 
 import com.ultraop.nametag.fabric.network.NameTagItemPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
@@ -22,6 +23,7 @@ public final class NameTagFabricClient {
     private NameTagFabricClient() {}
 
     public static void register() {
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ITEMS.clear());
         ClientPlayNetworking.registerGlobalReceiver(
                 NameTagItemPayload.TYPE,
                 (payload, context) -> context.client().execute(() -> {
