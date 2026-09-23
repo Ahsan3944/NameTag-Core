@@ -9,6 +9,7 @@ import com.ultraop.nametag.api.TagService;
 import com.ultraop.nametag.core.model.PlayerAssignment;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.core.model.TagId;
+import com.ultraop.nametag.core.model.TagItemSettings;
 import com.ultraop.nametag.core.validation.TagValidator;
 
 import java.time.Clock;
@@ -185,9 +186,19 @@ public final class DefaultTagService implements TagService {
         PlayerAssignment current = assignments.find(playerUuid)
                 .orElse(new PlayerAssignment(playerUuid, List.of(), null));
         ArrayList<TagId> ids = new ArrayList<>(current.assignedTagIds());
+        boolean newTagHasItem = TagItemSettings.from(tag) != null;
+        if (newTagHasItem) {
+            ids.removeIf(existingId -> !existingId.equals(tag.id())
+                    && tags.find(existingId)
+                    .map(existing -> TagItemSettings.from(existing) != null)
+                    .orElse(false));
+        }
         if (!ids.contains(tag.id())) ids.add(tag.id());
 
         Map<TagId, Long> expirations = new HashMap<>(current.expirationEpochMillis());
+        if (newTagHasItem) {
+            expirations.keySet().removeIf(existingId -> !ids.contains(existingId));
+        }
         if (expiresAt == null) expirations.remove(tag.id());
         else expirations.put(tag.id(), expiresAt.toEpochMilli());
 
@@ -411,6 +422,16 @@ public final class DefaultTagService implements TagService {
                 .filter(tag -> permissions.has(playerUuid, tag.metadata().get("auto-permission")))
                 .max(Comparator.comparingInt(Tag::priority)
                         .thenComparing(tag -> tag.id().value(), Comparator.reverseOrder()));
+    }
+
+    @Override
+    public void purgeExpiredAssignments() {
+        long now = clock.millis();
+        for (PlayerAssignment assignment : assignments.findAll()) {
+            if (assignment.assignedTagIds().stream().anyMatch(id -> assignment.isExpired(id, now))) {
+                removeExpired(assignment.playerUuid(), assignment);
+            }
+        }
     }
 
     private PlayerAssignment removeExpired(UUID playerUuid, PlayerAssignment assignment) {

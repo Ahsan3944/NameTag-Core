@@ -44,6 +44,10 @@ public interface TagService {
     /** Returns all explicitly assigned, non-expired tags for a player in assignment order. */
     List<Tag> assignedTags(UUID playerUuid);
 
+    /** Immediately removes expired assignments from persistent storage. */
+    default void purgeExpiredAssignments() {
+    }
+
     /**
      * Resolves all simultaneously visible tags for the supplied player context.
      * The first tag is the explicit active tag when one exists; remaining tags are

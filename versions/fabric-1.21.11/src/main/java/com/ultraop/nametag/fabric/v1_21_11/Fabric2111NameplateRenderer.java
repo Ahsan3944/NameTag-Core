@@ -75,6 +75,7 @@ public final class Fabric2111NameplateRenderer {
     }
 
     private void tick(MinecraftServer server) {
+        tagService.purgeExpiredAssignments();
         long now = System.nanoTime();
         Set<String> activeTeamNames = new HashSet<>();
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {

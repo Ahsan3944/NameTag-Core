@@ -66,7 +66,8 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         // The native team/nameplate already carries the icon and tag. Never inject
         // another copy into chat, and remove legacy square-bracket wrappers so
         // old configuration files cannot leave a stray [] in chat.
-        return format.replace("[", "").replace("]", "");
+        return format.replace("{item}", "").replace("{tag}", "").replace("{tags}", "")
+                .replace("[", "").replace("]", "");
     }
 
     static Component renderFormat(

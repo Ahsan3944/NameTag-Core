@@ -88,7 +88,8 @@ public final class Fabric2111ChatRenderer {
         // The native team/nameplate already carries the icon and tag. Never inject
         // another copy into chat, and remove legacy square-bracket wrappers so
         // old configuration files cannot leave a stray [] in chat.
-        return format.replace("[", "").replace("]", "");
+        return format.replace("{item}", "").replace("{tag}", "").replace("{tags}", "")
+                .replace("[", "").replace("]", "");
     }
 
     static Text renderContentFormat(String format, List<Tag> tags, Text message) {
