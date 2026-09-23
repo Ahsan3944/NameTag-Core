@@ -125,8 +125,6 @@ Implemented commands:
 - `/nametag display glitch <tag> <white|colorful>`
 - `/nametag display effect <tag> <none|rainbow|pulse|wave|neon|breath|blink|rgb>`
 - `/nametag display item <tag> set <item>`
-- `/nametag display item <tag> mode <static|rotate>`
-- `/nametag display item <tag> speed <1-10>`
 - `/nametag display item <tag> clear`
 - `/nametag advanced role <tag> <permission|clear>`
 - `/nametag advanced scope <tag> clear`
