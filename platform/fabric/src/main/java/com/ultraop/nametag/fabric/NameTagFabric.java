@@ -94,7 +94,7 @@ public final class NameTagFabric {
             createItem.then(createItemValue);
 
             var createNameItem = CommandManager.literal("name+item");
-            var createNameItemValue = CommandManager.argument("item", StringArgumentType.string())
+            var createNameItemValue = CommandManager.argument("item", ItemStackArgumentType.itemStack(registryAccess))
                     .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
             var createNameItemName = CommandManager.argument("displayName", StringArgumentType.string());
             addStyleChoices(createNameItemName, service, permissions, messages, configuration, "name+item");
@@ -122,7 +122,7 @@ public final class NameTagFabric {
                             "name", StringArgumentType.getString(context, "displayName"))));
 
             var editItem = CommandManager.literal("item");
-            var editItemValue = CommandManager.argument("item", StringArgumentType.string())
+            var editItemValue = CommandManager.argument("item", ItemStackArgumentType.itemStack(registryAccess))
                     .suggests((context, builder) -> suggestEditItems(context, builder, permissions));
             var editSpin = CommandManager.literal("spin");
             var editSpinValue = CommandManager.argument("spin", BoolArgumentType.bool())
@@ -738,7 +738,7 @@ public final class NameTagFabric {
                 "tag", "edit",
                 StringArgumentType.getString(context, "tag"),
                 group,
-                StringArgumentType.getString(context, "item"),
+                getItemId(context),
                 property, value
         });
     }
@@ -847,7 +847,7 @@ public final class NameTagFabric {
         args.add("create");
         args.add(StringArgumentType.getString(context, "tag"));
         args.add("item");
-        args.add(StringArgumentType.getString(context, "item"));
+        args.add(getItemId(context));
         args.add("item-mode");
         args.add(spin ? "rotate" : "static");
         if (withSpeed) {
@@ -879,7 +879,7 @@ public final class NameTagFabric {
 
         if ("name+item".equals(flow)) {
             args.add("item");
-            args.add(StringArgumentType.getString(context, "item"));
+            args.add(getItemId(context));
             args.add("name");
             args.add(StringArgumentType.getString(context, "displayName"));
         } else {
