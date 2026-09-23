@@ -73,6 +73,8 @@ public final class DefaultConfigurationService implements ConfigurationService, 
         if (chatFormat.equals("[{item}{tag}] {player}: {message}")) {
             chatFormat = NameTagConfiguration.DEFAULT_CHAT_FORMAT;
         }
+        // Strip legacy square-bracket wrappers from any persisted custom format.
+        chatFormat = chatFormat.replace("[", "").replace("]", "");
 
         return new NameTagConfiguration(
                 booleanValue(document, "nameplateEnabled", true),

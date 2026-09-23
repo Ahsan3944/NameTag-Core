@@ -151,8 +151,9 @@ class Paper2111ChatRendererTest {
 
     @Test
     void doesNotInjectItemIntoChatFormat() {
-        assertEquals("[{tag}] {player}: {message}", Paper2111ChatRenderer.ensureItemPlaceholder("[{tag}] {player}: {message}"));
+        assertEquals("{tag} {player}: {message}", Paper2111ChatRenderer.ensureItemPlaceholder("[{tag}] {player}: {message}"));
         assertEquals("{player}: {message}", Paper2111ChatRenderer.ensureItemPlaceholder("{player}: {message}"));
+        assertEquals("{tag} {player}: {message}", Paper2111ChatRenderer.ensureItemPlaceholder("{tag} {player}: {message}"));
     }
 
     @Test

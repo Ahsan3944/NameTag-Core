@@ -212,8 +212,9 @@ class Fabric2111ChatRendererTest {
 
     @Test
     void doesNotInjectItemIntoChatFormat() {
-        assertEquals("[{tag}] {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("[{tag}] {player}: {message}"));
+        assertEquals("{tag} {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("[{tag}] {player}: {message}"));
         assertEquals("{player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("{player}: {message}"));
+        assertEquals("{tag} {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("{tag} {player}: {message}"));
     }
 
     @Test
@@ -230,6 +231,18 @@ class Fabric2111ChatRendererTest {
                 Map.of("item", "minecraft:diamond")
         );
         assertEquals("minecraft:item/diamond", Fabric2111ChatRenderer.itemSpriteId(tagged).toString());
+        Tag blockTag = new Tag(
+                new TagId("block"),
+                "BLOCK",
+                new TagColor.Preset("white"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of("item", "minecraft:diamond_block")
+        );
+        assertEquals("minecraft:block/diamond_block", Fabric2111ChatRenderer.itemSpriteId(blockTag).toString());
 
         Tag iconOnly = new Tag(
                 new TagId("icon_only"),

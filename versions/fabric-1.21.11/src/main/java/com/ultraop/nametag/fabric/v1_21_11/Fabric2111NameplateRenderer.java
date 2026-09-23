@@ -25,6 +25,8 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.text.object.AtlasTextObjectContents;
+import net.minecraft.item.BlockItem;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.Atlases;
 import net.minecraft.util.Identifier;
 
@@ -309,11 +311,13 @@ public final class Fabric2111NameplateRenderer {
         Identifier itemId = Identifier.tryParse(settings.itemId());
         if (itemId == null) return Text.empty();
 
+        boolean blockItem = Registries.ITEM.get(itemId) instanceof BlockItem;
+        Identifier atlas = blockItem ? Atlases.BLOCKS : Atlases.ITEMS;
         Identifier spriteId = Identifier.of(
                 itemId.getNamespace(),
-                "item/" + itemId.getPath()
+                (blockItem ? "block/" : "item/") + itemId.getPath()
         );
-        MutableText icon = Text.object(new AtlasTextObjectContents(Atlases.ITEMS, spriteId));
+        MutableText icon = Text.object(new AtlasTextObjectContents(atlas, spriteId));
         // Deliberate one-character gap between the native item icon and the tag/name.
         // Vanilla atlas text objects are fixed-size text objects; do not duplicate the
         // sprite to fake scaling because that would create a visible double icon.

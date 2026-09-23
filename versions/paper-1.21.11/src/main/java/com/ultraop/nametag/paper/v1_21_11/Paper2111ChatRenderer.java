@@ -15,6 +15,7 @@ import net.kyori.adventure.text.object.ObjectContents;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
+import org.bukkit.Material;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -62,10 +63,10 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
     }
 
     static String ensureItemPlaceholder(String format) {
-        // Do not inject {item} automatically. The player's team/nameplate prefix
-        // already renders the native icon before the player name. Auto-injecting
-        // {item} here creates the duplicate bracketed icon/tag in chat.
-        return format;
+        // The native team/nameplate already carries the icon and tag. Never inject
+        // another copy into chat, and remove legacy square-bracket wrappers so
+        // old configuration files cannot leave a stray [] in chat.
+        return format.replace("[", "").replace("]", "");
     }
 
     static Component renderFormat(
@@ -121,9 +122,13 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         if (settings == null) return Component.empty();
         String[] parts = settings.itemId().split(":", 2);
         if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) return Component.empty();
+        Material material = Material.matchMaterial(parts[0] + ":" + parts[1]);
+        boolean blockItem = material != null && material.isItem() && material.isBlock();
+        String atlas = blockItem ? "blocks" : "items";
+        String spritePath = (blockItem ? "block/" : "item/") + parts[1];
         Component icon = Component.object(ObjectContents.sprite(
-                Key.key("minecraft", "items"),
-                Key.key(parts[0], "item/" + parts[1])
+                Key.key("minecraft", atlas),
+                Key.key(parts[0], spritePath)
         ));
         if (!TagPresentation.displayText(tag).isBlank()) icon = icon.append(Component.text(" "));
         return icon;
