@@ -2,10 +2,7 @@
   "required": true,
   "package": "com.ultraop.nametag.fabric.v1_21_11.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [
-    "DisplayEntityAccessor",
-    "ItemDisplayEntityAccessor"
-  ],
+  "mixins": [],
   "injectors": {
     "defaultRequire": 1
   },
