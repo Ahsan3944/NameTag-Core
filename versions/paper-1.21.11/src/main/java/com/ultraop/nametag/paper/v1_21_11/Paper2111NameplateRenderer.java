@@ -25,6 +25,9 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Transformation;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -129,13 +132,22 @@ public final class Paper2111NameplateRenderer {
         updateItemDisplay(player, tags);
     }
 
+    private static final float ITEM_NAMEPLATE_SCALE = 0.30f;
+    private static final double ITEM_NAMEPLATE_Y = 2.28;
+    private static final double ITEM_NAMEPLATE_LEFT_OFFSET = 0.34;
+
     private void updateItemDisplay(Player player, List<Tag> tags) {
+        Tag itemTag = null;
         TagItemSettings settings = null;
         for (Tag tag : tags) {
             TagItemSettings candidate = TagItemSettings.from(tag);
-            if (candidate != null) { settings = candidate; break; }
+            if (candidate != null) {
+                settings = candidate;
+                itemTag = tag;
+                break;
+            }
         }
-        if (settings == null) {
+        if (settings == null || itemTag == null) {
             clearItemDisplay(player.getUniqueId());
             return;
         }
@@ -152,6 +164,7 @@ public final class Paper2111NameplateRenderer {
             itemDisplays.put(uuid, display);
             itemDisplaySignatures.remove(uuid);
             itemRotations.put(uuid, 0.0f);
+            applyItemDisplayTransform(display, settings.mode());
         }
 
         if (!signature.equals(itemDisplaySignatures.get(uuid))) {
@@ -162,6 +175,7 @@ public final class Paper2111NameplateRenderer {
             }
             display.setItemStack(new ItemStack(material));
             itemDisplaySignatures.put(uuid, signature);
+            applyItemDisplayTransform(display, settings.mode());
         }
 
         float playerYaw = player.getYaw();
@@ -176,10 +190,38 @@ public final class Paper2111NameplateRenderer {
             display.setRotation(playerYaw, 0.0f);
         }
 
+        long nowNanos = System.nanoTime();
+        String effect = itemTag.effect().id().toLowerCase(java.util.Locale.ROOT);
+        boolean blink = "blink".equals(effect);
+        boolean highlight = "neon".equals(effect);
+        boolean wave = "wave".equals(effect);
+        display.setInvisible(blink && ((nowNanos / 350_000_000L) % 2L == 1L));
+        display.setGlowing(highlight);
+
+        double waveOffset = wave
+                ? Math.sin(nowNanos / 250_000_000.0) * 0.07
+                : 0.0;
         Location location = player.getLocation().clone();
         double yaw = Math.toRadians(playerYaw);
-        location.add(-Math.cos(yaw) * 0.42, 2.45, -Math.sin(yaw) * 0.42);
+        location.add(-Math.cos(yaw) * ITEM_NAMEPLATE_LEFT_OFFSET, ITEM_NAMEPLATE_Y + waveOffset, -Math.sin(yaw) * ITEM_NAMEPLATE_LEFT_OFFSET);
         display.teleport(location);
+    }
+
+    private static void applyItemDisplayTransform(
+            ItemDisplay display,
+            TagItemSettings.Mode mode
+    ) {
+        display.setTransformation(new Transformation(
+                new Vector3f(),
+                new Quaternionf(),
+                new Vector3f(ITEM_NAMEPLATE_SCALE, ITEM_NAMEPLATE_SCALE, ITEM_NAMEPLATE_SCALE),
+                new Quaternionf()
+        ));
+        display.setBillboard(
+                mode == TagItemSettings.Mode.ROTATE
+                        ? org.bukkit.entity.Display.Billboard.FIXED
+                        : org.bukkit.entity.Display.Billboard.CENTER
+        );
     }
 
     private void clearItemDisplay(UUID uuid) {
