@@ -32,8 +32,10 @@ class DefaultTagServiceTest {
         UUID player = UUID.randomUUID();
 
         service.create(tag("rank", "Rank", 0, true));
-        service.create(tagWithMetadata("iron", "Iron", Map.of("item", "minecraft:iron_ingot")));
-        service.create(tagWithMetadata("diamond", "Diamond", Map.of("item", "minecraft:diamond")));
+        service.create(new Tag(new TagId("iron"), "Iron", new TagColor.Preset("red"), TagStyle.plain(),
+                TagEffect.none(), 0, true, true, Map.of("item", "minecraft:iron_ingot")));
+        service.create(new Tag(new TagId("diamond"), "Diamond", new TagColor.Preset("red"), TagStyle.plain(),
+                TagEffect.none(), 0, true, true, Map.of("item", "minecraft:diamond")));
 
         service.assign(player, new TagId("rank"));
         service.assign(player, new TagId("iron"));
