@@ -1,5 +1,6 @@
 package com.ultraop.nametag.common;
 
+import com.ultraop.nametag.core.model.PlayerAssignment;
 import com.ultraop.nametag.core.model.Tag;
 import com.ultraop.nametag.api.TagResolutionContext;
 import com.ultraop.nametag.core.model.TagColor;
