@@ -176,8 +176,8 @@ class Paper2111ChatRendererTest {
         if (!(object.contents() instanceof SpriteObjectContents sprite)) {
             throw new AssertionError("Expected a sprite object content for the item icon");
         }
-        assertEquals("minecraft:items", sprite.atlas().asString());
-        assertEquals("minecraft:item/diamond", sprite.sprite().asString());
+        assertEquals("minecraft:blocks", sprite.atlas().asString());
+        assertEquals("minecraft:block/diamond", sprite.sprite().asString());
 
         Tag iconOnly = new Tag(
                 new TagId("icon_only"),

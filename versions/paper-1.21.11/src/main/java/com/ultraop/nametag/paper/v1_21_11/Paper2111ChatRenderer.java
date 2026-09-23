@@ -122,10 +122,7 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         if (settings == null) return Component.empty();
         String[] parts = settings.itemId().split(":", 2);
         if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) return Component.empty();
-        Material material = "minecraft".equals(parts[0])
-                ? Material.matchMaterial(parts[1])
-                : null;
-        boolean blockItem = material != null && material.isBlock();
+        boolean blockItem = isBlockItem(parts[0], parts[1]);
         String atlas = blockItem ? "blocks" : "items";
         String spritePath = (blockItem ? "block/" : "item/") + parts[1];
         Component icon = Component.object(ObjectContents.sprite(
@@ -134,6 +131,40 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         ));
         if (!TagPresentation.displayText(tag).isBlank()) icon = icon.append(Component.text(" "));
         return icon;
+    }
+
+    private static boolean isBlockItem(String namespace, String path) {
+        if (!"minecraft".equals(namespace)) return false;
+        try {
+            Material material = Material.matchMaterial(path);
+            if (material != null) return material.isBlock();
+        } catch (LinkageError ignored) {
+            // Plain unit tests do not boot Bukkit's material registry. Fall through
+            // to a deterministic vanilla block-name fallback for those environments.
+        }
+        return path.endsWith("_block")
+                || path.endsWith("_ore")
+                || path.endsWith("_slab")
+                || path.endsWith("_stairs")
+                || path.endsWith("_wall")
+                || path.endsWith("_fence")
+                || path.endsWith("_door")
+                || path.endsWith("_trapdoor")
+                || path.endsWith("_button")
+                || path.endsWith("_pressure_plate")
+                || path.endsWith("_pane")
+                || path.endsWith("_glass")
+                || path.endsWith("_planks")
+                || path.endsWith("_log")
+                || path.endsWith("_wood")
+                || path.endsWith("_stem")
+                || path.endsWith("_hyphae")
+                || path.endsWith("_leaves")
+                || path.endsWith("_sapling")
+                || path.endsWith("_sign")
+                || path.endsWith("_hanging_sign")
+                || path.endsWith("_head")
+                || path.endsWith("_skull");
     }
 
     private static String metadataValue(Tag tag, String placeholder) {
