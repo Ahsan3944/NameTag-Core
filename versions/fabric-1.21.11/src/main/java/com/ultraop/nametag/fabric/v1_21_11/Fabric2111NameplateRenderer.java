@@ -20,12 +20,14 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.AffineTransformation;
 import org.joml.Vector3f;
 import com.ultraop.nametag.fabric.v1_21_11.mixin.DisplayEntityAccessor;
+import com.ultraop.nametag.fabric.v1_21_11.mixin.ItemDisplayEntityAccessor;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -132,7 +134,6 @@ public final class Fabric2111NameplateRenderer {
     private static final float ITEM_NAMEPLATE_SCALE = 0.30f;
     private static final float ITEM_NAMEPLATE_X = -0.42f;
     private static final float ITEM_NAMEPLATE_Y = 2.25f;
-    private static final byte ITEM_DISPLAY_GUI_MODE = 6;
 
     private void updateItemDisplay(ServerPlayerEntity player, List<Tag> tags) {
         Tag itemTag = null;
@@ -217,13 +218,11 @@ public final class Fabric2111NameplateRenderer {
             float waveOffset
     ) {
         DisplayEntityAccessor accessor = (DisplayEntityAccessor) display;
+        ItemDisplayEntityAccessor itemAccessor = (ItemDisplayEntityAccessor) display;
 
-        // ModelTransformationMode.GUI (index 6) uses the item's icon/GUI model
-        // instead of the full world/fixed 3D presentation.
-        display.getDataTracker().set(
-                DisplayEntityAccessor.nametagCore$getItemDisplayData(),
-                ITEM_DISPLAY_GUI_MODE
-        );
+        // Use the vanilla GUI item transform so the display uses the item's
+        // icon-style model instead of the full world/fixed 3D presentation.
+        itemAccessor.nametagCore$setItemDisplayContext(ItemDisplayContext.GUI);
 
         accessor.nametagCore$setTransformation(new AffineTransformation(
                 new Vector3f(ITEM_NAMEPLATE_X, ITEM_NAMEPLATE_Y + waveOffset, 0.0f),
