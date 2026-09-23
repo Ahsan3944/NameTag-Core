@@ -19,7 +19,6 @@ import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
@@ -50,10 +49,7 @@ public final class Fabric2111NameplateRenderer {
     private final Map<UUID, String> playerTeams = new HashMap<>();
     private final Map<String, List<Tag>> staticVisualTags = new HashMap<>();
     private final Map<String, AnimationState> animations = new HashMap<>();
-    private final Map<UUID, DisplayEntity.ItemDisplayEntity> itemDisplays = new HashMap<>();
     private final Map<UUID, String> itemDisplaySignatures = new HashMap<>();
-    private final Map<UUID, Float> itemRotations = new HashMap<>();
-    private final Set<UUID> spawnedItemDisplays = new HashSet<>();
 
     public Fabric2111NameplateRenderer(TagService tagService) {
         this.tagService = tagService;
@@ -65,8 +61,7 @@ public final class Fabric2111NameplateRenderer {
         for (Team team : new HashSet<>(teams.values())) {
             if (ownedTeamNames.contains(team.getName())) scoreboard.removeTeam(team);
         }
-        for (DisplayEntity.ItemDisplayEntity display : new HashSet<>(itemDisplays.values())) display.discard();
-        teams.clear(); ownedTeamNames.clear(); playerTeams.clear(); staticVisualTags.clear(); animations.clear(); itemDisplays.clear(); itemDisplaySignatures.clear(); itemRotations.clear(); spawnedItemDisplays.clear();
+        teams.clear(); ownedTeamNames.clear(); playerTeams.clear(); staticVisualTags.clear(); animations.clear(); itemDisplaySignatures.clear();
     }
 
     public void refreshPlayer(ServerPlayerEntity player) {
@@ -88,13 +83,7 @@ public final class Fabric2111NameplateRenderer {
         }
         playerTeams.entrySet().removeIf(entry -> server.getPlayerManager().getPlayer(entry.getKey()) == null);
         animations.entrySet().removeIf(entry -> !activeTeamNames.contains(entry.getKey()));
-        itemDisplays.entrySet().removeIf(entry -> {
-            if (server.getPlayerManager().getPlayer(entry.getKey()) != null) return false;
-            entry.getValue().discard();
-            itemDisplaySignatures.remove(entry.getKey());
-            itemRotations.remove(entry.getKey());
-            return true;
-        });
+;
     }
 
     private void renderPlayer(MinecraftServer server, ServerPlayerEntity player, long nowNanos) {
@@ -110,7 +99,8 @@ public final class Fabric2111NameplateRenderer {
         String oldTeamName = playerTeams.get(player.getUuid());
         if (tags.isEmpty()) {
             removePlayer(scoreboard, player, oldTeamName);
-            clearItemDisplay(player.getUuid());
+            sendItemNameplate(player, null);
+            itemDisplaySignatures.remove(player.getUuid());
             return;
         }
 
