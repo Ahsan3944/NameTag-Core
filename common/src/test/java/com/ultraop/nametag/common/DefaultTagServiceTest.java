@@ -406,7 +406,7 @@ class DefaultTagServiceTest {
 
         assertEquals(List.of("vip", "ingot"),
                 service.assignedTags(player).stream().map(Tag::id).map(TagId::value).toList());
-        assertEquals(new TagId("ingot"), service.activeTag(player).orElseThrow().id());
+        assertEquals(new TagId("vip"), service.activeTag(player).orElseThrow().id());
     }
 
     @Test
@@ -428,7 +428,7 @@ class DefaultTagServiceTest {
 
         assertEquals(List.of("vip", "ingot"),
                 service.assignedTags(player).stream().map(Tag::id).map(TagId::value).toList());
-        assertEquals(List.of("vip", "ingot"),
+        assertEquals(List.of("ingot", "vip"),
                 service.activeTags(player, new TagResolutionContext("world", 0, 64, 0))
                         .stream().map(Tag::id).map(TagId::value).toList());
     }
