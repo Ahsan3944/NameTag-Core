@@ -16,9 +16,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
-import net.minecraft.util.math.RotationAxis;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.entity.Entity;
 import net.minecraft.client.texture.Sprite;
@@ -144,13 +142,9 @@ public final class NameTagFabricClient {
         int color = 0xFFFFFFFF;
         int overlay = 0;
 
-        consumer.vertex(entry, x0, y1, 0.0f)
-                .color(color).texture(minU, maxV).overlay(overlay).light(light).normal(0.0f, 0.0f, 1.0f).next();
-        consumer.vertex(entry, x1, y1, 0.0f)
-                .color(color).texture(maxU, maxV).overlay(overlay).light(light).normal(0.0f, 0.0f, 1.0f).next();
-        consumer.vertex(entry, x1, y0, 0.0f)
-                .color(color).texture(maxU, minV).overlay(overlay).light(light).normal(0.0f, 0.0f, 1.0f).next();
-        consumer.vertex(entry, x0, y0, 0.0f)
-                .color(color).texture(minU, minV).overlay(overlay).light(light).normal(0.0f, 0.0f, 1.0f).next();
+        consumer.vertex(entry, x0, y1, 0.0f, color, minU, maxV, overlay, light, 0.0f, 0.0f, 1.0f);
+        consumer.vertex(entry, x1, y1, 0.0f, color, maxU, maxV, overlay, light, 0.0f, 0.0f, 1.0f);
+        consumer.vertex(entry, x1, y0, 0.0f, color, maxU, minV, overlay, light, 0.0f, 0.0f, 1.0f);
+        consumer.vertex(entry, x0, y0, 0.0f, color, minU, minV, overlay, light, 0.0f, 0.0f, 1.0f);
     }
 }
