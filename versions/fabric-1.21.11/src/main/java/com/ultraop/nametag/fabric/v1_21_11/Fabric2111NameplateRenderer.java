@@ -185,30 +185,10 @@ public final class Fabric2111NameplateRenderer {
             ServerPlayerEntity player,
             List<Tag> tags
     ) {
-        TagItemSettings settings = null;
-        Tag itemTag = null;
-        for (Tag tag : tags) {
-            TagItemSettings candidate = TagItemSettings.from(tag);
-            if (candidate != null) {
-                settings = candidate;
-                itemTag = tag;
-                break;
-            }
-        }
-
-        if (settings == null || itemTag == null) return null;
-
-        // Item tags are presentation-only icons. The tag's text/effect system
-        // remains owned by the normal scoreboard nameplate; the icon itself
-        // must never spin, wave, interpolate, or behave like a world item.
-        return new NameTagItemPayload(
-                player.getId(),
-                settings.itemId(),
-                true,
-                false,
-                1,
-                (byte) 0
-        );
+        // Item icons are now native Text objects inside the scoreboard
+        // prefix. Do not send the legacy client-side quad payload, otherwise
+        // the icon would be rendered twice.
+        return null;
     }
 
     private void removePlayer(ServerScoreboard scoreboard, ServerPlayerEntity player, String teamName) {
