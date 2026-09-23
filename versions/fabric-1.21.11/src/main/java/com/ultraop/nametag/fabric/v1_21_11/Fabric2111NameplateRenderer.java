@@ -195,19 +195,16 @@ public final class Fabric2111NameplateRenderer {
 
         if (settings == null || itemTag == null) return null;
 
-        byte effects = 0;
-        String effect = itemTag.effect().id().toLowerCase(java.util.Locale.ROOT);
-        if ("blink".equals(effect)) effects |= NameTagItemPayload.EFFECT_BLINK;
-        if ("neon".equals(effect)) effects |= NameTagItemPayload.EFFECT_NEON;
-        if ("wave".equals(effect)) effects |= NameTagItemPayload.EFFECT_WAVE;
-
+        // Item tags are presentation-only icons. The tag's text/effect system
+        // remains owned by the normal scoreboard nameplate; the icon itself
+        // must never spin, wave, interpolate, or behave like a world item.
         return new NameTagItemPayload(
                 player.getId(),
                 settings.itemId(),
                 true,
-                settings.mode() == TagItemSettings.Mode.ROTATE,
-                settings.speed(),
-                effects
+                false,
+                1,
+                (byte) 0
         );
     }
 
