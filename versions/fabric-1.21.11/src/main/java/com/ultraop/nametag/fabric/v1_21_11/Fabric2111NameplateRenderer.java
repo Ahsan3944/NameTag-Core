@@ -18,7 +18,7 @@ import net.minecraft.scoreboard.ServerScoreboard;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import com.ultraop.nametag.fabric.network.NameTagItemPayload;
+import com.ultraop.nametag.fabric.v1_21_11.network.NameTagItemPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
