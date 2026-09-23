@@ -1264,19 +1264,61 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 .sorted(Comparator.comparing(tag -> tag.id().value()))
                 .toList();
         source.sendMessage(messages.format("message.list_header", Map.of("count", Integer.toString(tags.size()))));
-        tags.forEach(tag -> source.sendMessage(messages.format(
-                "message.list_entry",
-                Map.of(
-                        "tag", tag.id().value(),
-                        "displayName", tag.displayName(),
-                        "color", describeColor(tag.color()),
-                        "style", describeStyle(tag.style()),
-                        "enabled", Boolean.toString(tag.enabled()),
-                        "chat", Boolean.toString(tag.chatEnabled()),
-                        "priority", Integer.toString(tag.priority()),
-                        "effect", tag.effect().id()
-                )
-        )));
+        tags.forEach(tag -> {
+            String displayName = tag.displayName().isBlank() ? "(icon-only)" : tag.displayName();
+            source.sendMessage(messages.format(
+                    "message.list_entry",
+                    Map.of(
+                            "tag", tag.id().value(),
+                            "displayName", displayName,
+                            "color", describeColor(tag.color()),
+                            "style", describeStyle(tag.style()),
+                            "enabled", Boolean.toString(tag.enabled()),
+                            "chat", Boolean.toString(tag.chatEnabled()),
+                            "priority", Integer.toString(tag.priority()),
+                            "effect", tag.effect().id()
+                    )
+            ));
+            source.sendStyledMessage("  Preview: " + buildListPreview(tag) + "§r");
+        });
+    }
+
+    private static String buildListPreview(Tag tag) {
+        String text = tag.displayName().isBlank() ? "[icon]" : tag.displayName();
+        StringBuilder preview = new StringBuilder();
+        preview.append(colorCode(tag.color()));
+        TagStyle style = tag.style();
+        if (style.bold()) preview.append('§').append('l');
+        if (style.italic()) preview.append('§').append('o');
+        if (style.underlined()) preview.append('§').append('n');
+        if (style.strikethrough()) preview.append('§').append('m');
+        if (style.obfuscated()) preview.append('§').append('k');
+        return preview.append(text).toString();
+    }
+
+    private static String colorCode(TagColor color) {
+        if (color instanceof TagColor.Preset preset) {
+            return switch (preset.name().toLowerCase(Locale.ROOT)) {
+                case "black" -> "§0";
+                case "dark_blue" -> "§1";
+                case "dark_green" -> "§2";
+                case "dark_aqua" -> "§3";
+                case "dark_red" -> "§4";
+                case "dark_purple" -> "§5";
+                case "gold" -> "§6";
+                case "gray" -> "§7";
+                case "dark_gray" -> "§8";
+                case "blue" -> "§9";
+                case "green" -> "§a";
+                case "aqua" -> "§b";
+                case "red" -> "§c";
+                case "light_purple" -> "§d";
+                case "yellow" -> "§e";
+                case "white" -> "§f";
+                default -> "§f";
+            };
+        }
+        return "§f";
     }
 
     private static String describeColor(TagColor color) {
