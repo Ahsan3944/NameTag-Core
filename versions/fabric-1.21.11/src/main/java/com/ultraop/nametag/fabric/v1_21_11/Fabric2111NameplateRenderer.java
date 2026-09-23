@@ -111,9 +111,16 @@ public final class Fabric2111NameplateRenderer {
         }
 
         String teamName = teamName(tags);
-        Team team = teams.computeIfAbsent(teamName, ignored -> createTeam(scoreboard, teamName));
+        Team team = teams.get(teamName);
+        if (team == null || scoreboard.getTeam(team.getName()) != team) {
+            teams.remove(teamName);
+            team = createTeam(scoreboard, teamName);
+            teams.put(teamName, team);
+        }
         if (oldTeamName != null && !oldTeamName.equals(teamName)) removePlayer(scoreboard, player, oldTeamName);
-        scoreboard.addScoreHolderToTeam(player.getName().getString(), team);
+        if (scoreboard.getScoreHolderTeam(player.getName().getString()) != team) {
+            scoreboard.addScoreHolderToTeam(player.getName().getString(), team);
+        }
         playerTeams.put(player.getUuid(), teamName);
         updateTeamVisual(team, tags, nowNanos);
         updateItemDisplay(player, tags);
@@ -207,10 +214,11 @@ public final class Fabric2111NameplateRenderer {
         boolean animated = tags.stream().anyMatch(tag -> tag.effect().isGlitch() || TagEffect.isAnimated(tag.effect().id()));
         if (!animated) {
             List<Tag> previous = staticVisualTags.get(team.getName());
-            if (!tags.equals(previous)) {
-                team.setPrefix(buildStaticPrefix(tags));
-                staticVisualTags.put(team.getName(), List.copyOf(tags));
+            MutableText expected = buildStaticPrefix(tags);
+            if (!tags.equals(previous) || !expected.equals(team.getPrefix())) {
+                team.setPrefix(expected);
             }
+            staticVisualTags.put(team.getName(), List.copyOf(tags));
             animations.remove(team.getName());
             return;
         }
@@ -222,7 +230,12 @@ public final class Fabric2111NameplateRenderer {
                         : AnimatedEffectSettings.from(tag.effect()).speedMs())
                 .min().orElse(100L);
         AnimationState state = animations.computeIfAbsent(team.getName(), ignored -> new AnimationState(nowNanos, 0L));
-        if (nowNanos - state.lastFrameNanos < speedMs * 1_000_000L) return;
+        if (nowNanos - state.lastFrameNanos < speedMs * 1_000_000L) {
+            if (state.lastPrefix != null && !state.lastPrefix.equals(team.getPrefix())) {
+                team.setPrefix(state.lastPrefix);
+            }
+            return;
+        }
 
         MutableText prefix = Text.empty();
         for (Tag tag : tags) {
@@ -241,6 +254,7 @@ public final class Fabric2111NameplateRenderer {
             }
         }
         team.setPrefix(prefix);
+        state.lastPrefix = prefix;
         state.lastFrameNanos = nowNanos; state.frameIndex++;
     }
 
@@ -333,6 +347,7 @@ public final class Fabric2111NameplateRenderer {
     private static final class AnimationState {
         private long lastFrameNanos;
         private long frameIndex;
+        private MutableText lastPrefix;
         private AnimationState(long lastFrameNanos, long frameIndex) {
             this.lastFrameNanos = lastFrameNanos - 1_000_000_000L;
             this.frameIndex = frameIndex;
