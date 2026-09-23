@@ -89,7 +89,8 @@ public final class Fabric2111ChatRenderer {
         // another copy into chat, and remove legacy square-bracket wrappers so
         // old configuration files cannot leave a stray [] in chat.
         return format.replace("{item}", "").replace("{tag}", "").replace("{tags}", "")
-                .replace("[", "").replace("]", "");
+                .replaceAll("\\[\\s*\\]\\s*", "")
+                .stripLeading();
     }
 
     static Text renderContentFormat(String format, List<Tag> tags, Text message) {

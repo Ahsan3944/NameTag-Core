@@ -67,7 +67,8 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         // another copy into chat, and remove legacy square-bracket wrappers so
         // old configuration files cannot leave a stray [] in chat.
         return format.replace("{item}", "").replace("{tag}", "").replace("{tags}", "")
-                .replace("[", "").replace("]", "");
+                .replaceAll("\\[\\s*\\]\\s*", "")
+                .stripLeading();
     }
 
     static Component renderFormat(
