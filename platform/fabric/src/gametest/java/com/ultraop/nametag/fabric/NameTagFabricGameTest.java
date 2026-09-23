@@ -118,6 +118,57 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
     }
 
     @GameTest
+    public void nameplatePrefixRecoversIfScoreboardStateIsChanged(TestContext context) {
+        ServerWorld world = context.getWorld();
+        var server = world.getServer();
+        DefaultTagService service = new DefaultTagService(
+                new InMemoryTagRepository(),
+                new InMemoryPlayerAssignmentRepository()
+        );
+        Tag tag = new Tag(
+                new TagId("owner"),
+                "OWNER",
+                new TagColor.Preset("gold"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of()
+        );
+        service.create(tag);
+
+        UUID playerUuid = UUID.randomUUID();
+        service.assign(playerUuid, tag.id());
+
+        Fabric2111NameplateRenderer renderer = new Fabric2111NameplateRenderer(service);
+        ServerPlayerEntity player = FakePlayer.get(
+                world,
+                new GameProfile(playerUuid, "UltraOP")
+        );
+
+        renderer.refreshPlayer(player);
+        var team = server.getScoreboard().getScoreHolderTeam(player.getName().getString());
+        if (team == null) {
+            renderer.stop(server);
+            context.throwGameTestException("Nameplate team was not created");
+            return;
+        }
+
+        team.setPrefix(net.minecraft.text.Text.empty());
+        renderer.refreshPlayer(player);
+
+        if (!team.getPrefix().getString().contains("OWNER")) {
+            renderer.stop(server);
+            context.throwGameTestException("Nameplate prefix was not restored after scoreboard state changed");
+            return;
+        }
+
+        renderer.stop(server);
+        context.complete();
+    }
+
+    @GameTest
     public void foreignScoreboardTeamIsNotHijacked(TestContext context) {
         ServerWorld world = context.getWorld();
         var server = world.getServer();
