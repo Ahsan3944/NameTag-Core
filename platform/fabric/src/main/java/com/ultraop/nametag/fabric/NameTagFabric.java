@@ -91,8 +91,8 @@ public final class NameTagFabric {
             var createItem = CommandManager.literal("item");
             var createItemValue = CommandManager.argument("item", ItemStackArgumentType.itemStack(registryAccess))
                     .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
-            createItemValue.then(createSpinNode(
-                    service, permissions, messages, configuration, false));
+            createItemValue.executes(context -> executeCreateItemWizard(
+                    context, service, permissions, messages, configuration, false, false, false));
             createItem.then(createItemValue);
 
             var createNameItem = CommandManager.literal("name+item");
@@ -126,21 +126,9 @@ public final class NameTagFabric {
             var editItem = CommandManager.literal("item");
             var editItemValue = CommandManager.argument("item", ItemStackArgumentType.itemStack(registryAccess))
                     .suggests((context, builder) -> suggestEditItems(context, builder, permissions));
-            var editSpin = CommandManager.literal("spin");
-            var editSpinValue = CommandManager.argument("spin", BoolArgumentType.bool())
-                    .suggests((context, builder) ->
-                            CommandSource.suggestMatching(List.of("true", "false"), builder))
-                    .executes(context -> executeEditSpin(
-                            context, service, permissions, messages, configuration));
-            var editSpinSpeed = CommandManager.argument("speed", IntegerArgumentType.integer(1, 10))
-                    .suggests((context, builder) ->
-                            CommandSource.suggestMatching(
-                                    List.of("1","2","3","4","5","6","7","8","9","10"), builder))
-                    .executes(context -> executeEditSpin(
-                            context, service, permissions, messages, configuration));
-            editSpinValue.then(editSpinSpeed);
-            editSpin.then(editSpinValue);
-            editItemValue.then(editSpin);
+            editItemValue.executes(context -> executeEditOption(
+                    context, service, permissions, messages, configuration,
+                    "item", getItemId(context)));
             editItemValue.then(CommandManager.literal("clear")
                     .executes(context -> executeEditOption(context, service, permissions, messages, configuration,
                             "item", "clear")));
@@ -810,29 +798,6 @@ public final class NameTagFabric {
 
         parent.then(normal);
         parent.then(glitch);
-    }
-
-    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<ServerCommandSource> createSpinNode(
-            TagService service, PermissionService permissions, DefaultMessageService messages,
-            DefaultConfigurationService configuration, boolean nameAndItem) {
-        var spin = CommandManager.literal("spin");
-
-        var spinTrue = CommandManager.literal("true");
-        var speed = CommandManager.argument("speed", IntegerArgumentType.integer(1, 10))
-                .suggests((context, builder) ->
-                        CommandSource.suggestMatching(
-                                List.of("1","2","3","4","5","6","7","8","9","10"), builder))
-                .executes(context -> executeCreateItemWizard(
-                        context, service, permissions, messages, configuration, nameAndItem, true, true));
-        spinTrue.then(speed);
-
-        var spinFalse = CommandManager.literal("false")
-                .executes(context -> executeCreateItemWizard(
-                        context, service, permissions, messages, configuration, nameAndItem, false, false));
-
-        spin.then(spinTrue);
-        spin.then(spinFalse);
-        return spin;
     }
 
     private static int executeCreateItemWizard(
