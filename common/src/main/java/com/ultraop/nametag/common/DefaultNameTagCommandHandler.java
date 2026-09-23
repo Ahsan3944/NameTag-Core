@@ -155,7 +155,8 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
                 case "edit" -> edit(context.source(), args);
                 case "delete" -> delete(context.source(), args);
                 case "set" -> assign(context.source(), args);
-                case "remove", "clear" -> clear(context.source(), args);
+                case "remove" -> remove(context.source(), args);
+                case "clear" -> clear(context.source(), args);
                 case "glitch" -> glitch(context.source(), args);
                 case "effect" -> effect(context.source(), args);
                 case "item" -> item(context.source(), args);
@@ -240,6 +241,10 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
 
         if (args.length == 2 && List.of("set", "remove", "clear").contains(subcommand)) {
             return playerNames(args[1]);
+        }
+
+        if (args.length == 3 && "remove".equals(subcommand)) {
+            return assignedTagNames(args[1], args[2]);
         }
 
         if (args.length == 3 && "set".equals(subcommand)) {
@@ -483,6 +488,17 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             }
         }
         return List.of();
+    }
+
+    private List<String> assignedTagNames(String playerName, String prefix) {
+        return playerResolver.findOnline(playerName)
+                .map(player -> tagService.assignedTags(player.uuid()).stream()
+                        .map(tag -> tag.id().value())
+                        .filter(id -> id.toLowerCase(Locale.ROOT).startsWith(
+                                prefix == null ? "" : prefix.toLowerCase(Locale.ROOT)))
+                        .sorted()
+                        .toList())
+                .orElse(List.of());
     }
 
     private static List<String> prefix(List<String> values, String prefix) {
@@ -956,9 +972,34 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
         return Duration.ofSeconds(seconds);
     }
 
+    private void remove(CommandSource source, String[] args) {
+        if (args.length != 3) {
+            throw new IllegalArgumentException(messages.message("error.usage.remove"));
+        }
+
+        OnlinePlayer player = playerResolver.findOnline(args[1]).orElseThrow(() ->
+                new IllegalArgumentException(
+                        messages.format("error.player.offline", Map.of("player", args[1]))
+                )
+        );
+
+        TagId id = new TagId(args[2].toLowerCase(Locale.ROOT));
+        if (tagService.assignedTags(player.uuid()).stream().noneMatch(tag -> tag.id().equals(id))) {
+            throw new IllegalArgumentException(
+                    messages.format("error.tag.not_assigned", Map.of("tag", id.value(), "player", player.name()))
+            );
+        }
+
+        tagService.remove(player.uuid(), id);
+        source.sendMessage(messages.format(
+                "message.removed",
+                Map.of("tag", id.value(), "player", player.name())
+        ));
+    }
+
     private void clear(CommandSource source, String[] args) {
         if (args.length != 2) {
-            throw new IllegalArgumentException(messages.message("error.usage.remove"));
+            throw new IllegalArgumentException(messages.message("error.usage.clear"));
         }
 
         OnlinePlayer player = playerResolver.findOnline(args[1]).orElseThrow(() ->
