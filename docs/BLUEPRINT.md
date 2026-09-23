@@ -97,7 +97,7 @@ The command tree is grouped for TAB completion: group -> sub-group/option -> val
 /nametag player set <player> <tag> [duration]
 
 `set` is the single direct assignment and activation command.
-/nametag player remove <player>
+/nametag player remove <player> <tag>
 /nametag player clear <player>
 /nametag display glitch <tag> <white|colorful>
 /nametag display effect <tag> <none|rainbow|pulse|wave>
