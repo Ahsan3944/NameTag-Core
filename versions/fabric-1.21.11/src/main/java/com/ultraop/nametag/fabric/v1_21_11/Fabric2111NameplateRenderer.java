@@ -251,7 +251,12 @@ public final class Fabric2111NameplateRenderer {
         }
 
         MutableText prefix = Text.empty();
+        boolean iconSlotReserved = false;
         for (Tag tag : tags) {
+            if (!iconSlotReserved && TagItemSettings.from(tag) != null) {
+                prefix.append(Text.literal("   "));
+                iconSlotReserved = true;
+            }
             if (tag.effect().isGlitch()) {
                 GlitchSettings settings = GlitchSettings.from(tag.effect());
                 prefix.append(buildGlitchPrefix(glitchEngine.render(TagPresentation.displayText(tag), settings, state.frameIndex, tag.id().value().hashCode()), tag.style()));
@@ -297,7 +302,14 @@ public final class Fabric2111NameplateRenderer {
 
     static MutableText buildStaticPrefix(List<Tag> tags) {
         MutableText result = Text.empty();
-        for (Tag tag : tags) result.append(buildSingleStaticPrefix(tag));
+        boolean iconSlotReserved = false;
+        for (Tag tag : tags) {
+            if (!iconSlotReserved && TagItemSettings.from(tag) != null) {
+                result.append(Text.literal("   "));
+                iconSlotReserved = true;
+            }
+            result.append(buildSingleStaticPrefix(tag));
+        }
         return result;
     }
 
