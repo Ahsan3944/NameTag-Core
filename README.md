@@ -120,7 +120,7 @@ Implemented commands:
 - `/nametag tag delete <tag>`
 - `/nametag player set <player> <tag> [duration]` — directly assigns and activates the tag.
 - `/nametag player give` has been removed to keep one unambiguous assignment command.
-- `/nametag player remove <player>`
+- `/nametag player remove <player> <tag>` — removes only the selected assigned tag.
 - `/nametag player clear <player>`
 - `/nametag display glitch <tag> <white|colorful>`
 - `/nametag display effect <tag> <none|rainbow|pulse|wave|neon|breath|blink|rgb>`
