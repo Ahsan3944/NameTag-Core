@@ -3,7 +3,8 @@
   "package": "com.ultraop.nametag.fabric.v1_21_11.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "DisplayEntityAccessor"
+    "DisplayEntityAccessor",
+    "ItemDisplayEntityAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
