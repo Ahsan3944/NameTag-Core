@@ -21,6 +21,8 @@ import net.minecraft.scoreboard.Team;
 import net.minecraft.entity.Entity;
 import net.minecraft.client.texture.Sprite;
 
+import org.joml.Vector3f;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -124,6 +126,26 @@ public final class NameTagFabricClient {
         matrices.pop();
     }
 
+    private static void emitVertex(
+            MatrixStack.Entry entry,
+            VertexConsumer consumer,
+            float x,
+            float y,
+            float u,
+            float v,
+            int color,
+            int overlay,
+            int light
+    ) {
+        Vector3f position = new Vector3f(x, y, 0.0f);
+        entry.getPositionMatrix().transformPosition(position);
+        consumer.vertex(
+                position.x(), position.y(), position.z(),
+                color, u, v, overlay, light,
+                0.0f, 0.0f, 1.0f
+        );
+    }
+
     private static void drawSprite(
             MatrixStack.Entry entry,
             VertexConsumer consumer,
@@ -142,9 +164,9 @@ public final class NameTagFabricClient {
         int color = 0xFFFFFFFF;
         int overlay = 0;
 
-        consumer.vertex(entry, x0, y1, 0.0f, color, minU, maxV, overlay, light, 0.0f, 0.0f, 1.0f);
-        consumer.vertex(entry, x1, y1, 0.0f, color, maxU, maxV, overlay, light, 0.0f, 0.0f, 1.0f);
-        consumer.vertex(entry, x1, y0, 0.0f, color, maxU, minV, overlay, light, 0.0f, 0.0f, 1.0f);
-        consumer.vertex(entry, x0, y0, 0.0f, color, minU, minV, overlay, light, 0.0f, 0.0f, 1.0f);
+        emitVertex(entry, consumer, x0, y1, minU, maxV, color, overlay, light);
+        emitVertex(entry, consumer, x1, y1, maxU, maxV, color, overlay, light);
+        emitVertex(entry, consumer, x1, y0, maxU, minV, color, overlay, light);
+        emitVertex(entry, consumer, x0, y0, minU, minV, color, overlay, light);
     }
 }
