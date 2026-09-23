@@ -130,8 +130,9 @@ public final class Fabric2111NameplateRenderer {
     }
 
     private static final float ITEM_NAMEPLATE_SCALE = 0.30f;
-    private static final double ITEM_NAMEPLATE_Y = 2.28;
-    private static final double ITEM_NAMEPLATE_LEFT_OFFSET = 0.34;
+    private static final float ITEM_NAMEPLATE_X = -0.42f;
+    private static final float ITEM_NAMEPLATE_Y = 2.25f;
+    private static final byte ITEM_DISPLAY_GUI_MODE = 6;
 
     private void updateItemDisplay(ServerPlayerEntity player, List<Tag> tags) {
         Tag itemTag = null;
@@ -159,7 +160,7 @@ public final class Fabric2111NameplateRenderer {
             itemDisplays.put(uuid, display);
             itemDisplaySignatures.remove(uuid);
             itemRotations.put(uuid, 0.0f);
-            applyItemDisplayTransform(display, settings.mode());
+            applyItemDisplayTransform(display, settings.mode(), 0.0f);
         }
 
         if (!signature.equals(itemDisplaySignatures.get(uuid))) {
@@ -175,7 +176,6 @@ public final class Fabric2111NameplateRenderer {
                 return;
             }
             itemDisplaySignatures.put(uuid, signature);
-            applyItemDisplayTransform(display, settings.mode());
         }
 
         float yaw = player.getYaw();
@@ -197,16 +197,15 @@ public final class Fabric2111NameplateRenderer {
         display.setInvisible(blink && ((nowNanos / 350_000_000L) % 2L == 1L));
         display.setGlowing(highlight);
 
-        double waveOffset = wave
-                ? Math.sin(nowNanos / 250_000_000.0) * 0.07
-                : 0.0;
-        double yawRadians = Math.toRadians(yaw);
-        double leftX = -Math.cos(yawRadians);
-        double leftZ = -Math.sin(yawRadians);
-        double x = player.getX() + leftX * ITEM_NAMEPLATE_LEFT_OFFSET;
-        double y = player.getY() + ITEM_NAMEPLATE_Y + waveOffset;
-        double z = player.getZ() + leftZ * ITEM_NAMEPLATE_LEFT_OFFSET;
-        display.setPosition(x, y, z);
+        float waveOffset = wave
+                ? (float) (Math.sin(nowNanos / 250_000_000.0) * 0.07)
+                : 0.0f;
+        applyItemDisplayTransform(display, settings.mode(), waveOffset);
+
+        // Keep the display anchored to the player origin. The nameplate-relative
+        // offset lives in the display transformation, not in a second world-space
+        // tracking offset. Interpolation is disabled so movement is immediate.
+        display.setPosition(player.getX(), player.getY(), player.getZ());
 
         if (!spawnedItemDisplays.contains(uuid) && !display.isRemoved()) {
             if (player.getEntityWorld().spawnEntity(display)) spawnedItemDisplays.add(uuid);
@@ -215,20 +214,27 @@ public final class Fabric2111NameplateRenderer {
 
     private static void applyItemDisplayTransform(
             DisplayEntity.ItemDisplayEntity display,
-            TagItemSettings.Mode mode
+            TagItemSettings.Mode mode,
+            float waveOffset
     ) {
         DisplayEntityAccessor accessor = (DisplayEntityAccessor) display;
+
+        // ModelTransformationMode.GUI (index 6) uses the item's icon/GUI model
+        // instead of the full world/fixed 3D presentation.
+        display.getDataTracker().set(
+                DisplayEntityAccessor.nametagCore$getItemDisplayData(),
+                ITEM_DISPLAY_GUI_MODE
+        );
+
         accessor.nametagCore$setTransformation(new AffineTransformation(
-                null,
+                new Vector3f(ITEM_NAMEPLATE_X, ITEM_NAMEPLATE_Y + waveOffset, 0.0f),
                 null,
                 new Vector3f(ITEM_NAMEPLATE_SCALE, ITEM_NAMEPLATE_SCALE, ITEM_NAMEPLATE_SCALE),
                 null
         ));
-        accessor.nametagCore$setBillboardMode(
-                mode == TagItemSettings.Mode.ROTATE
-                        ? DisplayEntity.BillboardMode.FIXED
-                        : DisplayEntity.BillboardMode.CENTER
-        );
+        accessor.nametagCore$setBillboardMode(DisplayEntity.BillboardMode.CENTER);
+        accessor.nametagCore$setInterpolationDuration(0);
+        accessor.nametagCore$setTeleportDuration(0);
     }
 
     private void clearItemDisplay(UUID uuid) {
