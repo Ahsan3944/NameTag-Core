@@ -25,7 +25,7 @@ public final class NameTagFabricClient {
     public static void register() {
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ITEMS.clear());
         ClientPlayNetworking.registerGlobalReceiver(
-                NameTagItemPayload.TYPE,
+                NameTagItemPayload.ID,
                 (payload, context) -> context.client().execute(() -> {
                     if (payload.active()) ITEMS.put(payload.entityId(), payload);
                     else ITEMS.remove(payload.entityId());
