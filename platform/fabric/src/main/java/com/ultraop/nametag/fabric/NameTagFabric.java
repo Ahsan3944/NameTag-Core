@@ -85,7 +85,7 @@ public final class NameTagFabric {
             createName.then(createNameValue);
 
             var createItem = CommandManager.literal("item");
-            var createItemValue = CommandManager.argument("item", StringArgumentType.word())
+            var createItemValue = CommandManager.argument("item", StringArgumentType.string())
                     .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
             createItemValue.then(createSpinNode(
                     service, permissions, messages, configuration, false));
@@ -120,7 +120,7 @@ public final class NameTagFabric {
                             "name", StringArgumentType.getString(context, "displayName"))));
 
             var editItem = CommandManager.literal("item");
-            var editItemValue = CommandManager.argument("item", StringArgumentType.word())
+            var editItemValue = CommandManager.argument("item", StringArgumentType.string())
                     .suggests((context, builder) -> suggestEditItems(context, builder, permissions));
             var editSpin = CommandManager.literal("spin");
             var editSpinValue = CommandManager.argument("spin", BoolArgumentType.bool())
@@ -234,9 +234,13 @@ public final class NameTagFabric {
             player.then(playerSet);
 
             var playerRemove = CommandManager.literal("remove");
-            playerRemove.then(CommandManager.argument("player", EntityArgumentType.player())
-                    .executes(context -> executeTargetClear(
-                            context, service, permissions, messages, configuration, "remove")));
+            var removePlayer = CommandManager.argument("player", EntityArgumentType.player());
+            removePlayer.then(CommandManager.argument("tag", StringArgumentType.word())
+                    .suggests((context, builder) -> suggestAssignedTags(
+                            context, builder, service))
+                    .executes(context -> executeTargetRemove(
+                            context, service, permissions, messages, configuration)));
+            playerRemove.then(removePlayer);
             player.then(playerRemove);
 
             var playerClear = CommandManager.literal("clear");
@@ -292,7 +296,7 @@ public final class NameTagFabric {
                     .suggests((context, builder) ->
                             suggestTags(context, builder, service, permissions, configuration, "item"));
             var itemSet = CommandManager.literal("set");
-            itemSet.then(CommandManager.argument("item", StringArgumentType.word())
+            itemSet.then(CommandManager.argument("item", StringArgumentType.string())
                     .suggests((context, builder) -> suggestItemValues(
                             context, builder, service, permissions, configuration))
                     .executes(context -> execute(context, service, permissions, messages, configuration,
@@ -956,6 +960,27 @@ public final class NameTagFabric {
         }
     }
 
+    private static int executeTargetRemove(
+            CommandContext<ServerCommandSource> context,
+            TagService service,
+            PermissionService permissions,
+            DefaultMessageService messages,
+            DefaultConfigurationService configuration
+    ) {
+        try {
+            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+            String tag = StringArgumentType.getString(context, "tag");
+            return execute(
+                    context,
+                    service, permissions, messages, configuration,
+                    new String[]{"remove", player.getName().getString(), tag}
+            );
+        } catch (CommandSyntaxException exception) {
+            context.getSource().sendError(Text.literal(exception.getMessage()));
+            return 0;
+        }
+    }
+
     private static int executeTargetClear(
             CommandContext<ServerCommandSource> context,
             TagService service,
@@ -977,6 +1002,23 @@ public final class NameTagFabric {
         } catch (CommandSyntaxException exception) {
             context.getSource().sendError(Text.literal(exception.getMessage()));
             return 0;
+        }
+    }
+
+    private static java.util.concurrent.CompletableFuture<Suggestions> suggestAssignedTags(
+            CommandContext<ServerCommandSource> context,
+            com.mojang.brigadier.suggestion.SuggestionsBuilder builder,
+            TagService service
+    ) {
+        try {
+            ServerPlayerEntity player = EntityArgumentType.getPlayer(context, "player");
+            List<String> values = service.assignedTags(player.getUuid()).stream()
+                    .map(tag -> tag.id().value())
+                    .sorted()
+                    .toList();
+            return CommandSource.suggestMatching(values, builder);
+        } catch (CommandSyntaxException exception) {
+            return CommandSource.suggestMatching(List.of(), builder);
         }
     }
 
