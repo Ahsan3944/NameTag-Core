@@ -27,6 +27,7 @@ public abstract class PlayerNameplateItemMixin {
 
         MinecraftClient client = MinecraftClient.getInstance();
         float textWidth = client.textRenderer.getWidth(state.displayName);
+        float prefixWidth = NameTagFabricClient.tagPrefixWidth(state);
 
         matrices.push();
         matrices.translate(
@@ -38,7 +39,9 @@ public abstract class PlayerNameplateItemMixin {
         matrices.multiply(rotation);
         matrices.scale(-0.025f, -0.025f, 0.025f);
 
-        NameTagFabricClient.renderItem(state, matrices, queue, state.light, textWidth);
+        NameTagFabricClient.renderItem(
+                state, matrices, queue, state.light, textWidth, prefixWidth
+        );
         matrices.pop();
     }
 }
