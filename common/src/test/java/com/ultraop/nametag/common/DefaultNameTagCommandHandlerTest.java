@@ -124,6 +124,45 @@ final class DefaultNameTagCommandHandlerTest {
     }
 
     @Test
+    void removeRemovesOnlyTheSelectedAssignedTag() {
+        InMemoryTagRepository tags = new InMemoryTagRepository();
+        InMemoryPlayerAssignmentRepository assignments = new InMemoryPlayerAssignmentRepository();
+        DefaultTagService service = new DefaultTagService(tags, assignments);
+        service.create(new Tag(
+                new TagId("owner"), "OWNER", new TagColor.Preset("gold"),
+                TagStyle.plain(), TagEffect.none(), 10, true, true, Map.of()
+        ));
+        service.create(new Tag(
+                new TagId("vip"), "VIP", new TagColor.Preset("blue"),
+                TagStyle.plain(), TagEffect.none(), 0, true, true, Map.of()
+        ));
+
+        UUID playerUuid = UUID.randomUUID();
+        RecordingSource source = new RecordingSource();
+        DefaultNameTagCommandHandler handler = new DefaultNameTagCommandHandler(
+                service,
+                new SinglePlayerResolver(new OnlinePlayer(playerUuid, "UltraOP")),
+                new DefaultMessageService()
+        );
+
+        handler.execute(new CommandContext(source, new String[]{"set", "UltraOP", "owner"}));
+        handler.execute(new CommandContext(source, new String[]{"set", "UltraOP", "vip"}));
+
+        assertEquals(List.of("owner", "vip"),
+                service.assignedTags(playerUuid).stream().map(tag -> tag.id().value()).toList());
+
+        assertEquals(List.of("owner", "vip"),
+                handler.suggest(new CommandContext(source, new String[]{"remove", "UltraOP", ""})));
+
+        handler.execute(new CommandContext(source, new String[]{"remove", "UltraOP", "owner"}));
+
+        assertEquals(List.of("vip"),
+                service.assignedTags(playerUuid).stream().map(tag -> tag.id().value()).toList());
+        assertEquals("vip", service.activeTag(playerUuid).orElseThrow().id().value());
+        assertEquals("Removed owner from UltraOP", source.lastMessage);
+    }
+
+    @Test
     void setAcceptsTemporaryDuration() {
         InMemoryTagRepository tags=new InMemoryTagRepository();
         InMemoryPlayerAssignmentRepository assignments=new InMemoryPlayerAssignmentRepository();
