@@ -47,12 +47,45 @@ public final class FabricCommandSource implements CommandSource {
                 .toList();
     }
 
+    private static final java.util.Set<String> COMMON_ITEM_FALLBACKS = java.util.Set.of(
+            "minecraft:stone",
+            "minecraft:cobblestone",
+            "minecraft:deepslate",
+            "minecraft:coal",
+            "minecraft:charcoal",
+            "minecraft:iron_ingot",
+            "minecraft:gold_ingot",
+            "minecraft:diamond",
+            "minecraft:emerald",
+            "minecraft:lapis_lazuli",
+            "minecraft:redstone",
+            "minecraft:quartz",
+            "minecraft:amethyst_shard",
+            "minecraft:copper_ingot",
+            "minecraft:netherite_ingot",
+            "minecraft:raw_iron",
+            "minecraft:raw_gold",
+            "minecraft:raw_copper",
+            "minecraft:iron_nugget",
+            "minecraft:gold_nugget"
+    );
+
     @Override
     public Collection<String> itemNames() {
-        return Registries.ITEM.getIds().stream()
+        java.util.Set<String> values = new java.util.TreeSet<>();
+        Registries.ITEM.getIds().stream()
                 .map(Object::toString)
-                .sorted()
-                .toList();
+                .forEach(values::add);
+
+        // Keep the common vanilla item choices visible even when a server-side
+        // registry/suggestion provider does not expose every vanilla entry to
+        // Brigadier. These are only fallbacks; they do not replace registry data.
+        COMMON_ITEM_FALLBACKS.forEach(id -> {
+            if (Registries.ITEM.containsId(net.minecraft.util.Identifier.of(id.split(":", 2)[0], id.split(":", 2)[1]))) {
+                values.add(id);
+            }
+        });
+        return java.util.List.copyOf(values);
     }
 
     @Override
