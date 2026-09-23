@@ -28,20 +28,20 @@ class DefaultTagServiceTest {
 
     @Test
     void assigningAnItemTagReplacesExistingItemTagButKeepsNormalTags() {
-        Tag normal = tag("rank", "Rank", Map.of());
-        Tag firstItem = tag("iron", "Iron", Map.of("item", "minecraft:iron_ingot"));
-        Tag secondItem = tag("diamond", "Diamond", Map.of("item", "minecraft:diamond"));
-        tags.save(normal);
-        tags.save(firstItem);
-        tags.save(secondItem);
+        DefaultTagService service = newService();
+        UUID player = UUID.randomUUID();
 
-        service.assign(playerId, normal.id());
-        service.assign(playerId, firstItem.id());
-        service.assign(playerId, secondItem.id());
+        service.create(tag("rank", "Rank", 0, true));
+        service.create(tagWithMetadata("iron", "Iron", Map.of("item", "minecraft:iron_ingot")));
+        service.create(tagWithMetadata("diamond", "Diamond", Map.of("item", "minecraft:diamond")));
 
-        List<Tag> assigned = service.assignedTags(playerId);
-        assertEquals(List.of(normal.id(), secondItem.id()), assigned.stream().map(Tag::id).toList());
-        assertFalse(assigned.stream().anyMatch(tag -> tag.id().equals(firstItem.id())));
+        service.assign(player, new TagId("rank"));
+        service.assign(player, new TagId("iron"));
+        service.assign(player, new TagId("diamond"));
+
+        List<Tag> assigned = service.assignedTags(player);
+        assertEquals(List.of(new TagId("rank"), new TagId("diamond")),
+                assigned.stream().map(Tag::id).toList());
     }
 
     @Test
