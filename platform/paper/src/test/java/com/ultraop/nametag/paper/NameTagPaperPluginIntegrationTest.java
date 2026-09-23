@@ -73,11 +73,13 @@ class NameTagPaperPluginIntegrationTest {
                 server.getConsoleSender(),
                 "nametag player set UltraOP vip"
         ));
+        server.getScheduler().performTicks(1);
 
         assertTrue(server.dispatchCommand(
                 server.getConsoleSender(),
                 "nametag player remove UltraOP owner"
         ));
+        server.getScheduler().performTicks(1);
 
         assertNotNull(server.getScoreboardManager()
                 .getMainScoreboard()
