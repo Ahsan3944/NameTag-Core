@@ -30,6 +30,7 @@ public final class NameTagFabricClient {
     private static final Map<Integer, NameTagItemPayload> ITEMS = new HashMap<>();
 
     private static final float ICON_SIZE = 9.0f;
+    private static final float ICON_GAP = 2.0f;
 
     private NameTagFabricClient() {}
 
