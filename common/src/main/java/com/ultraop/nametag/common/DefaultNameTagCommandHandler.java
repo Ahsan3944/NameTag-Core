@@ -950,6 +950,10 @@ public final class DefaultNameTagCommandHandler implements NameTagCommandHandler
             return;
         }
 
+        // Route every assignment through assign() so item-bearing tags use the
+        // same replacement rule as timed assignments. A direct setActive() call
+        // would otherwise leave previous item tags stored invisibly.
+        tagService.assign(player.uuid(), id);
         tagService.setActive(player.uuid(), id);
         source.sendMessage(messages.format("message.set_active", Map.of(
                 "tag", id.value(), "player", player.name()

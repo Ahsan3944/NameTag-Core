@@ -27,6 +27,24 @@ class DefaultTagServiceTest {
     Path tempDir;
 
     @Test
+    void assigningAnItemTagReplacesExistingItemTagButKeepsNormalTags() {
+        Tag normal = tag("rank", "Rank", Map.of());
+        Tag firstItem = tag("iron", "Iron", Map.of("item", "minecraft:iron_ingot"));
+        Tag secondItem = tag("diamond", "Diamond", Map.of("item", "minecraft:diamond"));
+        tags.save(normal);
+        tags.save(firstItem);
+        tags.save(secondItem);
+
+        service.assign(playerId, normal.id());
+        service.assign(playerId, firstItem.id());
+        service.assign(playerId, secondItem.id());
+
+        List<Tag> assigned = service.assignedTags(playerId);
+        assertEquals(List.of(normal.id(), secondItem.id()), assigned.stream().map(Tag::id).toList());
+        assertFalse(assigned.stream().anyMatch(tag -> tag.id().equals(firstItem.id())));
+    }
+
+    @Test
     void assignPreservesExistingActiveTag() {
         DefaultTagService service = newService();
         UUID player = UUID.randomUUID();
