@@ -20,14 +20,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.AffineTransformation;
 import org.joml.Vector3f;
-import com.ultraop.nametag.fabric.v1_21_11.mixin.DisplayEntityAccessor;
-import com.ultraop.nametag.fabric.v1_21_11.mixin.ItemDisplayEntityAccessor;
+import com.ultraop.nametag.fabric.network.NameTagItemPayload;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -131,13 +130,9 @@ public final class Fabric2111NameplateRenderer {
         updateItemDisplay(player, tags);
     }
 
-    private static final float ITEM_NAMEPLATE_SCALE = 0.30f;
-    private static final float ITEM_NAMEPLATE_X = -0.42f;
-    private static final float ITEM_NAMEPLATE_Y = 2.25f;
-
     private void updateItemDisplay(ServerPlayerEntity player, List<Tag> tags) {
-        Tag itemTag = null;
         TagItemSettings settings = null;
+        Tag itemTag = null;
         for (Tag tag : tags) {
             TagItemSettings candidate = TagItemSettings.from(tag);
             if (candidate != null) {
@@ -146,101 +141,49 @@ public final class Fabric2111NameplateRenderer {
                 break;
             }
         }
+
         if (settings == null || itemTag == null) {
-            clearItemDisplay(player.getUuid());
+            sendItemNameplate(player, null);
             return;
         }
 
+        String signature = settings.itemId()
+                + "|" + settings.mode().id()
+                + "|" + settings.speed()
+                + "|" + itemTag.effect().id();
+
         UUID uuid = player.getUuid();
-        String signature = settings.itemId() + "|" + settings.mode().id() + "|" + settings.speed();
-        DisplayEntity.ItemDisplayEntity display = itemDisplays.get(uuid);
-        if (display == null || display.isRemoved() || !display.getEntityWorld().equals(player.getEntityWorld())) {
-            if (display != null) display.discard();
-            display = new DisplayEntity.ItemDisplayEntity(EntityType.ITEM_DISPLAY, player.getEntityWorld());
-            display.setNoGravity(true);
-            itemDisplays.put(uuid, display);
-            itemDisplaySignatures.remove(uuid);
-            itemRotations.put(uuid, 0.0f);
-            applyItemDisplayTransform(display, 0.0f);
-        }
+        if (signature.equals(itemDisplaySignatures.get(uuid))) return;
 
-        if (!signature.equals(itemDisplaySignatures.get(uuid))) {
-            Identifier id = Identifier.tryParse(settings.itemId());
-            if (id == null || !Registries.ITEM.containsId(id)) {
-                clearItemDisplay(uuid);
-                return;
-            }
-            ItemStack stack = new ItemStack(Registries.ITEM.get(id));
-            var reference = display.getStackReference(0);
-            if (reference == null || !reference.set(stack)) {
-                clearItemDisplay(uuid);
-                return;
-            }
-            itemDisplaySignatures.put(uuid, signature);
-        }
-
-        float yaw = player.getYaw();
-        if (settings.mode() == TagItemSettings.Mode.ROTATE) {
-            float current = itemRotations.getOrDefault(uuid, 0.0f);
-            current += settings.speed() * 3.0f;
-            if (current >= 360.0f) current -= 360.0f;
-            itemRotations.put(uuid, current);
-            display.setYaw(current);
-        } else {
-            display.setYaw(yaw);
-        }
-
-        long nowNanos = System.nanoTime();
+        byte effects = 0;
         String effect = itemTag.effect().id().toLowerCase(java.util.Locale.ROOT);
-        boolean blink = "blink".equals(effect);
-        boolean highlight = "neon".equals(effect);
-        boolean wave = "wave".equals(effect);
-        display.setInvisible(blink && ((nowNanos / 350_000_000L) % 2L == 1L));
-        display.setGlowing(highlight);
+        if ("blink".equals(effect)) effects |= NameTagItemPayload.EFFECT_BLINK;
+        if ("neon".equals(effect)) effects |= NameTagItemPayload.EFFECT_NEON;
+        if ("wave".equals(effect)) effects |= NameTagItemPayload.EFFECT_WAVE;
 
-        float waveOffset = wave
-                ? (float) (Math.sin(nowNanos / 250_000_000.0) * 0.07)
-                : 0.0f;
-        applyItemDisplayTransform(display, waveOffset);
-
-        // Keep the display anchored to the player origin. The nameplate-relative
-        // offset lives in the display transformation, not in a second world-space
-        // tracking offset. Interpolation is disabled so movement is immediate.
-        display.setPosition(player.getX(), player.getY(), player.getZ());
-
-        if (!spawnedItemDisplays.contains(uuid) && !display.isRemoved()) {
-            if (player.getEntityWorld().spawnEntity(display)) spawnedItemDisplays.add(uuid);
-        }
-    }
-
-    private static void applyItemDisplayTransform(
-            DisplayEntity.ItemDisplayEntity display,
-            float waveOffset
-    ) {
-        DisplayEntityAccessor accessor = (DisplayEntityAccessor) display;
-        ItemDisplayEntityAccessor itemAccessor = (ItemDisplayEntityAccessor) display;
-
-        // Use the vanilla GUI item transform so the display uses the item's
-        // icon-style model instead of the full world/fixed 3D presentation.
-        itemAccessor.nametagCore$setItemDisplayContext(ItemDisplayContext.GUI);
-
-        accessor.nametagCore$setTransformation(new AffineTransformation(
-                new Vector3f(ITEM_NAMEPLATE_X, ITEM_NAMEPLATE_Y + waveOffset, 0.0f),
-                null,
-                new Vector3f(ITEM_NAMEPLATE_SCALE, ITEM_NAMEPLATE_SCALE, ITEM_NAMEPLATE_SCALE),
-                null
+        sendItemNameplate(player, new NameTagItemPayload(
+                player.getId(),
+                settings.itemId(),
+                true,
+                settings.mode() == TagItemSettings.Mode.ROTATE,
+                settings.speed(),
+                effects
         ));
-        accessor.nametagCore$setBillboardMode(DisplayEntity.BillboardMode.CENTER);
-        accessor.nametagCore$setInterpolationDuration(0);
-        accessor.nametagCore$setTeleportDuration(0);
+        itemDisplaySignatures.put(uuid, signature);
     }
 
-    private void clearItemDisplay(UUID uuid) {
-        DisplayEntity.ItemDisplayEntity display = itemDisplays.remove(uuid);
-        if (display != null) display.discard();
-        itemDisplaySignatures.remove(uuid);
-        itemRotations.remove(uuid);
-        spawnedItemDisplays.remove(uuid);
+    private void sendItemNameplate(
+            ServerPlayerEntity player,
+            NameTagItemPayload payload
+    ) {
+        if (!ServerPlayNetworking.canSend(player, NameTagItemPayload.TYPE)) return;
+        if (payload == null) {
+            ServerPlayNetworking.send(player, new NameTagItemPayload(
+                    player.getId(), "", false, false, 1, (byte) 0
+            ));
+        } else {
+            ServerPlayNetworking.send(player, payload);
+        }
     }
 
     private void removePlayer(ServerScoreboard scoreboard, ServerPlayerEntity player, String teamName) {
