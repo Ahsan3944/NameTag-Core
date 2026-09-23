@@ -30,7 +30,6 @@ public final class NameTagFabricClient {
     private static final Map<Integer, NameTagItemPayload> ITEMS = new HashMap<>();
 
     private static final float ICON_SIZE = 9.0f;
-    private static final float ICON_GAP = 2.0f;
 
     private NameTagFabricClient() {}
 
@@ -109,10 +108,10 @@ public final class NameTagFabricClient {
         // The icon occupies the same horizontal "tag" area as the team prefix.
         // For text+icon: [ICON] [TAG] Player
         // For icon-only: [ICON] Player
-        float tagStart = prefixWidth > 0.0f
-                ? -textWidth / 2.0f - prefixWidth
-                : -textWidth / 2.0f;
-        float x0 = tagStart - ICON_SIZE - ICON_GAP;
+        float labelLeft = -(textWidth + prefixWidth) / 2.0f;
+        float x0 = prefixWidth > 0.0f
+                ? labelLeft + 1.5f
+                : -textWidth / 2.0f - ICON_SIZE - ICON_GAP;
         float x1 = x0 + ICON_SIZE;
         float y0 = -ICON_SIZE + 1.0f;
         float y1 = y0 + ICON_SIZE;
