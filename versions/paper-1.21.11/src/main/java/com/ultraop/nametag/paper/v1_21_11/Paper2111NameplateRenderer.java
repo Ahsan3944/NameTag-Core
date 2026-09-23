@@ -115,8 +115,15 @@ public final class Paper2111NameplateRenderer {
 
         String teamName = teamName(tags);
         if (currentTeamName != null && !currentTeamName.equals(teamName)) removePlayerFromTeam(player, currentTeamName);
-        Team team = teams.computeIfAbsent(teamName, ignored -> createTeam(teamName));
-        if (!team.hasEntry(player.getName())) team.addEntry(player.getName());
+        Team team = teams.get(teamName);
+        if (team == null || scoreboard.getTeam(team.getName()) != team) {
+            teams.remove(teamName);
+            team = createTeam(teamName);
+            teams.put(teamName, team);
+        }
+        if (scoreboard.getEntryTeam(player.getName()) != team) {
+            team.addEntry(player.getName());
+        }
         playerTeams.put(player.getUniqueId(), teamName);
         updateTeamVisual(team, tags, now);
         updateItemDisplay(player, tags);
@@ -201,10 +208,11 @@ public final class Paper2111NameplateRenderer {
         boolean animated = tags.stream().anyMatch(tag -> tag.effect().isGlitch() || TagEffect.isAnimated(tag.effect().id()));
         if (!animated) {
             List<Tag> previous = staticVisualTags.get(team.getName());
-            if (!tags.equals(previous)) {
-                team.prefix(buildStaticPrefix(tags));
-                staticVisualTags.put(team.getName(), List.copyOf(tags));
+            Component expected = buildStaticPrefix(tags);
+            if (!tags.equals(previous) || !expected.equals(team.prefix())) {
+                team.prefix(expected);
             }
+            staticVisualTags.put(team.getName(), List.copyOf(tags));
             animations.remove(team.getName());
             return;
         }
@@ -216,7 +224,12 @@ public final class Paper2111NameplateRenderer {
                         : AnimatedEffectSettings.from(tag.effect()).speedMs())
                 .min().orElse(100L);
         AnimationState state = animations.computeIfAbsent(team.getName(), ignored -> new AnimationState(nowNanos, 0L));
-        if (nowNanos - state.lastFrameNanos < speedMs * 1_000_000L) return;
+        if (nowNanos - state.lastFrameNanos < speedMs * 1_000_000L) {
+            if (state.lastPrefix != null && !state.lastPrefix.equals(team.prefix())) {
+                team.prefix(state.lastPrefix);
+            }
+            return;
+        }
 
         Component prefix = Component.empty();
         for (Tag tag : tags) {
@@ -236,6 +249,7 @@ public final class Paper2111NameplateRenderer {
             }
         }
         team.prefix(prefix);
+        state.lastPrefix = prefix;
         state.lastFrameNanos = nowNanos;
         state.frameIndex++;
     }
@@ -344,6 +358,7 @@ public final class Paper2111NameplateRenderer {
     private static final class AnimationState {
         private long lastFrameNanos;
         private long frameIndex;
+        private Component lastPrefix;
         private AnimationState(long lastFrameNanos, long frameIndex) {
             this.lastFrameNanos = lastFrameNanos - 1_000_000_000L;
             this.frameIndex = frameIndex;
