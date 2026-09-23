@@ -34,7 +34,7 @@ public abstract class PlayerNameplateItemMixin {
                 state.nameLabelPos.y,
                 state.nameLabelPos.z
         );
-        Quaternionf rotation = client.getEntityRenderDispatcher().getRotation();
+        Quaternionf rotation = client.getEntityRenderDispatcher().camera.getRotation();
         matrices.multiply(rotation);
         matrices.scale(-0.025f, -0.025f, 0.025f);
 
