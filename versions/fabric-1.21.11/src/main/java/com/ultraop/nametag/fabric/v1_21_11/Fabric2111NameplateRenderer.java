@@ -160,7 +160,7 @@ public final class Fabric2111NameplateRenderer {
             ServerPlayerEntity player,
             NameTagItemPayload payload
     ) {
-        if (!ServerPlayNetworking.canSend(player, NameTagItemPayload.TYPE)) return;
+        if (!ServerPlayNetworking.canSend(player, NameTagItemPayload.ID)) return;
         if (payload == null) {
             ServerPlayNetworking.send(player, new NameTagItemPayload(
                     player.getId(), "", false, false, 1, (byte) 0
