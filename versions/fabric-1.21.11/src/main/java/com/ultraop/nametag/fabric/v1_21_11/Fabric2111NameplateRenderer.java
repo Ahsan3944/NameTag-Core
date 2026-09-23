@@ -23,6 +23,9 @@ import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.AffineTransformation;
+import org.joml.Vector3f;
+import com.ultraop.nametag.fabric.v1_21_11.mixin.DisplayEntityAccessor;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -126,13 +129,22 @@ public final class Fabric2111NameplateRenderer {
         updateItemDisplay(player, tags);
     }
 
+    private static final float ITEM_NAMEPLATE_SCALE = 0.30f;
+    private static final double ITEM_NAMEPLATE_Y = 2.28;
+    private static final double ITEM_NAMEPLATE_LEFT_OFFSET = 0.34;
+
     private void updateItemDisplay(ServerPlayerEntity player, List<Tag> tags) {
+        Tag itemTag = null;
         TagItemSettings settings = null;
         for (Tag tag : tags) {
             TagItemSettings candidate = TagItemSettings.from(tag);
-            if (candidate != null) { settings = candidate; break; }
+            if (candidate != null) {
+                settings = candidate;
+                itemTag = tag;
+                break;
+            }
         }
-        if (settings == null) {
+        if (settings == null || itemTag == null) {
             clearItemDisplay(player.getUuid());
             return;
         }
@@ -147,6 +159,7 @@ public final class Fabric2111NameplateRenderer {
             itemDisplays.put(uuid, display);
             itemDisplaySignatures.remove(uuid);
             itemRotations.put(uuid, 0.0f);
+            applyItemDisplayTransform(display, settings.mode());
         }
 
         if (!signature.equals(itemDisplaySignatures.get(uuid))) {
@@ -162,6 +175,7 @@ public final class Fabric2111NameplateRenderer {
                 return;
             }
             itemDisplaySignatures.put(uuid, signature);
+            applyItemDisplayTransform(display, settings.mode());
         }
 
         float yaw = player.getYaw();
@@ -175,16 +189,46 @@ public final class Fabric2111NameplateRenderer {
             display.setYaw(yaw);
         }
 
+        long nowNanos = System.nanoTime();
+        String effect = itemTag.effect().id().toLowerCase(java.util.Locale.ROOT);
+        boolean blink = "blink".equals(effect);
+        boolean highlight = "neon".equals(effect);
+        boolean wave = "wave".equals(effect);
+        display.setInvisible(blink && ((nowNanos / 350_000_000L) % 2L == 1L));
+        display.setGlowing(highlight);
+
+        double waveOffset = wave
+                ? Math.sin(nowNanos / 250_000_000.0) * 0.07
+                : 0.0;
         double yawRadians = Math.toRadians(yaw);
-        double rightX = -Math.cos(yawRadians);
-        double rightZ = -Math.sin(yawRadians);
-        double x = player.getX() + rightX * 0.42;
-        double y = player.getY() + 2.45;
-        double z = player.getZ() + rightZ * 0.42;
+        double leftX = -Math.cos(yawRadians);
+        double leftZ = -Math.sin(yawRadians);
+        double x = player.getX() + leftX * ITEM_NAMEPLATE_LEFT_OFFSET;
+        double y = player.getY() + ITEM_NAMEPLATE_Y + waveOffset;
+        double z = player.getZ() + leftZ * ITEM_NAMEPLATE_LEFT_OFFSET;
         display.setPosition(x, y, z);
+
         if (!spawnedItemDisplays.contains(uuid) && !display.isRemoved()) {
             if (player.getEntityWorld().spawnEntity(display)) spawnedItemDisplays.add(uuid);
         }
+    }
+
+    private static void applyItemDisplayTransform(
+            DisplayEntity.ItemDisplayEntity display,
+            TagItemSettings.Mode mode
+    ) {
+        DisplayEntityAccessor accessor = (DisplayEntityAccessor) display;
+        accessor.nametagCore$setTransformation(new AffineTransformation(
+                null,
+                null,
+                new Vector3f(ITEM_NAMEPLATE_SCALE, ITEM_NAMEPLATE_SCALE, ITEM_NAMEPLATE_SCALE),
+                null
+        ));
+        accessor.nametagCore$setBillboardMode(
+                mode == TagItemSettings.Mode.ROTATE
+                        ? DisplayEntity.BillboardMode.FIXED
+                        : DisplayEntity.BillboardMode.CENTER
+        );
     }
 
     private void clearItemDisplay(UUID uuid) {
