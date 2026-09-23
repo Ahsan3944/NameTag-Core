@@ -66,10 +66,18 @@ public final class DefaultConfigurationService implements ConfigurationService, 
     }
 
     private static NameTagConfiguration fromDocument(Map<String, Object> document) {
+        String chatFormat = stringValue(document, "chatFormat", NameTagConfiguration.DEFAULT_CHAT_FORMAT);
+        // Migrate the old built-in layout. The player's team/nameplate prefix
+        // already carries the rank icon + tag, so keeping the old bracketed
+        // copy produces a duplicate icon/tag in chat.
+        if (chatFormat.equals("[{item}{tag}] {player}: {message}")) {
+            chatFormat = NameTagConfiguration.DEFAULT_CHAT_FORMAT;
+        }
+
         return new NameTagConfiguration(
                 booleanValue(document, "nameplateEnabled", true),
                 booleanValue(document, "chatEnabled", true),
-                stringValue(document, "chatFormat", NameTagConfiguration.DEFAULT_CHAT_FORMAT),
+                chatFormat,
                 intValue(document, "defaultTagPriority", 0),
                 booleanValue(document, "defaultTagEnabled", true),
                 booleanValue(document, "defaultTagChatEnabled", true),

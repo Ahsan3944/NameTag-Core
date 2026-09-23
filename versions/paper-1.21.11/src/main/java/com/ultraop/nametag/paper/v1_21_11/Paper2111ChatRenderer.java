@@ -62,16 +62,9 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
     }
 
     static String ensureItemPlaceholder(String format) {
-        if (format.contains(ITEM_PLACEHOLDER)) return format;
-        int tagIndex = format.indexOf(TAG_PLACEHOLDER);
-        if (tagIndex < 0) tagIndex = format.indexOf("{tags}");
-        if (tagIndex >= 0) {
-            return format.substring(0, tagIndex) + ITEM_PLACEHOLDER + format.substring(tagIndex);
-        }
-        int playerIndex = format.indexOf(PLAYER_PLACEHOLDER);
-        if (playerIndex >= 0) {
-            return format.substring(0, playerIndex) + ITEM_PLACEHOLDER + format.substring(playerIndex);
-        }
+        // Do not inject {item} automatically. The player's team/nameplate prefix
+        // already renders the native icon before the player name. Auto-injecting
+        // {item} here creates the duplicate bracketed icon/tag in chat.
         return format;
     }
 

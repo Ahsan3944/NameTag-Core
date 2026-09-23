@@ -26,6 +26,19 @@ class DefaultConfigurationServiceTest {
     }
 
     @Test
+    void migratesLegacyDefaultChatFormatWithoutDuplicatingRankIconOrTag() throws Exception {
+        Path file = tempDir.resolve("configuration.yml");
+        Files.writeString(file, """
+                schemaVersion: 1
+                chatFormat: "[{item}{tag}] {player}: {message}"
+                """);
+
+        DefaultConfigurationService service = new DefaultConfigurationService(file);
+
+        assertEquals(NameTagConfiguration.DEFAULT_CHAT_FORMAT, service.current().chatFormat());
+    }
+
+    @Test
     void loadsTypedConfigurationValues() throws Exception {
         Path file = tempDir.resolve("configuration.yml");
         Files.writeString(file, """

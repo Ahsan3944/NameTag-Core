@@ -211,9 +211,9 @@ class Fabric2111ChatRendererTest {
 
 
     @Test
-    void injectsItemBeforeExistingTagPlaceholder() {
-        assertEquals("[{item}{tag}] {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("[{tag}] {player}: {message}"));
-        assertEquals("[{item}{tags}] {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("[{tags}] {player}: {message}"));
+    void doesNotInjectItemIntoChatFormat() {
+        assertEquals("[{tag}] {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("[{tag}] {player}: {message}"));
+        assertEquals("{player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("{player}: {message}"));
     }
 
     @Test
@@ -243,7 +243,7 @@ class Fabric2111ChatRendererTest {
                 Map.of("item", "minecraft:diamond")
         );
         assertEquals("", iconOnly.displayName());
-        assertEquals("{item}{tag} {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("{tag} {player}: {message}"));
+        assertEquals("{tag} {player}: {message}", Fabric2111ChatRenderer.ensureItemPlaceholder("{tag} {player}: {message}"));
         assertEquals("minecraft:item/diamond", Fabric2111ChatRenderer.itemSpriteId(iconOnly).toString());
     }
 }
