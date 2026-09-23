@@ -47,7 +47,10 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("message.assigned_temporary", "Assigned {tag} to {player} for {duration}");
         defaults.put("message.exported", "Exported {count} tags to {file}");
         defaults.put("message.imported", "Imported {count} tags from {file}");
-        defaults.put("error.usage.remove", "Usage: /nametag player remove <player>");
+        defaults.put("error.usage.remove", "Usage: /nametag player remove <player> <tag>");
+        defaults.put("error.usage.clear", "Usage: /nametag player clear <player>");
+        defaults.put("error.tag.not_assigned", "Tag {tag} is not assigned to {player}.");
+        defaults.put("message.removed", "Removed {tag} from {player}");
         defaults.put("error.usage.glitch", "Usage: /nametag display glitch <tag> <white|colorful>");
         defaults.put("error.usage.effect", "Usage: /nametag display effect <tag> <none|rainbow|pulse|wave>");
         defaults.put("error.usage.role", "Usage: /nametag advanced role <tag> <permission|clear>");
@@ -63,7 +66,7 @@ public final class DefaultMessageService implements MessageService {
         defaults.put("message.role_set", "Automatic role mapping for tag {tag}: {permission}");
         defaults.put("message.list_header", "NameTags ({count} total):");
         defaults.put("message.list_entry", "- {tag} -> {displayName} | color={color} | style={style} | enabled={enabled} | chat={chat} | effect={effect}");
-        defaults.put("message.usage", "/nametag tag create <tag> <displayName> | tag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value> | tag list | tag delete <tag> | player set <player> <tag> [duration] | player remove <player> | player clear <player> | display glitch <tag> <white|colorful> | display effect <tag> <none|rainbow|pulse|wave> | advanced role <tag> <permission|clear> | advanced scope <tag> clear|world <world>|region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ> | admin reload | admin export <file> | admin import <file>");
+        defaults.put("message.usage", "/nametag tag create <tag> <displayName> | tag edit <tag> <name|color|gradient|style|priority|enabled|chat> <value> | tag list | tag delete <tag> | player set <player> <tag> [duration] | player remove <player> <tag> | player clear <player> | display glitch <tag> <white|colorful> | display effect <tag> <none|rainbow|pulse|wave> | advanced role <tag> <permission|clear> | advanced scope <tag> clear|world <world>|region <name> <world> <minX> <minY> <minZ> <maxX> <maxY> <maxZ> | admin reload | admin export <file> | admin import <file>");
         return defaults;
     }
 }
