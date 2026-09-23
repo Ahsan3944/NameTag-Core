@@ -28,7 +28,7 @@ Windows:
 4. Start the server with Java 21.
 5. Fabric stores NameTag-Core configuration and persistence under `config/nametag-core/`.
 6. Use `/nametag list` to verify command registration.
-7. **Client-side requirement for native item nameplate icons:** install the same NameTag-Core Fabric JAR on every Fabric 1.21.11 client that should see the icon. The server sends the selected item data through the NameTag-Core client payload, and the client renders the item directly inside the vanilla player nameplate. A server-only installation cannot render the actual item PNG/model in a vanilla client.
+7. **Native item nameplate icons:** Fabric 1.21.11 item icons are inserted directly into the scoreboard/nameplate `Text` as a vanilla atlas text object. The icon therefore follows the same NameTag text layout and is also available anywhere the same team prefix is rendered, including the TAB player list. No separate client-side NameTag-Core installation is required for this native atlas icon path.
 
 ## Configuration
 
