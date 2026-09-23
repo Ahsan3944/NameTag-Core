@@ -3,6 +3,7 @@ package com.ultraop.nametag.fabric.network;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.util.Identifier;
 
 public record NameTagItemPayload(
         int entityId,
@@ -13,7 +14,7 @@ public record NameTagItemPayload(
         byte effects
 ) implements CustomPayload {
     public static final CustomPayload.Id<NameTagItemPayload> ID =
-            CustomPayload.id("nametag-core:item_nameplate");
+            new CustomPayload.Id<>(Identifier.of("nametag-core", "item_nameplate"));
 
     public static final PacketCodec<RegistryByteBuf, NameTagItemPayload> CODEC =
             PacketCodec.of(
