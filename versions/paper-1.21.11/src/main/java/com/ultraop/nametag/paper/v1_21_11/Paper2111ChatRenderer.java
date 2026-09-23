@@ -123,9 +123,8 @@ public final class Paper2111ChatRenderer implements ChatRenderer.ViewerUnaware {
         if (settings == null) return Component.empty();
         String[] parts = settings.itemId().split(":", 2);
         if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) return Component.empty();
-        boolean blockItem = isBlockItem(parts[0], parts[1]);
-        String atlas = blockItem ? "blocks" : "items";
-        String spritePath = (blockItem ? "block/" : "item/") + parts[1];
+        String atlas = "items";
+        String spritePath = "item/" + parts[1];
         Component icon = Component.object(ObjectContents.sprite(
                 Key.key("minecraft", atlas),
                 Key.key(parts[0], spritePath)

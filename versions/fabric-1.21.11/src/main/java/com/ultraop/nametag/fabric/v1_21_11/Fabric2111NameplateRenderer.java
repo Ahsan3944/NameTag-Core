@@ -311,11 +311,9 @@ public final class Fabric2111NameplateRenderer {
         Identifier itemId = Identifier.tryParse(settings.itemId());
         if (itemId == null) return Text.empty();
 
-        boolean blockItem = Registries.BLOCK.containsId(itemId);
-        Identifier atlas = blockItem ? Atlases.BLOCKS : Atlases.ITEMS;
         Identifier spriteId = Identifier.of(
                 itemId.getNamespace(),
-                (blockItem ? "block/" : "item/") + itemId.getPath()
+                "item/" + itemId.getPath()
         );
         MutableText icon = Text.object(new AtlasTextObjectContents(atlas, spriteId));
         // Deliberate one-character gap between the native item icon and the tag/name.
