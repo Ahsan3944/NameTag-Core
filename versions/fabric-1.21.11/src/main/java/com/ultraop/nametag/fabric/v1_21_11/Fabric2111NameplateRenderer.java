@@ -18,12 +18,6 @@ import net.minecraft.scoreboard.ServerScoreboard;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.AffineTransformation;
-import org.joml.Vector3f;
 import com.ultraop.nametag.fabric.network.NameTagItemPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.text.MutableText;
@@ -83,7 +77,6 @@ public final class Fabric2111NameplateRenderer {
         }
         playerTeams.entrySet().removeIf(entry -> server.getPlayerManager().getPlayer(entry.getKey()) == null);
         animations.entrySet().removeIf(entry -> !activeTeamNames.contains(entry.getKey()));
-;
     }
 
     private void renderPlayer(MinecraftServer server, ServerPlayerEntity player, long nowNanos) {
