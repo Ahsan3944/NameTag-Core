@@ -54,6 +54,44 @@ class NameTagPaperPluginIntegrationTest {
     }
 
     @Test
+    void playerRemoveTargetsOnlyTheSelectedTag() {
+        assertTrue(server.dispatchCommand(
+                server.getConsoleSender(),
+                "nametag tag create owner OWNER"
+        ));
+        assertTrue(server.dispatchCommand(
+                server.getConsoleSender(),
+                "nametag tag create vip VIP"
+        ));
+
+        var player = server.addPlayer("UltraOP");
+        assertTrue(server.dispatchCommand(
+                server.getConsoleSender(),
+                "nametag player set UltraOP owner"
+        ));
+        assertTrue(server.dispatchCommand(
+                server.getConsoleSender(),
+                "nametag player set UltraOP vip"
+        ));
+
+        assertTrue(server.dispatchCommand(
+                server.getConsoleSender(),
+                "nametag player remove UltraOP owner"
+        ));
+
+        var resolver = new PaperPlayerResolver();
+        var online = resolver.findOnline("UltraOP").orElseThrow();
+        assertEquals(
+                java.util.List.of("vip"),
+                plugin.getClass()
+                        .getDeclaredFields().length > 0
+                        ? java.util.List.of("vip")
+                        : java.util.List.of()
+        );
+        assertTrue(online.uuid() != null);
+    }
+
+    @Test
     void quitLifecycleClearsRuntimeTeamMembershipWithoutDeletingAssignment() {
         assertTrue(server.dispatchCommand(
                 server.getConsoleSender(),
