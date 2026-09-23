@@ -79,16 +79,9 @@ class NameTagPaperPluginIntegrationTest {
                 "nametag player remove UltraOP owner"
         ));
 
-        var resolver = new PaperPlayerResolver();
-        var online = resolver.findOnline("UltraOP").orElseThrow();
-        assertEquals(
-                java.util.List.of("vip"),
-                plugin.getClass()
-                        .getDeclaredFields().length > 0
-                        ? java.util.List.of("vip")
-                        : java.util.List.of()
-        );
-        assertTrue(online.uuid() != null);
+        assertNotNull(server.getScoreboardManager()
+                .getMainScoreboard()
+                .getEntryTeam(player.getName()));
     }
 
     @Test
