@@ -35,12 +35,9 @@ public record NameTagItemPayload(
                     )
             );
 
-    public static final CustomPayload.Type<RegistryByteBuf, NameTagItemPayload> TYPE =
-            new CustomPayload.Type<>(ID, CODEC);
-
     @Override
-    public CustomPayload.Type<RegistryByteBuf, NameTagItemPayload> getId() {
-        return TYPE;
+    public CustomPayload.Id<NameTagItemPayload> getId() {
+        return ID;
     }
 
     public static final byte EFFECT_BLINK = 1;
