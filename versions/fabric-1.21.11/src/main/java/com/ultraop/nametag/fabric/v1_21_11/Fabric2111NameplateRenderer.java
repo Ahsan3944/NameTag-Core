@@ -160,7 +160,7 @@ public final class Fabric2111NameplateRenderer {
             itemDisplays.put(uuid, display);
             itemDisplaySignatures.remove(uuid);
             itemRotations.put(uuid, 0.0f);
-            applyItemDisplayTransform(display, settings.mode(), 0.0f);
+            applyItemDisplayTransform(display, 0.0f);
         }
 
         if (!signature.equals(itemDisplaySignatures.get(uuid))) {
@@ -200,7 +200,7 @@ public final class Fabric2111NameplateRenderer {
         float waveOffset = wave
                 ? (float) (Math.sin(nowNanos / 250_000_000.0) * 0.07)
                 : 0.0f;
-        applyItemDisplayTransform(display, settings.mode(), waveOffset);
+        applyItemDisplayTransform(display, waveOffset);
 
         // Keep the display anchored to the player origin. The nameplate-relative
         // offset lives in the display transformation, not in a second world-space
@@ -214,7 +214,6 @@ public final class Fabric2111NameplateRenderer {
 
     private static void applyItemDisplayTransform(
             DisplayEntity.ItemDisplayEntity display,
-            TagItemSettings.Mode mode,
             float waveOffset
     ) {
         DisplayEntityAccessor accessor = (DisplayEntityAccessor) display;
