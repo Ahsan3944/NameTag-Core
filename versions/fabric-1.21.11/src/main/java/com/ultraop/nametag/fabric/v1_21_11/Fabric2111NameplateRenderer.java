@@ -59,6 +59,7 @@ public final class Fabric2111NameplateRenderer {
     }
 
     public void refreshPlayer(ServerPlayerEntity player) {
+        itemDisplaySignatures.remove(player.getUuid());
         renderPlayer(player.getEntityWorld().getServer(), player, System.nanoTime());
     }
 
