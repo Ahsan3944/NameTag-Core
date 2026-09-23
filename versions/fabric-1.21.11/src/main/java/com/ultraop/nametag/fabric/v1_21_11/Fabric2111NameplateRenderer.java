@@ -25,7 +25,6 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.text.object.AtlasTextObjectContents;
-import net.minecraft.item.BlockItem;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Atlases;
 import net.minecraft.util.Identifier;
@@ -311,7 +310,7 @@ public final class Fabric2111NameplateRenderer {
         Identifier itemId = Identifier.tryParse(settings.itemId());
         if (itemId == null) return Text.empty();
 
-        boolean blockItem = Registries.ITEM.get(itemId) instanceof BlockItem;
+        boolean blockItem = Registries.BLOCK.containsId(itemId);
         Identifier atlas = blockItem ? Atlases.BLOCKS : Atlases.ITEMS;
         Identifier spriteId = Identifier.of(
                 itemId.getNamespace(),
