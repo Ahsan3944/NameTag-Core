@@ -92,7 +92,7 @@ public final class NameTagFabric {
             createItem.then(createItemValue);
 
             var createNameItem = CommandManager.literal("name+item");
-            var createNameItemValue = CommandManager.argument("item", StringArgumentType.word())
+            var createNameItemValue = CommandManager.argument("item", StringArgumentType.string())
                     .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
             var createNameItemName = CommandManager.argument("displayName", StringArgumentType.string());
             addStyleChoices(createNameItemName, service, permissions, messages, configuration, "name+item");
