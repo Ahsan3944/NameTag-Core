@@ -59,8 +59,10 @@ public final class Fabric2111NameplateRenderer {
     }
 
     public void refreshPlayer(ServerPlayerEntity player) {
+        MinecraftServer server = player.getEntityWorld().getServer();
         itemDisplaySignatures.remove(player.getUuid());
-        renderPlayer(player.getEntityWorld().getServer(), player, System.nanoTime());
+        renderPlayer(server, player, System.nanoTime());
+        syncItemNameplatesToViewer(server, player);
     }
 
     public void clearPlayer(ServerPlayerEntity player) {
@@ -82,13 +84,7 @@ public final class Fabric2111NameplateRenderer {
 
     private void renderPlayer(MinecraftServer server, ServerPlayerEntity player, long nowNanos) {
         ServerScoreboard scoreboard = server.getScoreboard();
-        TagResolutionContext context = new TagResolutionContext(
-                player.getEntityWorld().getRegistryKey().getValue().toString(),
-                player.getBlockPos().getX(), player.getBlockPos().getY(), player.getBlockPos().getZ()
-        );
-        List<Tag> tags = tagService.activeTags(player.getUuid(), context).stream()
-                .filter(Tag::enabled)
-                .toList();
+        List<Tag> tags = activeTagsFor(player);
 
         String oldTeamName = playerTeams.get(player.getUuid());
         if (tags.isEmpty()) {
@@ -115,6 +111,77 @@ public final class Fabric2111NameplateRenderer {
     }
 
     private void updateItemDisplay(ServerPlayerEntity player, List<Tag> tags) {
+        NameTagItemPayload payload = buildItemNameplatePayload(player, tags);
+        UUID uuid = player.getUuid();
+
+        if (payload == null) {
+            if (itemDisplaySignatures.remove(uuid) != null) {
+                sendItemNameplate(player, null);
+            }
+            return;
+        }
+
+        String signature = payload.itemId()
+                + "|" + payload.rotate()
+                + "|" + payload.speed()
+                + "|" + payload.effects();
+
+        if (signature.equals(itemDisplaySignatures.get(uuid))) return;
+
+        sendItemNameplate(player, payload);
+        itemDisplaySignatures.put(uuid, signature);
+    }
+
+    private void sendItemNameplate(
+            ServerPlayerEntity target,
+            NameTagItemPayload payload
+    ) {
+        MinecraftServer server = target.getEntityWorld().getServer();
+        if (server == null) return;
+
+        NameTagItemPayload outbound = payload == null
+                ? new NameTagItemPayload(target.getId(), "", false, false, 1, (byte) 0)
+                : payload;
+
+        for (ServerPlayerEntity viewer : server.getPlayerManager().getPlayerList()) {
+            if (ServerPlayNetworking.canSend(viewer, NameTagItemPayload.ID)) {
+                ServerPlayNetworking.send(viewer, outbound);
+            }
+        }
+    }
+
+    private void syncItemNameplatesToViewer(
+            MinecraftServer server,
+            ServerPlayerEntity viewer
+    ) {
+        if (!ServerPlayNetworking.canSend(viewer, NameTagItemPayload.ID)) return;
+
+        for (ServerPlayerEntity target : server.getPlayerManager().getPlayerList()) {
+            List<Tag> tags = activeTagsFor(target);
+            NameTagItemPayload payload = buildItemNameplatePayload(target, tags);
+            ServerPlayNetworking.send(
+                    viewer,
+                    payload == null
+                            ? new NameTagItemPayload(target.getId(), "", false, false, 1, (byte) 0)
+                            : payload
+            );
+        }
+    }
+
+    private List<Tag> activeTagsFor(ServerPlayerEntity player) {
+        TagResolutionContext context = new TagResolutionContext(
+                player.getEntityWorld().getRegistryKey().getValue().toString(),
+                player.getBlockPos().getX(), player.getBlockPos().getY(), player.getBlockPos().getZ()
+        );
+        return tagService.activeTags(player.getUuid(), context).stream()
+                .filter(Tag::enabled)
+                .toList();
+    }
+
+    private NameTagItemPayload buildItemNameplatePayload(
+            ServerPlayerEntity player,
+            List<Tag> tags
+    ) {
         TagItemSettings settings = null;
         Tag itemTag = null;
         for (Tag tag : tags) {
@@ -126,18 +193,7 @@ public final class Fabric2111NameplateRenderer {
             }
         }
 
-        if (settings == null || itemTag == null) {
-            sendItemNameplate(player, null);
-            return;
-        }
-
-        String signature = settings.itemId()
-                + "|" + settings.mode().id()
-                + "|" + settings.speed()
-                + "|" + itemTag.effect().id();
-
-        UUID uuid = player.getUuid();
-        if (signature.equals(itemDisplaySignatures.get(uuid))) return;
+        if (settings == null || itemTag == null) return null;
 
         byte effects = 0;
         String effect = itemTag.effect().id().toLowerCase(java.util.Locale.ROOT);
@@ -145,29 +201,14 @@ public final class Fabric2111NameplateRenderer {
         if ("neon".equals(effect)) effects |= NameTagItemPayload.EFFECT_NEON;
         if ("wave".equals(effect)) effects |= NameTagItemPayload.EFFECT_WAVE;
 
-        sendItemNameplate(player, new NameTagItemPayload(
+        return new NameTagItemPayload(
                 player.getId(),
                 settings.itemId(),
                 true,
                 settings.mode() == TagItemSettings.Mode.ROTATE,
                 settings.speed(),
                 effects
-        ));
-        itemDisplaySignatures.put(uuid, signature);
-    }
-
-    private void sendItemNameplate(
-            ServerPlayerEntity player,
-            NameTagItemPayload payload
-    ) {
-        if (!ServerPlayNetworking.canSend(player, NameTagItemPayload.ID)) return;
-        if (payload == null) {
-            ServerPlayNetworking.send(player, new NameTagItemPayload(
-                    player.getId(), "", false, false, 1, (byte) 0
-            ));
-        } else {
-            ServerPlayNetworking.send(player, payload);
-        }
+        );
     }
 
     private void removePlayer(ServerScoreboard scoreboard, ServerPlayerEntity player, String teamName) {
@@ -280,7 +321,10 @@ public final class Fabric2111NameplateRenderer {
             glyph.setStyle(glyphStyle);
             result.append(glyph);
         }
-        return result.append(Text.literal(" "));
+        if (!TagPresentation.displayText(tag).isEmpty()) {
+            result.append(Text.literal(" "));
+        }
+        return result;
     }
 
     private static MutableText buildGlitchPrefix(GlitchFrame frame, TagStyle style) {
