@@ -315,7 +315,7 @@ public final class Fabric2111NameplateRenderer {
                 itemId.getNamespace(),
                 "item/" + itemId.getPath()
         );
-        MutableText icon = Text.object(new AtlasTextObjectContents(atlas, spriteId));
+        MutableText icon = Text.object(new AtlasTextObjectContents(Atlases.ITEMS, spriteId));
         // Deliberate one-character gap between the native item icon and the tag/name.
         // Vanilla atlas text objects are fixed-size text objects; do not duplicate the
         // sprite to fake scaling because that would create a visible double icon.
