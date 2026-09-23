@@ -41,6 +41,22 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
     }
 
     @GameTest
+    public void namespacedItemCreateCommandParsesColonIds(TestContext context) {
+        var server = context.getWorld().getServer();
+        int result = server.getCommandManager().executeWithPrefix(
+                server.getCommandSource().withLevel(4),
+                "nametag tag create parserfix item minecraft:netherite_ingot spin false"
+        );
+
+        if (result <= 0) {
+            context.throwGameTestException("Namespaced item ID command did not execute");
+            return;
+        }
+
+        context.complete();
+    }
+
+    @GameTest
     public void playerLifecycleRestoresAndClearsRuntimeNameplate(TestContext context) {
         ServerWorld world = context.getWorld();
         var server = world.getServer();
