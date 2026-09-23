@@ -41,7 +41,7 @@ public final class NameTagFabricGameTest implements CustomTestMethodInvoker {
     }
 
     @GameTest
-    public void namespacedItemCreateCommandParsesColonIds(TestContext context) {
+    public void namespacedItemCreateCommandParsesColonIds(TestContext context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         var server = context.getWorld().getServer();
         int result = server.getCommandManager().getDispatcher().execute(
                 "nametag tag create parserfix item minecraft:netherite_ingot spin false",
