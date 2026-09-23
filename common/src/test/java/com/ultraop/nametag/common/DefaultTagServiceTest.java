@@ -391,6 +391,48 @@ class DefaultTagServiceTest {
     }
 
     @Test
+    void assigningItemTagReplacesPreviousItemTagButKeepsNameTags() {
+        DefaultTagService service = newService();
+        UUID player = UUID.randomUUID();
+
+        service.create(tag("vip", "VIP", 50, true));
+        service.create(itemTag("diamond", "DIAMOND", "minecraft:diamond"));
+        service.create(itemTag("ingot", "INGOT", "minecraft:iron_ingot"));
+
+        service.assign(player, new TagId("vip"));
+        service.assign(player, new TagId("diamond"));
+        service.assign(player, new TagId("ingot"));
+
+        assertEquals(List.of("vip", "ingot"),
+                service.assignedTags(player).stream().map(Tag::id).map(TagId::value).toList());
+        assertEquals(new TagId("ingot"), service.activeTag(player).orElseThrow().id());
+    }
+
+    @Test
+    void legacyMultipleItemTagsAreNormalizedToTheActiveItemTag() {
+        InMemoryPlayerAssignmentRepository assignments = new InMemoryPlayerAssignmentRepository();
+        InMemoryTagRepository tags = new InMemoryTagRepository();
+        DefaultTagService service = new DefaultTagService(tags, assignments);
+        UUID player = UUID.randomUUID();
+
+        service.create(itemTag("diamond", "DIAMOND", "minecraft:diamond"));
+        service.create(itemTag("ingot", "INGOT", "minecraft:iron_ingot"));
+        service.create(tag("vip", "VIP", 50, true));
+
+        assignments.save(new PlayerAssignment(
+                player,
+                List.of(new TagId("vip"), new TagId("diamond"), new TagId("ingot")),
+                new TagId("ingot")
+        ));
+
+        assertEquals(List.of("vip", "ingot"),
+                service.assignedTags(player).stream().map(Tag::id).map(TagId::value).toList());
+        assertEquals(List.of("vip", "ingot"),
+                service.activeTags(player, new TagResolutionContext("world", 0, 64, 0))
+                        .stream().map(Tag::id).map(TagId::value).toList());
+    }
+
+    @Test
     void activeTagsOrdersExplicitActiveFirstAndIncludesOtherAssignments() {
         DefaultTagService service = newService();
         UUID player = UUID.randomUUID();
@@ -456,6 +498,14 @@ class DefaultTagServiceTest {
         return new DefaultTagService(
                 new InMemoryTagRepository(),
                 new InMemoryPlayerAssignmentRepository()
+        );
+    }
+
+    private static Tag itemTag(String id, String displayName, String item) {
+        return new Tag(
+                new TagId(id), displayName, new TagColor.Preset("white"),
+                TagStyle.plain(), TagEffect.none(), 10, true, true,
+                Map.of("item", item)
         );
     }
 

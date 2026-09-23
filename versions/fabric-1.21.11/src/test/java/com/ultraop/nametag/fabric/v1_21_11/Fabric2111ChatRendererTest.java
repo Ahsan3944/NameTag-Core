@@ -218,6 +218,23 @@ class Fabric2111ChatRendererTest {
     }
 
     @Test
+    void resolvesBlockItemSpriteFromBlockAtlas() {
+        Tag blockTag = new Tag(
+                new TagId("block"),
+                "BLOCK",
+                new TagColor.Preset("white"),
+                TagStyle.plain(),
+                TagEffect.none(),
+                0,
+                true,
+                true,
+                Map.of("item", "minecraft:diamond_block")
+        );
+        assertEquals("minecraft:block/diamond_block",
+                Fabric2111NameplateRenderer.itemSpriteId(blockTag, true).toString());
+    }
+
+    @Test
     void rendersItemIconBeforeTagAndSupportsIconOnly() {
         Tag tagged = new Tag(
                 new TagId("vip"),

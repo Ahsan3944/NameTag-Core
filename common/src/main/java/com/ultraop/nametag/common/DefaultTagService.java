@@ -203,6 +203,11 @@ public final class DefaultTagService implements TagService {
         else expirations.put(tag.id(), expiresAt.toEpochMilli());
 
         TagId active = current.activeTagId() != null ? current.activeTagId() : tag.id();
+        if (newTagHasItem && current.activeTagId() != null
+                && !ids.contains(current.activeTagId())
+                && ids.contains(tag.id())) {
+            active = tag.id();
+        }
         PlayerAssignment updated = new PlayerAssignment(playerUuid, ids, active, expirations);
         TagValidator.validate(updated);
         assignments.save(updated);
@@ -296,7 +301,8 @@ public final class DefaultTagService implements TagService {
         List<Tag> resolved;
         boolean cacheable = false;
         if (stored.isPresent()) {
-            PlayerAssignment assignment = removeExpired(playerUuid, stored.get());
+            PlayerAssignment assignment = normalizeItemAssignments(
+                    playerUuid, removeExpired(playerUuid, stored.get()));
             resolved = resolveActiveTags(assignment, context);
             cacheable = !assignment.hasExpirations() && !resolved.isEmpty();
             if (resolved.isEmpty()) {
@@ -385,7 +391,8 @@ public final class DefaultTagService implements TagService {
         Optional<PlayerAssignment> stored = assignments.find(playerUuid);
         if (stored.isEmpty()) return List.of();
 
-        PlayerAssignment assignment = removeExpired(playerUuid, stored.get());
+        PlayerAssignment assignment = normalizeItemAssignments(
+                playerUuid, removeExpired(playerUuid, stored.get()));
         return assignment.assignedTagIds().stream()
                 .filter(tagId -> !assignment.isExpired(tagId, clock.millis()))
                 .map(tags::find)
@@ -403,7 +410,8 @@ public final class DefaultTagService implements TagService {
             return automaticRoleTag(playerUuid);
         }
 
-        PlayerAssignment assignment = removeExpired(playerUuid, stored.get());
+        PlayerAssignment assignment = normalizeItemAssignments(
+                playerUuid, removeExpired(playerUuid, stored.get()));
         if (assignment.hasExpirations()) return resolveActiveTag(assignment);
 
         Optional<Tag> resolved = resolveActiveTag(assignment);
@@ -432,6 +440,40 @@ public final class DefaultTagService implements TagService {
                 removeExpired(assignment.playerUuid(), assignment);
             }
         }
+    }
+
+    private PlayerAssignment normalizeItemAssignments(UUID playerUuid, PlayerAssignment assignment) {
+        List<TagId> itemIds = assignment.assignedTagIds().stream()
+                .filter(id -> tags.find(id)
+                        .map(tag -> TagItemSettings.from(tag) != null)
+                        .orElse(false))
+                .toList();
+        if (itemIds.size() <= 1) return assignment;
+
+        TagId keep = itemIds.stream()
+                .filter(id -> Objects.equals(id, assignment.activeTagId()))
+                .findFirst()
+                .orElse(itemIds.get(itemIds.size() - 1));
+
+        List<TagId> remaining = assignment.assignedTagIds().stream()
+                .filter(id -> !itemIds.contains(id) || id.equals(keep))
+                .toList();
+
+        Map<TagId, Long> expirations = new HashMap<>();
+        for (Map.Entry<TagId, Long> entry : assignment.expirationEpochMillis().entrySet()) {
+            if (remaining.contains(entry.getKey())) expirations.put(entry.getKey(), entry.getValue());
+        }
+
+        TagId active = remaining.contains(assignment.activeTagId())
+                ? assignment.activeTagId()
+                : keep;
+        PlayerAssignment updated = new PlayerAssignment(
+                playerUuid, remaining, active, expirations
+        );
+        assignments.save(updated);
+        activeTagCache.invalidatePlayer(playerUuid);
+        contextualTagCache.invalidatePlayer(playerUuid);
+        return updated;
     }
 
     private PlayerAssignment removeExpired(UUID playerUuid, PlayerAssignment assignment) {
