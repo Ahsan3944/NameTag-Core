@@ -24,6 +24,9 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
+import net.minecraft.text.object.AtlasTextObjectContents;
+import net.minecraft.util.Atlases;
+import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -254,7 +257,7 @@ public final class Fabric2111NameplateRenderer {
         boolean iconSlotReserved = false;
         for (Tag tag : tags) {
             if (!iconSlotReserved && TagItemSettings.from(tag) != null) {
-                prefix.append(Text.literal("   "));
+                prefix.append(buildItemIcon(tag));
                 iconSlotReserved = true;
             }
             if (tag.effect().isGlitch()) {
@@ -305,12 +308,32 @@ public final class Fabric2111NameplateRenderer {
         boolean iconSlotReserved = false;
         for (Tag tag : tags) {
             if (!iconSlotReserved && TagItemSettings.from(tag) != null) {
-                result.append(Text.literal("   "));
+                result.append(buildItemIcon(tag));
                 iconSlotReserved = true;
             }
             result.append(buildSingleStaticPrefix(tag));
         }
         return result;
+    }
+
+    /**
+     * Uses Minecraft 1.21.11's native atlas text object so the item icon is
+     * part of the actual NameTag/scoreboard Text component. This keeps the
+     * icon in the same text layout used by the nameplate and TAB list instead
+     * of spawning or moving a separate render entity.
+     */
+    private static MutableText buildItemIcon(Tag tag) {
+        TagItemSettings settings = TagItemSettings.from(tag);
+        if (settings == null) return Text.empty();
+
+        Identifier itemId = Identifier.tryParse(settings.itemId());
+        if (itemId == null) return Text.empty();
+
+        Identifier spriteId = Identifier.of(
+                itemId.getNamespace(),
+                "item/" + itemId.getPath()
+        );
+        return Text.object(new AtlasTextObjectContents(Atlases.ITEMS, spriteId));
     }
 
     private static MutableText buildSingleStaticPrefix(Tag tag) {
