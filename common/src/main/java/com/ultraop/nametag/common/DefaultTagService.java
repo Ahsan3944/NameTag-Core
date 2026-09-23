@@ -370,6 +370,19 @@ public final class DefaultTagService implements TagService {
     }
 
     @Override
+    public List<Tag> assignedTags(UUID playerUuid) {
+        Optional<PlayerAssignment> stored = assignments.find(playerUuid);
+        if (stored.isEmpty()) return List.of();
+
+        PlayerAssignment assignment = removeExpired(playerUuid, stored.get());
+        return assignment.assignedTagIds().stream()
+                .filter(tagId -> !assignment.isExpired(tagId, clock.millis()))
+                .map(tags::find)
+                .flatMap(Optional::stream)
+                .toList();
+    }
+
+    @Override
     public Optional<Tag> activeTag(UUID playerUuid) {
         Optional<Optional<Tag>> cached = activeTagCache.findCached(playerUuid);
         if (cached.isPresent()) return cached.orElseThrow();
