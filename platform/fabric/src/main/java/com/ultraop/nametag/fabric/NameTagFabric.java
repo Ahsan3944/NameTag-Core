@@ -17,6 +17,7 @@ import com.ultraop.nametag.common.FileTagAuditLogger;
 import com.ultraop.nametag.common.StorageConfiguration;
 import com.ultraop.nametag.common.StorageFactory;
 import com.ultraop.nametag.fabric.v1_21_11.Fabric2111Adapter;
+import com.ultraop.nametag.fabric.network.NameTagFabricNetworking;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.CommandSource;
@@ -34,6 +35,7 @@ public final class NameTagFabric {
     private NameTagFabric() {}
 
     public static void bootstrap() {
+        NameTagFabricNetworking.register();
         java.nio.file.Path dataDirectory = FabricLoader.getInstance()
                 .getConfigDir()
                 .resolve("nametag-core");
