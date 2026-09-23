@@ -21,6 +21,8 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.command.argument.ItemStackArgumentType;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -85,7 +87,7 @@ public final class NameTagFabric {
             createName.then(createNameValue);
 
             var createItem = CommandManager.literal("item");
-            var createItemValue = CommandManager.argument("item", StringArgumentType.string())
+            var createItemValue = CommandManager.argument("item", ItemStackArgumentType.itemStack(registryAccess))
                     .suggests((context, builder) -> suggestCreateItems(context, builder, permissions));
             createItemValue.then(createSpinNode(
                     service, permissions, messages, configuration, false));
@@ -296,7 +298,7 @@ public final class NameTagFabric {
                     .suggests((context, builder) ->
                             suggestTags(context, builder, service, permissions, configuration, "item"));
             var itemSet = CommandManager.literal("set");
-            itemSet.then(CommandManager.argument("item", StringArgumentType.string())
+            itemSet.then(CommandManager.argument("item", ItemStackArgumentType.itemStack(registryAccess))
                     .suggests((context, builder) -> suggestItemValues(
                             context, builder, service, permissions, configuration))
                     .executes(context -> execute(context, service, permissions, messages, configuration,
@@ -304,7 +306,7 @@ public final class NameTagFabric {
                                     "display", "item",
                                     StringArgumentType.getString(context, "tag"),
                                     "set",
-                                    StringArgumentType.getString(context, "item")
+                                    getItemId(context)
                             })));
             itemTag.then(itemSet);
 
@@ -901,6 +903,12 @@ public final class NameTagFabric {
             PermissionService permissions) {
         FabricCommandSource source = new FabricCommandSource(context.getSource(), permissions);
         return CommandSource.suggestMatching(source.itemNames(), builder);
+    }
+
+    private static String getItemId(CommandContext<ServerCommandSource> context) {
+        return Registries.ITEM.getId(
+                ItemStackArgumentType.getItemStackArgument(context, "item").getItem()
+        ).toString();
     }
 
     private static int execute(
