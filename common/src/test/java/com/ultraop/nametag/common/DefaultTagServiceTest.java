@@ -315,6 +315,43 @@ class DefaultTagServiceTest {
     }
 
     @Test
+    void assigningNewItemTagReplacesPreviousItemTagButPreservesNameTag() {
+        DefaultTagService service = newService();
+        UUID player = UUID.randomUUID();
+        service.create(tag("vip", "VIP", 10, true));
+        service.create(new Tag(new TagId("diamond"), "DIAMOND", new TagColor.Preset("aqua"), TagStyle.plain(),
+                TagEffect.none(), 20, true, true, Map.of("item", "minecraft:diamond")));
+        service.create(new Tag(new TagId("lapis"), "LAPIS", new TagColor.Preset("blue"), TagStyle.plain(),
+                TagEffect.none(), 30, true, true, Map.of("item", "minecraft:lapis_lazuli")));
+
+        service.assign(player, new TagId("vip"));
+        service.assign(player, new TagId("diamond"));
+        service.assign(player, new TagId("lapis"));
+
+        assertEquals(List.of("vip", "lapis"),
+                service.assignedTags(player).stream().map(Tag::id).map(TagId::value).toList());
+    }
+
+    @Test
+    void purgeExpiredAssignmentsRemovesExpiredTagImmediately() {
+        Instant now = Instant.parse("2026-01-01T00:00:00Z");
+        MutableClock clock = new MutableClock(now);
+        InMemoryTagRepository tags = new InMemoryTagRepository();
+        InMemoryPlayerAssignmentRepository assignments = new InMemoryPlayerAssignmentRepository();
+        DefaultTagService service = new DefaultTagService(
+                tags, assignments, 8, new com.ultraop.nametag.api.TagEventBus(), clock
+        );
+        UUID player = UUID.randomUUID();
+        service.create(tag("vip", "VIP", 10, true));
+        service.assignUntil(player, new TagId("vip"), now.plusSeconds(60));
+        clock.advanceSeconds(61);
+
+        service.purgeExpiredAssignments();
+
+        assertTrue(assignments.find(player).isEmpty());
+    }
+
+    @Test
     void yamlBackedServiceSurvivesRestart() {
         UUID player = UUID.randomUUID();
 

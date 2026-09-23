@@ -86,6 +86,7 @@ public final class Paper2111NameplateRenderer {
     }
 
     private void tick() {
+        tagService.purgeExpiredAssignments();
         long now = System.nanoTime();
         Set<String> activeTeamNames = new HashSet<>();
         for (Player player : Bukkit.getOnlinePlayers()) {
