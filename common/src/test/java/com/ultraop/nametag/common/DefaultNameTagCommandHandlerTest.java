@@ -536,6 +536,8 @@ final class DefaultNameTagCommandHandlerTest {
                 value.contains("owner -> OWNER") && value.contains("color=red") && value.contains("style=plain")));
         assertTrue(source.messages.stream().anyMatch(value ->
                 value.contains("vip -> VIP") && value.contains("color=gold") && value.contains("style=bold")));
+        assertTrue(source.messages.contains("  Preview: §6§lVIP§r"));
+        assertTrue(source.messages.contains("  Preview: §cOWNER§r"));
     }
 
     @Test
