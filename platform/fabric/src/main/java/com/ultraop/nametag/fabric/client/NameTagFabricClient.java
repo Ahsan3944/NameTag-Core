@@ -1,6 +1,6 @@
 package com.ultraop.nametag.fabric.client;
 
-import com.ultraop.nametag.fabric.network.NameTagItemPayload;
+import com.ultraop.nametag.fabric.v1_21_11.network.NameTagItemPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
