@@ -9,7 +9,7 @@ public final class NameTagFabricNetworking {
 
     public static synchronized void register() {
         if (registered) return;
-        PayloadTypeRegistry.playS2C().register(NameTagItemPayload.TYPE, NameTagItemPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(NameTagItemPayload.ID, NameTagItemPayload.CODEC);
         registered = true;
     }
 }
